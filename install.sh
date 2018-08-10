@@ -17,7 +17,11 @@ do
 	PLUGIN_ELEM=${i#$PLUGIN_DIR}
 	if [  "${PLUGIN_ELEM}" != '/install.sh' ] && [ "${PLUGIN_ELEM}" != '/uninstall.sh' ]
 	then
-		if [ ! -e "${GW_DIR}${PLUGIN_ELEM}" ] || [ -L "${GW_DIR}${PLUGIN_ELEM}" ]
+		if [ ! -e "${GW_DIR}${PLUGIN_ELEM}" ] && [ -d "$i" ]
+		then
+			mkdir ${GW_DIR}${PLUGIN_ELEM}
+			echo "$PLUGIN_ELEM created"
+		elif [ ! -e "${GW_DIR}${PLUGIN_ELEM}" ] || [ -L "${GW_DIR}${PLUGIN_ELEM}" ]
 		then
 			ln -sf $i ${GW_DIR}${PLUGIN_ELEM}
 			echo "$PLUGIN_ELEM installed"

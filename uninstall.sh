@@ -15,7 +15,7 @@ done
 for i in $(ls -R $PLUGIN_DIR | awk ' /:$/&&f{s=$0;f=0} /:$/&&!f{sub(/:$/,"");s=$0;f=1;next} NF&&f{ print s"/"$0 }')
 do 
 	PLUGIN_ELEM=${i#$PLUGIN_DIR}
-	[ -L "${GW_DIR}${PLUGIN_ELEM}" ] && { rm ${GW_DIR}${PLUGIN_ELEM}; echo "$PLUGIN_ELEM uninstalled"; }
+	[ -L "${GW_DIR}${PLUGIN_ELEM}" ] && { rm ${GW_DIR}${PLUGIN_ELEM}; echo "$PLUGIN_ELEM uninstalled"; } #**** TODO: remove dir ***
 done
 
 IFS=$IFS_BK
