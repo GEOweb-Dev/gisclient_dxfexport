@@ -56,6 +56,8 @@ $dxfExcludeGeometryLayers = array(
 		'quote_t',
 		'quote_p',
 		'quote_l',
+		'quote_linee',
+		'quote_testi',
 		'particolari_l',
 		'particolari_a',
 		'particolari_p'

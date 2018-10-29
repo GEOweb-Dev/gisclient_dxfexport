@@ -32,9 +32,7 @@ class Lexer
     private $_tokens = array();
     private $_delimeter = '';
     private $_last_error = '';
-    private $_throttle_limit = 1000; //limite di elaborazione per evitare loop infiniti
-	private $_throttle = 0; 
-	
+    	
     public function __construct($delimeter = "#")
     {
         $this->_delimeter = $delimeter;
@@ -105,6 +103,8 @@ class Lexer
 
 class Parser{
 	public $lexer = NULL;
+	private $_throttle_limit = 1000; //limite di elaborazione per evitare loop infiniti
+	private $_throttle = 0; 
 	
 	//esegue il parsing della prima espressione tra parentesi tonde trovata
 	public function parseBracket($tokens){
@@ -382,6 +382,8 @@ SCRIPT
 	* Valuta una espressione come un boolean
 	*/
 	public function evaluateString($expression){
+		$this->_throttle = 0;
+		
 		//elimino gli escape
 		$expression = str_replace("\\", "", $expression);
 		
@@ -389,11 +391,9 @@ SCRIPT
 			$this->lexer = $this->createLexer();
 		}
 		$lexer = $this->lexer;
-		
 		$lexer->resetTokens();
-		
 		while($result = $lexer->tokenize($expression)){
-			//echo $result."<br />";
+			//echo $result."\n";
 		}
 		$tokens = $lexer->tokens;
 		//print_r($tokens);
@@ -420,6 +420,8 @@ SCRIPT
 	* Calcola una espressione come stringa
 	*/
 	public function calculateString($expression){
+		$this->_throttle = 0;
+		
 		if(is_null($this->lexer)){
 			$this->lexer = $this->createLexer();
 		}
@@ -427,7 +429,7 @@ SCRIPT
 		$lexer->resetTokens();
 		
 		while($result = $lexer->tokenize($expression)){
-			//echo $result."<br />";
+			//echo $result."\n";
 		}
 		$tokens = $lexer->tokens;
 		//rimuovo tutte le funzioni
