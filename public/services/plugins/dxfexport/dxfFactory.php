@@ -367,10 +367,6 @@ class dxfFactory{
 		//file_put_contents($outputFile, implode(PHP_EOL, $this->entPoints), FILE_APPEND);
 		//file_put_contents($outputFile, PHP_EOL, FILE_APPEND);
 		file_put_contents($outputFile, implode(PHP_EOL, $part2), FILE_APPEND);
-		
-		//print(count($this->dxf) - $this->endOfSection("ENTITIES"));
-		//$this->dxf = array_merge($part1, $this->entHatches, $this->entLines, $this->entPoints, $part2);
-				
 	}
 	
 	/**
@@ -438,203 +434,11 @@ class dxfFactory{
 						$coords = $feature->{'geometry'}->{'coordinates'};
 						//$coords = $clip->clip($coords);
 						$props = $feature->{'properties'};
-						//print($dLayer->{'layerName'});
-						//print_r($dLayer->{'styles'});
 						//ricavo lo style relativo
-						$style = $this->getStyle($props, $dLayer->{'styles'});
-						$this->log(json_encode($style));
-						//print_r($props);
-						//definizione dei valori di default
-						if(is_null($style)){
-							$this->log("Impossibile definire lo stile".$dLayer->{'layerName'}." la feature non sarà visualizzata");
-							continue;
-							//$style = $dLayer->{'styles'}[0];
-							//return;
-						}
-						//colore
-						$color = NULL;
-						if(isset($style->{'color'})){
-							$color = $style->{'color'};
-						}
-						$outlineColor = NULL;
-						if(isset($style->{'outlineColor'})){
-							$outlineColor = $style->{'outlineColor'};
-						}else{
-							//$outlineColor = $dLayer->{'color'};
-						}
-						$linetype = NULL;
-						if(isset($style->{'lineType'})){
-							$linetype = $this->getLineStyleName($style->{'lineType'});
-						}
-						$fieldText = NULL;
-						if(isset($dLayer->{'fieldText'})){
-							$fieldText = $dLayer->{'fieldText'};
-						}
-						if(isset($style->{'fieldText'})){
-							$fieldText = $style->{'fieldText'};
-						}
-						$labelColor = NULL;
-						if(isset($style->{'labelColor'})){
-							$labelColor = $style->{'labelColor'};
-						}
-						$symbolName = NULL;
-						if(isset($style->{'symbol_name'})){
-							$symbolName = $style->{'symbol_name'};
-						}
-						$thickness = null;
-						if(isset($style->{'thickness'})){
-							$thickness = $style->{'thickness'};
-						}
-						$labelSize = $this->defaultSize;
-						if(isset($style->{'labelSize'})){
-							$labelSize = $this->getLabelSize($style->{'labelSize'});
-						}
-						//fine definizione dei valori di default
-						
-						switch (strtolower($feature->{'geometry'}->{'type'})) {
-							case "point":
-								//setto la z se non presente
-								if(count($coords) == 2){
-									array_push($coords, 0);
-								}
-								//verifico l'etichetta
-								if(!is_null($fieldText)){
-									//aggiungo una etichetta
-									$text = "";
-									$angle = 0;
-									
-									if(!empty($props)){
-										if(isset($fieldText)){
-											if(isset($props->{$this->normalizeField($fieldText)})){
-												$text = $props->{$this->normalizeField($fieldText)};
-											}else{
-												$this->log("Campo ".$fieldText." non configurato");
-											}
-										}
-										//setto l'angolo al valore del campo definito
-										if(isset($style->{'fieldTextAngle'})){ 
-											if(isset($props->{$this->normalizeField($style->{'fieldTextAngle'})})){ 
-												$angle = intval($props->{$this->normalizeField($style->{'fieldTextAngle'})});
-											}
-										}
-									}
-									//aggiungo i valori fissi degli angoli
-									(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
-									$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor);
-								}
-								//se il nome del simbolo è settato aggiungo un blocco altrimenti un punto
-								if(!is_null($symbolName)){
-									$angle = 0;
-									$symbolName = $this->getSymbolName($symbolName);
-									//print_r($style);
-									(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
-									if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
-									$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color);
-								}else{
-									$this->addPoint3D($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], 1, $color);
-								}
-							break;
-							case "text":
-								if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
-									$text = "";
-									$angle = 0;
-									if(!empty($props)){
-										(!is_null($fieldText)) ? $text = $props->{$dLayer->{'fieldText'}} : $text = "";
-										(isset($style->{'fieldTextAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldTextAngle'})}) : $angle = 0;
-									}
-									//(isset($style->{'labelSize'})) ? $labelSize = $style->{'labelSize'} : $labelSize = $this->defaultSize;
-									(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
-									//setto la z se non presente
-									if(count($coords) == 2){
-										array_push($coords, 0);
-									}
-									$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor);
-									//addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign)
-								}
-							break;
-							case "insert":
-								$symbolName = $this->getSymbolName($symbolName);
-								$angle = 0;
-								//$size = $this->defaultSize;
-								if(!empty($props)){
-									(isset($fieldText)) ? $text = $props->{$fieldText} : $text = "";
-									(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
-									if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
-								}
-								//setto la z se non presente
-								if(count($coords) == 2){
-									array_push($coords, 0);
-								}
-								$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color);
-							break;
-							case "polyline":
-							case "linestring":
-							case "multilinestring":
-								//setto l'outline come il colore se non è definito
-								if(is_null($outlineColor)){
-									$outlineColor = $color;
-								}
-								if(is_null($color) && is_null($outlineColor)){
-									//$this->printFeatureLayer("Impossibile definire il colore", $feature, $dLayer);
-									//return;
-								}
-								//$this-log("layer ".$dLayer->{'layerName'});
-								//$this-log("thickness ".$thickness);
-								//$this-log("outlineColor ".$outlineColor);
-								//$this-log("color ".$color);
-								//TODO non aggiungo se il nome contiene una etichetta, andrebbe definita in maniera differente
-								//ma al momento non esistono soluzioni alternative
-								if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
-									if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
-										for($li = 0; $li < count($coords); $li++){
-											$this->addPolyLine($dLayer->{'layerName'}, $coords[$li], $thickness, $linetype, $outlineColor);
-										}
-									}else{
-										$this->addPolyLine($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor);
-									}
-								}
-								if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
-									if(!is_null($fieldText)){
-										//aggiungo una etichetta
-										$text = "TEXT NOT FOUND";
-										$angle = 0;
-										//$labelSize = $this->defaultSize;
-										//calcolo del testo
-										if(!empty($props)){
-											if (!is_null($fieldText)) {
-												$text =  $this->calculateExpression($props, $fieldText);
-											}
-										}
-										if(is_null($labelColor)){
-											if(!is_null($outlineColor)){
-												$labelColor = $outlineColor;
-											}
-										}
-										//calcolo della coordinata per l'etichetta
-										$midCount = intval(count($coords)/2);
-										$midPoint = [$this->midPointX($coords[$midCount-1][0],$coords[$midCount][0]),$this->midPointY($coords[$midCount-1][1],$coords[$midCount][1]), 0];
-										//calcolo l'angolo
-										$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
-										//rettifico l'orientamento
-										$angle = $this->labelAngle($angle);
-										$this->addText($dLayer->{'layerName'}, $midPoint[0], $midPoint[1], $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor);
-									}
-								}
-							break;
-							case "polygon":
-							case "multipolygon":
-								//verifica del multipolygon
-								//print($dLayer->{'layerName'}." out ". $outlineColor. " col ".$color);
-								if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
-									if(is_array($coords[0])){
-										for($i=0; $i< count($coords); $i++){
-											$this->addPolygon($dLayer->{'layerName'}, $coords[$i], $thickness, $linetype, $outlineColor, $color);
-										}
-									}else{
-										$this->addPolygon($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor, $color);
-									}
-								}
-							break;
+						$stylesFeature = $this->getStyles($props, $dLayer->{'styles'});
+						foreach ($stylesFeature as $style){
+							//print($dLayer->{'layerName'}."style<br/>".json_encode($stylesFeature)."<br/>");
+							$this->drawFeature($style, $dLayer, $feature);
 						}
 					}
 				}
@@ -695,18 +499,19 @@ class dxfFactory{
 	}
 	
 	/**
-	* Ricava uno style in base alle proprietà dell'utente
+	* Ricava gli style in base alle proprietà dell'utente
 	*
 	* @param object $props Proprietà della feature
 	* @param object $styles Array degli stili
 	*
 	* @return object Primo stile trovato con le caratteristiche fornite
 	*/
-	public function getStyle($props, $styles){
+	public function getStyles($props, $styles){
 		//var_dump($props);
 		//return $styles[0];
 		//$this->log("feature");
 		$expression = "";
+		$styleResult = [];
 		try {
 			$style = NULL;
 			foreach ($styles as $thisStyle){
@@ -714,7 +519,8 @@ class dxfFactory{
 				$expression = $thisStyle->{'expression'}; 
 				//$this->log($expression);
 				if($expression == NULL){
-					return $thisStyle;
+					array_push($styleResult, $thisStyle);
+					continue;
 				}
 				//ricavo tutti i campi da sostituire
 				preg_match_all("/\[(.*?)\]/", $expression, $fieldList);
@@ -727,31 +533,31 @@ class dxfFactory{
 							//elimino i caratteri non validi
 							$valueProp = str_replace(array("\n","\r","\t"), '', $valueProp);
 						}
-						//TODO rimuovere questo valore e fare un controllo sul tipo di field
 						if($valueProp == ""){
-							$valueProp = "0";
+							//questa verifica controlla se il valore è una stringa in base agli apici
+							//non ho il tipo di campo e i valori nulli non vengono valutati con i numeri
+							if( substr($expression, strrpos($expression, $field) -1, 1) != "'"){
+								$valueProp = "0";
+							}
 						}
 						$expression = str_replace($field, $valueProp, $expression);
 					}
 					//valuto l'espressione
 					$this->log($expression);
 					//print($expression."\n");
-					//$result = 1;
 					$result = $this->parserExpression->evaluateString($expression);
 					//$this->log("result ".$result);
 					//se valida uso lo stile
 					if ($result == 1){
-						$style = $thisStyle;
-						//print_r($style);
-						break;
+						array_push($styleResult, $thisStyle);
 					}
 				}
 			}
 		} catch (Exception $e) {
 			$this->log("Espressione non valida ".$expression); //var_dump($e)
-			return $styles[0];
+			//$styleResult = [$styles[0]];
 		}
-		return $style;
+		return $styleResult;
 	}
 	
 	/**
@@ -804,6 +610,201 @@ class dxfFactory{
 	}
 	//**************************************************************************************************************
 	
+	public function drawFeature($style, $dLayer, $feature){
+		$props = $feature->{'properties'};
+		$coords = $feature->{'geometry'}->{'coordinates'};
+		$this->log("Style: ".json_encode($style));
+		if(is_null($style)){
+			$this->log("Impossibile definire lo stile".$dLayer->{'layerName'}." la feature non sarà visualizzata");
+			return;
+		}
+		//colore
+		$color = NULL;
+		if(isset($style->{'color'})){
+			$color = $style->{'color'};
+		}
+		$outlineColor = NULL;
+		if(isset($style->{'outlineColor'})){
+			$outlineColor = $style->{'outlineColor'};
+		}else{
+			//$outlineColor = $dLayer->{'color'};
+		}
+		$linetype = NULL;
+		if(isset($style->{'lineType'})){
+			$linetype = $this->getLineStyleName($style->{'lineType'});
+		}
+		$fieldText = NULL;
+		if(isset($dLayer->{'fieldText'})){
+			$fieldText = $dLayer->{'fieldText'};
+		}
+		if(isset($style->{'fieldText'})){
+			$fieldText = $style->{'fieldText'};
+		}
+		$labelColor = NULL;
+		if(isset($style->{'labelColor'})){
+			$labelColor = $style->{'labelColor'};
+		}
+		$symbolName = NULL;
+		if(isset($style->{'symbol_name'})){
+			$symbolName = $style->{'symbol_name'};
+		}
+		$thickness = null;
+		if(isset($style->{'thickness'})){
+			$thickness = $style->{'thickness'};
+		}
+		$labelSize = $this->defaultSize;
+		if(isset($style->{'labelSize'})){
+			$labelSize = $this->getLabelSize($style->{'labelSize'});
+		}
+		//fine definizione dei valori di default
+		$this->log("Simbolo ".$feature->{'geometry'}->{'type'});
+		switch (strtolower($feature->{'geometry'}->{'type'})) {
+			case "point":
+				//setto la z se non presente
+				if(count($coords) == 2){
+					array_push($coords, 0);
+				}
+				//verifico l'etichetta
+				if(!is_null($fieldText)){
+					//aggiungo una etichetta
+					$text = "";
+					$angle = 0;
+					
+					if(!empty($props)){
+						if(isset($fieldText)){
+							if(isset($props->{$this->normalizeField($fieldText)})){
+								$text = $props->{$this->normalizeField($fieldText)};
+							}else{
+								$this->log("Campo ".$fieldText." non configurato");
+							}
+						}
+						//setto l'angolo al valore del campo definito
+						if(isset($style->{'fieldTextAngle'})){ 
+							if(isset($props->{$this->normalizeField($style->{'fieldTextAngle'})})){ 
+								$angle = intval($props->{$this->normalizeField($style->{'fieldTextAngle'})});
+							}
+						}
+					}
+					//aggiungo i valori fissi degli angoli
+					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
+					$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor);
+				}
+				//se il nome del simbolo è settato aggiungo un blocco altrimenti un punto
+				$this->log("Simbolo ".$symbolName);
+				if(!is_null($symbolName)){
+					$angle = 0;
+					$symbolName = $this->getSymbolName($symbolName);
+					//print_r($style);
+					(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
+					if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
+					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color);
+				}else{
+					$this->addPoint3D($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], 1, $color);
+				}
+			break;
+			case "text":
+				if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
+					$text = "";
+					$angle = 0;
+					if(!empty($props)){
+						(!is_null($fieldText)) ? $text = $props->{$dLayer->{'fieldText'}} : $text = "";
+						(isset($style->{'fieldTextAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldTextAngle'})}) : $angle = 0;
+					}
+					//(isset($style->{'labelSize'})) ? $labelSize = $style->{'labelSize'} : $labelSize = $this->defaultSize;
+					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
+					//setto la z se non presente
+					if(count($coords) == 2){
+						array_push($coords, 0);
+					}
+					$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor);
+					//addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign)
+				}
+			break;
+			case "insert":
+				$symbolName = $this->getSymbolName($symbolName);
+				$angle = 0;
+				//$size = $this->defaultSize;
+				if(!empty($props)){
+					(isset($fieldText)) ? $text = $props->{$fieldText} : $text = "";
+					(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
+					if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
+				}
+				//setto la z se non presente
+				if(count($coords) == 2){
+					array_push($coords, 0);
+				}
+				$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color);
+			break;
+			case "polyline":
+			case "linestring":
+			case "multilinestring":
+				//setto l'outline come il colore se non è definito
+				if(is_null($outlineColor)){
+					$outlineColor = $color;
+				}
+				if(is_null($color) && is_null($outlineColor)){
+					//$this->printFeatureLayer("Impossibile definire il colore", $feature, $dLayer);
+					//return;
+				}
+				//$this-log("layer ".$dLayer->{'layerName'});
+				//$this-log("thickness ".$thickness);
+				//$this-log("outlineColor ".$outlineColor);
+				//$this-log("color ".$color);
+				//TODO non aggiungo se il nome contiene una etichetta, andrebbe definita in maniera differente
+				//ma al momento non esistono soluzioni alternative
+				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+					if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
+						for($li = 0; $li < count($coords); $li++){
+							$this->addPolyLine($dLayer->{'layerName'}, $coords[$li], $thickness, $linetype, $outlineColor);
+						}
+					}else{
+						$this->addPolyLine($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor);
+					}
+				}
+				if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
+					if(!is_null($fieldText)){
+						//aggiungo una etichetta
+						$text = "TEXT NOT FOUND";
+						$angle = 0;
+						//$labelSize = $this->defaultSize;
+						//calcolo del testo
+						if(!empty($props)){
+							if (!is_null($fieldText)) {
+								$text =  $this->calculateExpression($props, $fieldText);
+							}
+						}
+						if(is_null($labelColor)){
+							if(!is_null($outlineColor)){
+								$labelColor = $outlineColor;
+							}
+						}
+						//calcolo della coordinata per l'etichetta
+						$midCount = intval(count($coords)/2);
+						$midPoint = [$this->midPointX($coords[$midCount-1][0],$coords[$midCount][0]),$this->midPointY($coords[$midCount-1][1],$coords[$midCount][1]), 0];
+						//calcolo l'angolo
+						$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
+						//rettifico l'orientamento
+						$angle = $this->labelAngle($angle);
+						$this->addText($dLayer->{'layerName'}, $midPoint[0], $midPoint[1], $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor);
+					}
+				}
+			break;
+			case "polygon":
+			case "multipolygon":
+				//verifica del multipolygon
+				//print($dLayer->{'layerName'}." out ". $outlineColor. " col ".$color);
+				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+					if(is_array($coords[0])){
+						for($i=0; $i< count($coords); $i++){
+							$this->addPolygon($dLayer->{'layerName'}, $coords[$i], $thickness, $linetype, $outlineColor, $color);
+						}
+					}else{
+						$this->addPolygon($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor, $color);
+					}
+				}
+			break;
+		}
+	}
 	
 	/**
 	* Aggiunge un layer 
