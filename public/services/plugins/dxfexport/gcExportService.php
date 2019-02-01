@@ -25,6 +25,10 @@
 *
 ******************************************************************************/
 
+//error_reporting( E_ALL );
+//ini_set('display_errors', 1);
+
+
 //variabili
 require_once '../../../../config/config.php';
 require_once ADMIN_PATH."lib/functions.php";
@@ -62,6 +66,7 @@ $gcService->startSession();
 //$objMapset = new gcMap($mapSet, false, NULL, false);
 $dxfFeatureExport = new dxfFeatureExport($dxfLogPath);
 $dxfFeatureExport->debug = $dxfDebug;
+$dxfFeatureExport->dxfSplitLayers = $dxfSplitLayers;
 
 //eseguo la conversione di un mapset in un file di configurazione
 $configFile = new stdClass();
@@ -89,6 +94,7 @@ $dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
+$dxfFact->drawHatches = $dxfDrawHatches;
 
 //imposto la blacklist di layer da eliminare
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;

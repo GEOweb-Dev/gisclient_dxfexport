@@ -68,6 +68,7 @@ class dxfFactory{
 	
 	public $debug = False; //abilita le informazioni di debug
 	public $dummy = NULL; //abilita le geometrie dummy
+	public $drawHatches = True; //abilita disegno dei riempimenti
 	
 	public $configExtraction = NULL;
 	public $configExtractionStr = NULL;
@@ -570,10 +571,18 @@ class dxfFactory{
 	*/
 	public function calculateExpression($props, $expression){
 		//var_dump($props);
+		//$this->log($expression);
 		try {
 			//valutazione dell'espressione
 			if($expression == NULL){
 				return "";
+			}
+			//Valuto se l'espressione è una sola parola
+			if(strpos($expression, ' ') === false){
+				if(isset($props->{$this->normalizeField($expression)})){
+					$result =  utf8_decode($props->{$this->normalizeField($expression)});
+				}
+				return $result;
 			}
 			//ricavo tutti i campi da sostituire
 			preg_match_all("/\[(.*?)\]/", $expression, $fieldList);
@@ -587,7 +596,7 @@ class dxfFactory{
 					}
 				}
 				//valuto l'espressione
-				//$this->log($expression);
+				$this->log($expression);
 				$result = $this->parserExpression->calculateString($expression);
 				$this->log("result ".$result);
 				return utf8_decode($result);
@@ -761,6 +770,7 @@ class dxfFactory{
 						$this->addPolyLine($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor);
 					}
 				}
+				//sezione etichette alle linee
 				if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
 					if(!is_null($fieldText)){
 						//aggiungo una etichetta
@@ -786,6 +796,15 @@ class dxfFactory{
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
 						$this->addText($dLayer->{'layerName'}, $midPoint[0], $midPoint[1], $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor);
+					}
+				}
+				//sezione simboli associati alle linee
+				if(!is_null($symbolName)){
+					//$symbolName = "FGN_DIREZIONE_1";
+					$symbolCoords = $this->getPointCoordsDistance($coords, 10);
+					//aggiungo un insert
+					foreach($symbolCoords as $symbolCoord){
+						$this->addInsert($dLayer->{'layerName'}, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color);
 					}
 				}
 			break;
@@ -869,6 +888,10 @@ class dxfFactory{
 	* @return array
 	*/
     public function addPoint3D($layerName, $x, $y, $z, $thickness, $color){
+		//se il colore è nullo non disegno
+		if (is_null($color)){
+			return;
+		}
 		//if (is_null($color))
 		//{
 		//	$color = $this->defaultColor;
@@ -930,6 +953,10 @@ class dxfFactory{
 	* @return array
 	*/
 	public function addPolyLine3d($layerName, $coords, $thickness, $lineType, $color){
+		//se il colore è nullo non disegno
+		if (is_null($color)){
+			return;
+		}
 		$strGeom = array();
 		$this->log("".$lineType);
 		if (is_null($lineType))
@@ -1055,6 +1082,10 @@ class dxfFactory{
 	* @return array
 	*/
 	public function addPolyLine($layerName, $coords, $thickness, $lineType, $color){
+		//se il colore è nullo non disegno
+		if (is_null($color)){
+			return;
+		}
 		$strGeom = array();
 		$this->handle++;
 		$tmpHandle = $this->handle + $this->handleLines;
@@ -1144,24 +1175,25 @@ class dxfFactory{
 	* @return array
 	*/
 	public function addPolygon($layerName, $coords, $thickness, $lineType, $outlineColor, $color){
-		$this->handle++;
-		$tmpHandle = $this->handle + $this->handleHatches;
-		$strGeom = array();
-		if (is_null($lineType))
+		//disegno solo se ho un colore
+		if (count($coords) > 0 && !is_null($outlineColor))
 		{
-			$lineType = "Continuous";
-		}
-		//if (is_null($outlineColor))
-		//{
-		//	$outlineColor = $this->defaultColor;
-		//}
-		if ($outlineColor == 0)
-		{
-			$outlineColor = null;
-			//$outlineColor = $this->defaultColor;
-		}
-		if (count($coords) > 0)
-		{
+			$this->handle++;
+			$tmpHandle = $this->handle + $this->handleHatches;
+			$strGeom = array();
+			if (is_null($lineType))
+			{
+				$lineType = "Continuous";
+			}
+			//if (is_null($outlineColor))
+			//{
+			//	$outlineColor = $this->defaultColor;
+			//}
+			if ($outlineColor == 0)
+			{
+				$outlineColor = null;
+				//$outlineColor = $this->defaultColor;
+			}
 		//inizio
 			array_push($strGeom, "  0");
 			array_push($strGeom, "LWPOLYLINE");
@@ -1195,7 +1227,6 @@ class dxfFactory{
 				//print("thickness ".$thickness."\n");
 				array_push($strGeom, " 43");
 				array_push($strGeom, $this->getThickness($thickness));
-				
 			}
 
 			for($i = 0; $i < count($coords); $i++){
@@ -1205,19 +1236,20 @@ class dxfFactory{
 				array_push($strGeom, "  20");
 				array_push($strGeom, $coord[1]."");
 			}
-		}
-		if(isset($this->outputFile)){
-			file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
-		}else{
-			//$this->entLines = array_merge($this->entLines, $strGeom);
-			foreach ($strGeom as $fline){
-				array_push($this->entLines, $fline);
+		
+			if(isset($this->outputFile)){
+				file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
+				file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
+			}else{
+				//$this->entLines = array_merge($this->entLines, $strGeom);
+				foreach ($strGeom as $fline){
+					array_push($this->entLines, $fline);
+				}
 			}
 		}
 		//print($layerName." ".empty($color)." ".$color."\n");
 		
-		if(!empty($color)){
+		if(!empty($color) && $drawHatches){
 			$this->addHatch($layerName, $coords, $color, NULL, $tmpHandle);
 		}
 		$this->log("POLYGON added ".$tmpHandle);
@@ -1236,6 +1268,10 @@ class dxfFactory{
 	* @return array
 	*/
 	public function addHatch($layerName, $coords, $color, $pattern, $parentHandle){
+		//se il colore è nullo non disegno
+		if (is_null($color)){
+			return;
+		}
 		$this->handle++;
 		$tmpHandle = $this->handle + $this->handleHatches;
 		$strGeom = array();
@@ -1376,6 +1412,10 @@ class dxfFactory{
 	* @return array
 	*/
 	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color){
+		//se il colore è nullo non disegno
+		if (is_null($color)){
+			return;
+		}
 		//$text = str_replace($text, "O", "");
 		//$text = str_replace($text, " ", "");
 		//rimuovo gli a capo
@@ -1468,6 +1508,10 @@ class dxfFactory{
 	* @return array
 	*/
 	public function addInsert($layerName, $x, $y, $z, $blockName, $angle, $color){
+		//se il colore è nullo non disegno
+		if (is_null($color)){
+			return;
+		}
 		//if ($color == NULL || $color == "")
 		//{
 		//	$color = $this->defaultColor;
@@ -1638,6 +1682,44 @@ class dxfFactory{
 		$distance = 0.0;
 		$distance = sqrt(($x2 -$x1) * ($x2 - $x1)  + ($y2 - $y1) * ($y2 - $y1)); 
 		return $distance;
+	}
+	
+	public function getPointCoordsDistance($coords, $metersPerLabel){
+		$arrResult = array();
+		$totalLenght = 0.0; //lunghezza totale del segmento
+		$segmentLength = 0.0; //lunghezza parziale del segmento
+		//calcolo la lunghezza totale
+		for ($f=1; $f < count($coords); $f++){
+			$totalLenght += $this->calcDistance($coords[$f-1][0], $coords[$f][0], $coords[$f-1][1], $coords[$f][1]);
+		}
+		//verifico che l'offset non sia troppo vicino al limite
+		if ($totalLenght < $metersPerLabel) {
+			return $arrResult; 
+		}
+		//ciclo i segmenti in modo da assegnare un oggetto per ogni multiplo di metersPerLabel
+		for ($f=1; $f < count($coords); $f++){
+			$segmentLength = $this->calcDistance($coords[$f-1][0], $coords[$f][0], $coords[$f-1][1], $coords[$f][1]);
+			$segmentAngle = $this->calcAngle($coords[$f-1][0],$coords[$f][0],$coords[$f-1][1],$coords[$f][1]);
+			if($segmentLength < $metersPerLabel){
+				//restituisco il punto medio
+				$point_x = ($coords[$f-1][0] + $coords[$f][0]) / 2;
+				$point_y = ($coords[$f-1][1] + $coords[$f][1]) / 2;
+				//array_push($arrResult, [$point_x, $point_y, $segmentAngle]);
+			}else{
+				$numPoints = floor($segmentLength/$metersPerLabel);
+				//calcolo le coordinate del punto distante tot metri dalla x
+				for ($k=1; $k <= $numPoints; $k++){				
+					//inserisco l'etichetta
+					//angolo tra i punti
+					$tempAngSin = $segmentAngle * M_PI / 180;
+					$point_x = $coords[$f-1][0] + ($k * $metersPerLabel)  * cos($tempAngSin);
+					$point_y = $coords[$f-1][1] + ($k * $metersPerLabel) * sin($tempAngSin);
+					$actualDistance += $metersPerLabel;
+					array_push($arrResult, [$point_x, $point_y, $segmentAngle]);
+				}
+			}			
+		}
+		return $arrResult;
 	}
 	
 	public function getThickness($thickness){
