@@ -96,7 +96,8 @@ print("<tr><td><strong>Progetto</strong></td><td><strong>Tema</strong></td><td><
 	print("<td><span>".$thisRow["project_name"]."</span></td>"."<td><span>".$thisRow["theme_name"]."</span></td>");
 	print("<td><span>".$thisRow["symbol_name"]."</span></td>\n");
 	for($i = 0; $i < count($blocks); $i++){
-		if(strpos($blocks[$i], $symbol) !== false){
+		//if(strpos($blocks[$i], $symbol) !== false){
+		if($blocks[$i] == $symbol){
 			$found = true;
 			break;
 		}

@@ -39,6 +39,7 @@ require_once ROOT_PATH . 'lib/gcuser.class.php';
 class dxfFeatureExport {
 	
 	public $debug = False;
+	public $dxfSplitLayers = [];
 	public $logTxt = "";
 	public $logPath = "";
 	
@@ -79,8 +80,7 @@ class dxfFeatureExport {
                 $sep = '?';
             }
         }       
-		
-		
+
 		//non considero mai l'utente amministratore per l'estrazione DXF
 		$isAdmin = false;
 		//leggo i permessi
@@ -131,7 +131,6 @@ class dxfFeatureExport {
 		//die($sql);
 		$stmt = $db->prepare($sql);
 		$stmt->execute($sqlValues);
-		
 		
 		//eseguo il loop sui layer per la generazione dei layer DXF
 		while($thisLayer = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -198,10 +197,10 @@ class dxfFeatureExport {
 						}
 					}
 					
-					$style = new stdClass();
-					
+					$style = new stdClass(); //classe generica
 					
 					$style->{"expression"} = $thisStyle["expression"];
+					$style->{"className"} = $thisStyle["class_name"];
 					//print $thisStyle["expression"]."\n";
 					//verifica del campo classitem da unire con l'espressione
 					if($thisLayer["classitem"] != NULL){
@@ -211,18 +210,15 @@ class dxfFeatureExport {
 					if($thisStyle["class_text"] != NULL){
 						$style->{"fieldText"} = $thisStyle["class_text"];
 					}
-					
 					//verifica del nome del simbolo
 					if($thisStyle["symbol_name"] != NULL){
 						$style->{"symbol_name"} = $thisStyle["symbol_name"];
 					}
-					
 					//verifica outline
 					if($thisStyle["outlinecolor"] != NULL){
 						$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
 						$style->{"outlineColor"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
 					}
-					
 					if($thisStyle["color"] != NULL){
 						//poi al colore normale
 						$thisColor = explode(" ", $thisStyle["color"]);;
@@ -275,7 +271,6 @@ class dxfFeatureExport {
 							$label_size = floatval($thisStyle["label_size"]); 
 						}
 					}
-					
 					if($label_minsize>0){
 						$style->{"labelSize"} = $label_minsize;
 					} elseif($label_maxsize>0){
@@ -283,12 +278,24 @@ class dxfFeatureExport {
 					} elseif($label_size>0){
 						$style->{"labelSize"} = $label_size;
 					}
-					
 					$i++;/**/
 					array_push($styles, $style);
 				}
-				$layer->{"styles"} = $styles;
-				array_push($layers, $layer);
+				//controllo se il layer deve essere splittato per i propri stili
+				if(in_array($thisLayer["layer_name"], $this->dxfSplitLayers)){
+					//eseguo lo split dei layer
+					foreach($styles as $style){
+						$clonedLayer = unserialize(serialize($layer));
+						$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"}."_".$style->{"className"};
+						//var_dump($style);
+						$clonedLayer->{"styles"} = [$style];
+						array_push($layers, $clonedLayer);
+					}
+				}else{
+					//inserisco il layer singolo
+					$layer->{"styles"} = $styles;
+					array_push($layers, $layer);
+				}
 				
 			}
 		}

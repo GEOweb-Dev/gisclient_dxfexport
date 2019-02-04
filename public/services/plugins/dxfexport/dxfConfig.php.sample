@@ -32,6 +32,8 @@ $dxfTempPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/";
 $dxfSaveToDir = 1;
 //File di log
 $dxfLogPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/log.txt";
+//abilita l'inserimento dei riempimenti True attivi False non attivi
+$dxfDrawHatches = False;
 //layer geometrici da escludere di default
 $dxfExcludeGeometryLayers = array(
 		'etichette',
@@ -65,5 +67,9 @@ $dxfExcludeGeometryLayers = array(
 //layer testuali da escludere di default
 $dxfExcludeTextLayers = array(
 		
+	);
+//split dei layer in base alle classi	
+$dxfSplitLayers = array(
+	
 	);
 ?>
