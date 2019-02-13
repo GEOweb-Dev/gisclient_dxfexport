@@ -143,7 +143,7 @@ class dxfFeatureExport {
 				//definizione del layer
 				$layer = new stdClass();
 				$styles = array(); //elenco degli stili restituire
-				$layer->{"layerName"} = $thisLayer["layer_name"];
+				$layer->{"layerName"} = $thisLayer["theme_name"]."_".$thisLayer["layer_name"];
 				//campo label
 				if($thisLayer["labelitem"] != NULL){
 					$layer->{"fieldText"} = $thisLayer["labelitem"];
