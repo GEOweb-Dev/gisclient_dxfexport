@@ -72,4 +72,8 @@ $dxfExcludeTextLayers = array(
 $dxfSplitLayers = array(
 	
 	);
+//parametro di ridimensionamento dei testi
+$dxfTextScaleMultiplier = 7;
+//parametro di ridimensionamento dei simboli
+$dxfInsertScaleMultiplier = 1;
 ?>

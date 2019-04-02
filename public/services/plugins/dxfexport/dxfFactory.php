@@ -77,16 +77,17 @@ class dxfFactory{
 	public $defaultColor = (256 * 256) * 255 + (256 * 255) + 255;
 	
 	//eliminazione delle geometrie doppie o indesiderate
-	//TODO Mettere nel file di configurazione globale
 	public $excludeGeometryLayers = array(
 		
 	);
 	
 	//eliminazione dei testi doppi indesiderati
-	//TODO Mettere nel file di configurazione globale
 	public $excludeTextLayers = array(
 		
 	);
+	
+	public $dxfTextScaleMultiplier = 1;
+	public $dxfInsertScaleMultiplier = 1;
 	
 	public $parserExpression;
 	
@@ -518,7 +519,7 @@ class dxfFactory{
 			foreach ($styles as $thisStyle){
 				//valutazione dell'espressione
 				$expression = $thisStyle->{'expression'}; 
-				//$this->log($expression);
+				$this->log($expression);
 				if($expression == NULL){
 					array_push($styleResult, $thisStyle);
 					continue;
@@ -547,7 +548,7 @@ class dxfFactory{
 					$this->log($expression);
 					//print($expression."\n");
 					$result = $this->parserExpression->evaluateString($expression);
-					//$this->log("result ".$result);
+					$this->log("result ".$result);
 					//se valida uso lo stile
 					if ($result == 1){
 						array_push($styleResult, $thisStyle);
@@ -706,7 +707,7 @@ class dxfFactory{
 					//print_r($style);
 					(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
 					if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
-					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color);
+					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
 				}else{
 					$this->addPoint3D($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], 1, $color);
 				}
@@ -742,7 +743,7 @@ class dxfFactory{
 				if(count($coords) == 2){
 					array_push($coords, 0);
 				}
-				$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color);
+				$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, dxfInsertScaleMultiplier);
 			break;
 			case "polyline":
 			case "linestring":
@@ -795,7 +796,7 @@ class dxfFactory{
 						$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->addText($dLayer->{'layerName'}, $midPoint[0], $midPoint[1], $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor);
+						$this->addText($dLayer->{'layerName'}, $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -804,7 +805,7 @@ class dxfFactory{
 					$symbolCoords = $this->getPointCoordsDistance($coords, 10);
 					//aggiungo un insert
 					foreach($symbolCoords as $symbolCoord){
-						$this->addInsert($dLayer->{'layerName'}, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color);
+						$this->addInsert($dLayer->{'layerName'}, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
 					}
 				}
 			break;
@@ -1437,6 +1438,7 @@ class dxfFactory{
 		$strGeom = array();
         $this->handle++;
 		$tmpHandle = $this->handle + $this->handlePoints;
+		$labelSize = 0.35 * floatval($this->dxfTextScaleMultiplier);
 		array_push($strGeom, "  0");
 		array_push($strGeom, "TEXT");
 		array_push($strGeom, "  5");
@@ -1464,7 +1466,7 @@ class dxfFactory{
 		array_push($strGeom, "  30");
 		array_push($strGeom, $z."");
 		array_push($strGeom, " 40");
-		array_push($strGeom, $labelSize."");
+		array_push($strGeom, number_format((float)$labelSize, 2, '.', '')."");
 		array_push($strGeom, "  1");
 		array_push($strGeom, $text);
 		array_push($strGeom, " 50");
@@ -1507,7 +1509,7 @@ class dxfFactory{
 	*
 	* @return array
 	*/
-	public function addInsert($layerName, $x, $y, $z, $blockName, $angle, $color){
+	public function addInsert($layerName, $x, $y, $z, $blockName, $angle, $color, $scaleInsert){
 		//se il colore è nullo non disegno
 		if (is_null($color)){
 			return;
@@ -1554,6 +1556,12 @@ class dxfFactory{
 		array_push($strGeom, $z."");
 		array_push($strGeom, " 50");
 		array_push($strGeom, $angle."");
+		
+		array_push($strGeom, "  41");
+		array_push($strGeom, number_format((int)$scaleInsert, 0, '.', '')."");
+		array_push($strGeom, "  42");
+		array_push($strGeom, number_format((int)$scaleInsert, 0, '.', '')."");
+		
 		if(isset($this->outputFile)){
 			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
 			file_put_contents($this->outputFilePoints, PHP_EOL, FILE_APPEND);
@@ -1799,6 +1807,25 @@ class dxfFactory{
 			$this->log($dLayer);
 		}*/
 	}
+	
+	public function getOffsetX($angle){
+		while($angle > 360){
+			$angle = $angle - 360;
+		}
+		if($angle > 0 && $angle <= 90){
+			return -0.2;
+		}
+		return 0.2;
+	}
+	
+	public function getOffsetY($angle){
+		//if(($angle >= 0 && $angle <= 180)){
+		//		return 1;
+		//}
+		//return -1;
+		return 0.2;
+	}
+	
 	
 	/**
 	* Ricava il GeoJson da una chiamata WFS su MapServer
