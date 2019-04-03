@@ -100,6 +100,10 @@ $dxfFact->drawHatches = $dxfDrawHatches;
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
+//imposto il rescale di simboli e testi
+$dxfFact->dxfTextScaleMultiplier = $dxfTextScaleMultiplier;
+$dxfFact->dxfInsertScaleMultiplier = $dxfInsertScaleMultiplier;
+
 /**/
 $fileName = uniqid('dxf_', true).".dxf";
 if($dxfSaveToDir == 1){

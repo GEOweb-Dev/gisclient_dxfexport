@@ -208,46 +208,46 @@ class Parser{
 							$result = ($tokens[$i-1]['token'] == $tokens[$i+1]['token']) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case "!=":
 						case "<>":
 							$result = ($tokens[$i-1]['token'] != $tokens[$i+1]['token']) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case ">":
 							$result = ($tokens[$i-1]['token'] > $tokens[$i+1]['token']) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case ">=":
 							$result = ($tokens[$i-1]['token'] >= $tokens[$i+1]['token']) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case "<":
 							$result = ($tokens[$i-1]['token'] < $tokens[$i+1]['token']) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case "<=":
 							$result = ($tokens[$i-1]['token'] <= $tokens[$i+1]['token']) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case "IN":
 						case "in":
 							$result = (in_array(trim($tokens[$i-1]['token'], "'"), explode(",", trim($tokens[$i+1]['token'], "'")))) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						case "~":
 						case "LIKE":
 						case "like":
 							$result = (strpos($tokens[$i-1]['token'], $tokens[$i+1]['token'])) ? 1 : 0;
 							$found = True;
 							$index = $i;
-						break;
+							break 2;
 						default:
 								break;
 					}
@@ -276,7 +276,7 @@ class Parser{
 							//dimensione di replace
 							$lenReplace = 3;
 							$index = $i - 1;
-							break;
+							break 2;
 						case "OR":
 						case "or":
 							if(boolval($tokens[$i-1]['token']) || boolval($tokens[$i+1]['token'])){
@@ -286,7 +286,7 @@ class Parser{
 							//dimensione di replace
 							$lenReplace = 3;
 							$index = $i - 1;
-							break;
+							break 2;
 						case "NOT":
 						case "not":
 							if(!boolval($tokens[$i+1]['token'])){
@@ -296,7 +296,7 @@ class Parser{
 							//dimensione di replace
 							$lenReplace = 2;
 							$index = $i;
-							break;
+							break 2;
 						 default:
 							break;
 					}
