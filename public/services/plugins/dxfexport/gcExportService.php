@@ -102,6 +102,7 @@ $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
 //imposto il rescale di simboli e testi
 $dxfFact->dxfTextScaleMultiplier = $dxfTextScaleMultiplier;
+$dxfFact->dxfLabelScaleMultiplier = $dxfLabelScaleMultiplier;
 $dxfFact->dxfInsertScaleMultiplier = $dxfInsertScaleMultiplier;
 
 /**/

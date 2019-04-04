@@ -87,6 +87,7 @@ class dxfFactory{
 	);
 	
 	public $dxfTextScaleMultiplier = 1;
+	public $dxfLabelScaleMultiplier = 1;
 	public $dxfInsertScaleMultiplier = 1;
 	
 	public $parserExpression;
@@ -697,19 +698,23 @@ class dxfFactory{
 					}
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
-					$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor);
+					if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
+						$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfTextScaleMultiplier);
+					}
 				}
 				//se il nome del simbolo è settato aggiungo un blocco altrimenti un punto
-				$this->log("Simbolo ".$symbolName);
-				if(!is_null($symbolName)){
-					$angle = 0;
-					$symbolName = $this->getSymbolName($symbolName);
-					//print_r($style);
-					(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
-					if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
-					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
-				}else{
-					$this->addPoint3D($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], 1, $color);
+				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+					$this->log("Simbolo ".$symbolName);
+					if(!is_null($symbolName)){
+						$angle = 0;
+						$symbolName = $this->getSymbolName($symbolName);
+						//print_r($style);
+						(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
+						if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
+						$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
+					}else{
+						$this->addPoint3D($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], 1, $color);
+					}
 				}
 			break;
 			case "text":
@@ -726,24 +731,26 @@ class dxfFactory{
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}
-					$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor);
+					$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfTextScaleMultiplier);
 					//addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign)
 				}
 			break;
 			case "insert":
-				$symbolName = $this->getSymbolName($symbolName);
-				$angle = 0;
-				//$size = $this->defaultSize;
-				if(!empty($props)){
-					(isset($fieldText)) ? $text = $props->{$fieldText} : $text = "";
-					(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
-					if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
+				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+					$symbolName = $this->getSymbolName($symbolName);
+					$angle = 0;
+					//$size = $this->defaultSize;
+					if(!empty($props)){
+						(isset($fieldText)) ? $text = $props->{$fieldText} : $text = "";
+						(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
+						if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
+					}
+					//setto la z se non presente
+					if(count($coords) == 2){
+						array_push($coords, 0);
+					}				
+					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, dxfInsertScaleMultiplier);
 				}
-				//setto la z se non presente
-				if(count($coords) == 2){
-					array_push($coords, 0);
-				}
-				$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, dxfInsertScaleMultiplier);
 			break;
 			case "polyline":
 			case "linestring":
@@ -756,10 +763,6 @@ class dxfFactory{
 					//$this->printFeatureLayer("Impossibile definire il colore", $feature, $dLayer);
 					//return;
 				}
-				//$this-log("layer ".$dLayer->{'layerName'});
-				//$this-log("thickness ".$thickness);
-				//$this-log("outlineColor ".$outlineColor);
-				//$this-log("color ".$color);
 				//TODO non aggiungo se il nome contiene una etichetta, andrebbe definita in maniera differente
 				//ma al momento non esistono soluzioni alternative
 				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
@@ -796,7 +799,7 @@ class dxfFactory{
 						$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->addText($dLayer->{'layerName'}, $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor);
+						$this->addText($dLayer->{'layerName'}, $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfLabelScaleMultiplier);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -1412,7 +1415,7 @@ class dxfFactory{
 	*
 	* @return array
 	*/
-	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color){
+	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color, $scaleMultiplier){
 		//se il colore è nullo non disegno
 		if (is_null($color)){
 			return;
@@ -1438,7 +1441,7 @@ class dxfFactory{
 		$strGeom = array();
         $this->handle++;
 		$tmpHandle = $this->handle + $this->handlePoints;
-		$labelSize = 0.35 * floatval($this->dxfTextScaleMultiplier);
+		$labelSize = floatval($labelSize) * floatval($scaleMultiplier);
 		array_push($strGeom, "  0");
 		array_push($strGeom, "TEXT");
 		array_push($strGeom, "  5");
@@ -1859,7 +1862,7 @@ class dxfFactory{
 		$this->entities = array_merge($this->entities, $this->addPoint3D("0", 10, 10, 0, 1));
 		$coords = array(array(11, 11, 11), array(22, 22, 22));
 		$this->entities = array_merge($this->entities, $this->addPolyLine3d("0", $coords, 1, NULL));
-		$this->entities = array_merge($this->entities, $this->addText("0", 20, 20, 0, "GEOIREN", 22, 90, ""));
+		$this->entities = array_merge($this->entities, $this->addText("0", 20, 20, 0, "GEOIREN", 22, 90, ""), 1);
 		$coords = array(array(33, 33), array(44, 44));
 		$this->entities = array_merge($this->entities, $this->addPolyLine("0", $coords, 1, NULL));
 		$this->entities = array_merge($this->entities, $this->addInsert("0", 50, 50, 0, "ENEL", 0));

@@ -62,7 +62,10 @@ $dxfExcludeGeometryLayers = array(
 		'quote_testi',
 		'particolari_l',
 		'particolari_a',
-		'particolari_p'
+		'particolari_p',
+		'base_dbt_dbt_accesso_civici',
+		'base_dbt_dbt_reticolo_stradale',
+		'base_dbt_dbt_aree_verdi_coltura_agricola'
 	);
 //layer testuali da escludere di default
 $dxfExcludeTextLayers = array(
@@ -73,7 +76,9 @@ $dxfSplitLayers = array(
 	
 	);
 //parametro di ridimensionamento dei testi
-$dxfTextScaleMultiplier = 7;
+$dxfTextScaleMultiplier = 2;
+//parametro di ridimensionamento dele label
+$dxfLabelScaleMultiplier = 5;
 //parametro di ridimensionamento dei simboli
-$dxfInsertScaleMultiplier = 1;
+$dxfInsertScaleMultiplier = 3;
 ?>
