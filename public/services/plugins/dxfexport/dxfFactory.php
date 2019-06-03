@@ -86,6 +86,11 @@ class dxfFactory{
 		
 	);
 	
+	public $enableLineThickness = True;
+	public $enableColors = True;
+	public $enableSingleLayerBlock = True;
+	public $singleLayerBlockName = "blocchi";
+	
 	public $dxfTextScaleMultiplier = 1;
 	public $dxfLabelScaleMultiplier = 1;
 	public $dxfInsertScaleMultiplier = 1;
@@ -403,15 +408,12 @@ class dxfFactory{
 		
 		//aggiungo il layer con l'extent
 		$this->layers = array_merge($this->layers, $this->addLayer("boundingbox", 2, NULL));
-		//aggiungo il rettangolo di estrazione
-		//$coords = [
-		//	[$this->configExtraction->{'minX'}, $this->configExtraction->{'minY'}, 0],
-		//	[$this->configExtraction->{'minX'}, $this->configExtraction->{'maxY'}, 0],
-		//	[$this->configExtraction->{'maxX'}, $this->configExtraction->{'maxY'}, 0],
-		//	[$this->configExtraction->{'maxX'}, $this->configExtraction->{'minY'}, 0],
-		//	[$this->configExtraction->{'minX'}, $this->configExtraction->{'minY'}, 0],
-		//];
-		//$this->addPolygon("boundingbox", $coords, 1, NULL, 2, NULL);
+		
+		//aggiungo il layer unico per i blocchi
+		if($this->enableSingleLayerBlock){
+			$this->layers = array_merge($this->layers, $this->addLayer($this->singleLayerBlockName, 7, NULL));
+		}
+		
 		
 		//Ciclo sui layer
 		foreach ($this->configExtraction->{'layers'} as $dLayer){
@@ -919,8 +921,8 @@ class dxfFactory{
 		array_push($strGeom, "100");
 		array_push($strGeom, "AcDbPoint");
 		array_push($strGeom, " 62");
-		array_push($strGeom,  "7");
-		if (!is_null($color)){
+		array_push($strGeom, ($this->enableColors) ? "7" : "256");
+		if ($this->enableColors && !is_null($color)){
 			array_push($strGeom, " 420");
 			array_push($strGeom,  $color."");
 		}
@@ -930,8 +932,10 @@ class dxfFactory{
         array_push($strGeom, $y."");
 		array_push($strGeom, "  30");
         array_push($strGeom, $z."");
-        array_push($strGeom, "  39");
-        array_push($strGeom, $thickness."");
+		if($this->enableLineThickness){
+			array_push($strGeom, "  39");
+			array_push($strGeom, $thickness."");
+		}
 		//valuto se scrivere su disco o utilizzare array in memoria
 		if(isset($this->outputFile)){
 			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
@@ -967,14 +971,9 @@ class dxfFactory{
 		{
 			$lineType = "Continuous";
 		}
-		//if (is_null($color))
-		//{
-		//	$color = $this->defaultColor;
-		//}
 		if ($color == 0)
 		{
 			$color = null;
-			//$color = $this->defaultColor;
 		}
 		$this->handle++;
 		$tmpHandle = $this->handle + $this->handleLines;
@@ -997,10 +996,14 @@ class dxfFactory{
 			array_push($strGeom, " 48");
 			array_push($strGeom, " 0.1");
 			array_push($strGeom, " 62");
-			array_push($strGeom,  "7");
-			if (!is_null($color)){
+			array_push($strGeom, ($this->enableColors) ? "7" : "256");
+			if ($this->enableColors && !is_null($color)){
 				array_push($strGeom, " 420");
 				array_push($strGeom,  $color."");
+			}
+			if($this->enableLineThickness){
+				array_push($strGeom, "  39");
+				array_push($strGeom, $thickness."");
 			}
 			array_push($strGeom, "  100");
 			array_push($strGeom, "AcDb3dPolyline");
@@ -1032,9 +1035,11 @@ class dxfFactory{
 				array_push($strGeom, " 48");
 				array_push($strGeom, " 0.1");
 				array_push($strGeom, " 62");
-				array_push($strGeom,  "7");
-				array_push($strGeom, " 420");
-				array_push($strGeom,  $color."");
+				array_push($strGeom, ($this->enableColors) ? "7" : "256");
+				if ($this->enableColors && !is_null($color)){
+					array_push($strGeom, " 420");
+					array_push($strGeom,  $color."");
+				}
 				array_push($strGeom, "  100");
 				array_push($strGeom, "AcDbVertex");
 				array_push($strGeom, "  100");
@@ -1097,14 +1102,9 @@ class dxfFactory{
 		{
 			$lineType = "Continuous";
 		}
-		//if (is_null($color))
-		//{
-		//	$color = $this->defaultColor;
-		//}
 		if ($color == 0)
 		{
 			$color = null;
-			//$color = $this->defaultColor;
 		}
 		if (count($coords) > 0)
 		{
@@ -1124,8 +1124,8 @@ class dxfFactory{
 			array_push($strGeom, " 48");
 			array_push($strGeom, " 0.1");
 			array_push($strGeom, " 62");
-			array_push($strGeom,  "1");
-			if (!is_null($color)){
+			array_push($strGeom, ($this->enableColors) ? "7" : "256");
+			if ($this->enableColors && !is_null($color)){
 				array_push($strGeom, " 420");
 				array_push($strGeom,  $color."");
 			}
@@ -1137,12 +1137,10 @@ class dxfFactory{
 			array_push($strGeom, "0");
 			//array_push($strGeom, "  43");
 			//array_push($strGeom, "0.0");
-			if(!is_null($thickness)){
+			if($this->enableLineThickness && !is_null($thickness)){
 				array_push($strGeom, " 43");
 				array_push($strGeom, $this->getThickness($thickness));
-				
 			}
-			
 			$this->handle++;
 			$tmpHandle = $this->handle + $this->handleLines;
 			for($i = 0; $i < count($coords); $i++){
@@ -1216,8 +1214,8 @@ class dxfFactory{
 			array_push($strGeom, " 48");
 			array_push($strGeom, " 0.1");
 			array_push($strGeom, " 62");
-			array_push($strGeom,  "1");
-			if (!is_null($outlineColor)){
+			array_push($strGeom, ($this->enableColors) ? "7" : "256");
+			if ($this->enableColors && !is_null($outlineColor)){
 				array_push($strGeom, " 420");
 				array_push($strGeom,  $outlineColor."");
 			}
@@ -1227,12 +1225,10 @@ class dxfFactory{
 			array_push($strGeom, count($coords)."");
 			array_push($strGeom, "  70");
 			array_push($strGeom, "0");
-			if(!is_null($thickness)){
-				//print("thickness ".$thickness."\n");
+			if($this->enableLineThickness && !is_null($thickness)){
 				array_push($strGeom, " 43");
 				array_push($strGeom, $this->getThickness($thickness));
 			}
-
 			for($i = 0; $i < count($coords); $i++){
 				$coord = $coords[$i];
 				array_push($strGeom, "  10");
@@ -1279,14 +1275,6 @@ class dxfFactory{
 		$this->handle++;
 		$tmpHandle = $this->handle + $this->handleHatches;
 		$strGeom = array();
-		//if (is_null($lineType))
-		//{
-		//	$lineType = "Continuous";
-		//}
-		//if (is_null($color))
-		//{
-		//	$color = $this->defaultColor;
-		//}
 		if (is_null($pattern))
 		{
 			$pattern = "SOLID";
@@ -1304,8 +1292,8 @@ class dxfFactory{
 			array_push($strGeom, "  8");
 			array_push($strGeom, $layerName);
 			array_push($strGeom, " 62");
-			array_push($strGeom,  "7");
-			if (!is_null($color)){
+			array_push($strGeom, ($this->enableColors) ? "7" : "256");
+			if ($this->enableColors && !is_null($color)){
 				array_push($strGeom, " 420");
 				array_push($strGeom,  $color."");
 			}
@@ -1420,8 +1408,6 @@ class dxfFactory{
 		if (is_null($color)){
 			return;
 		}
-		//$text = str_replace($text, "O", "");
-		//$text = str_replace($text, " ", "");
 		//rimuovo gli a capo
 		$text = str_replace("\r", "", $text);
 		$text = str_replace("\n", "", $text);
@@ -1429,13 +1415,8 @@ class dxfFactory{
 		{
 			$textAlign = 0;
 		}
-		//if (is_null($color))
-		//{
-		//	$color = $this->defaultColor;
-		//}
 		if ($color == 0)
 		{
-			//$color = $this->defaultColor;
 			$color = null;
 		}
 		$strGeom = array();
@@ -1455,8 +1436,8 @@ class dxfFactory{
 		array_push($strGeom, "  6");
 		array_push($strGeom, "Continuous");
 		array_push($strGeom, " 62");
-		array_push($strGeom,  "5");
-		if (!is_null($color)){
+		array_push($strGeom, ($this->enableColors) ? "7" : "256");
+		if ($this->enableColors && !is_null($color)){
 			array_push($strGeom, " 420");
 			array_push($strGeom,  $color."");
 		}
@@ -1517,13 +1498,8 @@ class dxfFactory{
 		if (is_null($color)){
 			return;
 		}
-		//if ($color == NULL || $color == "")
-		//{
-		//	$color = $this->defaultColor;
-		//}
 		if ($color == 0)
 		{
-			//$color = $this->defaultColor;
 			$color = null;
 		}
 		$strGeom = array();
@@ -1538,12 +1514,12 @@ class dxfFactory{
 		array_push($strGeom, "  100");
 		array_push($strGeom, "AcDbEntity");
 		array_push($strGeom, "  8");
-		array_push($strGeom, $layerName);
+		array_push($strGeom, ($this->enableSingleLayerBlock) ? $this->singleLayerBlockName : $layerName);
 		array_push($strGeom, "  6");
 		array_push($strGeom, "Continuous");
 		array_push($strGeom, " 62");
-		array_push($strGeom,  "7");
-		if (!is_null($color)){
+		array_push($strGeom, ($this->enableColors) ? "7" : "256");
+		if ($this->enableColors && !is_null($color)){
 			array_push($strGeom, " 420");
 			array_push($strGeom,  $color."");
 		}
@@ -1752,6 +1728,18 @@ class dxfFactory{
 		//return "CAMBIO ATTRIBUTI";
 		$result = "Continuous";
 		switch(strtolower($name)){
+			case "dash":
+				$result = "ACAD_ISO02W100";
+			break;
+			case "dash_dash_dot_dot":
+				$result = "ACAD_ISO13W100";
+			break;
+			case "dash_dash_dot":
+				$result = "ACAD_ISO11W100";
+			break;
+			case "dash_dot_dot_dot":
+				$result = "ACAD_ISO14W100";
+			break;
 			case "dash_dot_dot":
 				$result = "ACAD_ISO12W100";
 			break;
@@ -1762,13 +1750,15 @@ class dxfFactory{
 				$result = "ACAD_ISO03W100";
 			break;
 			case "dot":
-				$result = "ACAD_ISO02W100";
+				$result = "ACAD_ISO07W100";
 			break;
 			case "linea_puntinata_10":
 				$result = "ACAD_ISO07W100";
 			break;
 			case "nascosta":
 				$result = "ACAD_ISO04W100";
+				break;
+			default:
 			break;
 		}
 		return $result;
@@ -1868,8 +1858,6 @@ class dxfFactory{
 		$this->entities = array_merge($this->entities, $this->addInsert("0", 50, 50, 0, "ENEL", 0));
 		$coords = array(array(55, 55), array(55, 66), array(66, 66), array(66, 55), array(55, 55));
 		$this->entities = array_merge($this->entities, $this->addPolygon("0", $coords, 1, NULL, 1, NULL));
-		
-		
 	}
 
 }
