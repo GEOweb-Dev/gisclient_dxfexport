@@ -28,7 +28,6 @@
 //error_reporting( E_ALL );
 //ini_set('display_errors', 1);
 
-
 //variabili
 require_once '../../../../config/config.php';
 require_once ADMIN_PATH."lib/functions.php";
@@ -36,11 +35,9 @@ require_once ROOT_PATH."lib/i18n.php";
 require_once ROOT_PATH . 'lib/GCService.php';
 //require_once 'include/gcMap.class.php';
 require_once ADMIN_PATH."lib/gcFeature.class.php";
-
 require_once "dxfConfig.php";
 require_once "dxfFactory.php";
 require_once "dxfFeatureExport.php";
-
 
 set_time_limit(300);
 
@@ -57,6 +54,12 @@ $themes = $_REQUEST["themes"];
 $project = $_REQUEST["project"];
 $epsg = $_REQUEST["epsg"];
 $template = $_REQUEST["template"];
+$enableLineThickness = $_REQUEST["enableLineThickness"];
+$enableColors = $_REQUEST["enableColors"];
+$enableSingleLayerBlock = $_REQUEST["enableSingleLayerBlock"];
+$textScaleMultiplier = $_REQUEST["textScaleMultiplier"];
+$labelScaleMultiplier = $_REQUEST["labelScaleMultiplier"];
+$insertScaleMultiplier = $_REQUEST["insertScaleMultiplier"];
 
 //inizializzazione del servizio
 $gcService = GCService::instance();
@@ -92,6 +95,17 @@ $configFile->{"layers"} = $layers;
 
 $dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 
+//abilita spessori
+$dxfFact->enableLineThickness = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
+//abilita colori
+$dxfFact->enableColors = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
+//abilita layer singolo per i blocchi
+$dxfFact->enableSingleLayerBlock = (is_null($enableSingleLayerBlock)) ? boolval($dxfEnableSingleLayerBlock) : $enableSingleLayerBlock;
+//aggiorna moltiplicatori
+$dxfFact->textScaleMultiplier = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $textScaleMultiplier;
+$dxfFact->labelScaleMultiplier = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $labelScaleMultiplier;
+$dxfFact->insertScaleMultiplier = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $insertScaleMultiplier;
+
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
 $dxfFact->drawHatches = $dxfDrawHatches;
@@ -125,9 +139,4 @@ if($dxfSaveToDir == 1){
 	header('Content-Disposition: attachment; filename='.basename($fileName));
 	print $dxfFact->createDxf();
 }
-
-
-
-
-
 ?>

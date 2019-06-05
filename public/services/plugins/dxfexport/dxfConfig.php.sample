@@ -34,6 +34,18 @@ $dxfSaveToDir = 1;
 $dxfLogPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/log.txt";
 //abilita l'inserimento dei riempimenti True attivi False non attivi
 $dxfDrawHatches = False;
+//abilita la dimensione personalizzata delle linee e polilinee. Mettendo a false la dimensione sarà DA LAYER
+$dxfEnableLineThickness = True;
+//abilita il colore personalizzato per gli oggetti. Mettendo a false il colore sarà DA LAYER
+$dxfEnableColors = True;
+//Singolo layer per blocchi
+$dxfEnableSingleLayerBlock = False;
+//parametro di ridimensionamento dei testi
+$dxfTextScaleMultiplier = 2;
+//parametro di ridimensionamento dele label
+$dxfLabelScaleMultiplier = 5;
+//parametro di ridimensionamento dei simboli
+$dxfInsertScaleMultiplier = 3;
 //layer geometrici da escludere di default
 $dxfExcludeGeometryLayers = array(
 		'etichette',
@@ -75,10 +87,4 @@ $dxfExcludeTextLayers = array(
 $dxfSplitLayers = array(
 	
 	);
-//parametro di ridimensionamento dei testi
-$dxfTextScaleMultiplier = 2;
-//parametro di ridimensionamento dele label
-$dxfLabelScaleMultiplier = 5;
-//parametro di ridimensionamento dei simboli
-$dxfInsertScaleMultiplier = 3;
 ?>
