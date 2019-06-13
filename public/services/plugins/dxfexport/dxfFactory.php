@@ -407,11 +407,11 @@ class dxfFactory{
 		//$clip = new SutherlandHodgman(10, 20, 20, 10);
 		
 		//aggiungo il layer con l'extent
-		$this->layers = array_merge($this->layers, $this->addLayer("boundingbox", 2, NULL));
+		$this->layers = array_merge($this->layers, $this->addLayer("boundingbox", 2, NULL, NULL));
 		
 		//aggiungo il layer unico per i blocchi
 		if($this->enableSingleLayerBlock){
-			$this->layers = array_merge($this->layers, $this->addLayer($this->singleLayerBlockName, 7, NULL));
+			$this->layers = array_merge($this->layers, $this->addLayer($this->singleLayerBlockName, 7, NULL, NULL));
 		}
 		
 		
@@ -433,7 +433,7 @@ class dxfFactory{
 						if(!isset($dLayer->{'color'})){
 							$dLayer->{'color'} = 7;
 						}
-						$this->layers = array_merge($this->layers, $this->addLayer($dLayer->{'layerName'}, $dLayer->{'color'}, $dLayer->{'lineType'}));
+						$this->layers = array_merge($this->layers, $this->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $dLayer->{'lineType'}));
 					}
 					foreach ($geojson->{'features'} as $feature){
 						$coords = $feature->{'geometry'}->{'coordinates'};
@@ -840,7 +840,7 @@ class dxfFactory{
 	*
 	* @return array
 	*/
-	public function addLayer($layerName, $color, $lineType){
+	public function addLayer($layerName, $aciColor, $color, $lineType){
 		$this->handle++;
         $strLayer = array();
 		if (is_null($lineType))
@@ -867,7 +867,7 @@ class dxfFactory{
 		array_push($strLayer, " 70");
 		array_push($strLayer, "	 0");
 		array_push($strLayer, " 62");
-		array_push($strLayer,  "7");
+		array_push($strLayer, !is_null($aciColor) ? $aciColor."" : "7");
 		if (!is_null($color)){
 			array_push($strLayer, " 420");
 			array_push($strLayer,  $color."");
