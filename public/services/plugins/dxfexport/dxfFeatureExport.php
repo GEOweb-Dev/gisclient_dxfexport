@@ -609,6 +609,12 @@ class dxfFeatureExport {
      */
 	public static function getDecimalColor($r, $g, $b)
     {
+		if(($r == "0" && $g == "0" && $b == "0") || ($r == "0" && $g == "0" && $b == "7"))
+		{
+			$r = "255";
+			$g = "255";
+			$b = "255";
+		}
 		//return $r.','.$g.','.$b;
 		return (256 * 256 * $r) + (256 * $g) + $b;
 	}

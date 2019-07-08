@@ -40,6 +40,8 @@ $dxfEnableLineThickness = True;
 $dxfEnableColors = True;
 //Singolo layer per blocchi
 $dxfEnableSingleLayerBlock = False;
+//Layer da escludere per singolo layer per blocchi
+$dxfExcludeSingleLayerBlock = array('base_btu_btu_simbologia_p');
 //parametro di ridimensionamento dei testi
 $dxfTextScaleMultiplier = 2;
 //parametro di ridimensionamento dele label

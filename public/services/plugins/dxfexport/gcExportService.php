@@ -84,7 +84,6 @@ $configFile->{"epsg"} = $epsg;
 $configFile->{"templateFile"} = "templates/".urldecode($template);
 $configFile->{"titolo"} = "Estrazione DXF";
 
-
 //die($dxfFeatureExport->getAci(200,200,200)."");
 $layers = $dxfFeatureExport->getLayers($mapSet, $themes, $project, $epsg);
 
@@ -95,17 +94,6 @@ $configFile->{"layers"} = $layers;
 
 $dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 
-//abilita spessori
-$dxfFact->enableLineThickness = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
-//abilita colori
-$dxfFact->enableColors = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
-//abilita layer singolo per i blocchi
-$dxfFact->enableSingleLayerBlock = (is_null($enableSingleLayerBlock)) ? boolval($dxfEnableSingleLayerBlock) : $enableSingleLayerBlock;
-//aggiorna moltiplicatori
-$dxfFact->textScaleMultiplier = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $textScaleMultiplier;
-$dxfFact->labelScaleMultiplier = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $labelScaleMultiplier;
-$dxfFact->insertScaleMultiplier = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $insertScaleMultiplier;
-
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
 $dxfFact->drawHatches = $dxfDrawHatches;
@@ -114,10 +102,18 @@ $dxfFact->drawHatches = $dxfDrawHatches;
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
-//imposto il rescale di simboli e testi
-$dxfFact->dxfTextScaleMultiplier = $dxfTextScaleMultiplier;
-$dxfFact->dxfLabelScaleMultiplier = $dxfLabelScaleMultiplier;
-$dxfFact->dxfInsertScaleMultiplier = $dxfInsertScaleMultiplier;
+//abilita spessori
+$dxfFact->enableLineThickness = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
+//abilita colori
+$dxfFact->enableColors = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
+//abilita layer singolo per i blocchi
+$dxfFact->enableSingleLayerBlock = (is_null($enableSingleLayerBlock)) ? boolval($dxfEnableSingleLayerBlock) : $enableSingleLayerBlock;
+$dxfFact->excludeSingleLayerBlock = $dxfExcludeSingleLayerBlock;
+
+//aggiorna moltiplicatori rescale
+$dxfFact->dxfTextScaleMultiplier = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $dxfTextScaleMultiplier * doubleval($textScaleMultiplier);
+$dxfFact->dxfLabelScaleMultiplier = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $dxfLabelScaleMultiplier * doubleval($labelScaleMultiplier);
+$dxfFact->dxfInsertScaleMultiplier = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $dxfInsertScaleMultiplier * doubleval($insertScaleMultiplier);
 
 /**/
 $fileName = uniqid('dxf_', true).".dxf";

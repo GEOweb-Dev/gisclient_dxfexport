@@ -89,8 +89,10 @@ class dxfFactory{
 	public $enableLineThickness = True;
 	public $enableColors = True;
 	public $enableSingleLayerBlock = True;
+	public $excludeSingleLayerBlock = array();
 	public $singleLayerBlockName = "blocchi";
 	
+	public $dxfLineScale = 2.5;
 	public $dxfTextScaleMultiplier = 1;
 	public $dxfLabelScaleMultiplier = 1;
 	public $dxfInsertScaleMultiplier = 1;
@@ -751,7 +753,7 @@ class dxfFactory{
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}				
-					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, dxfInsertScaleMultiplier);
+					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
 				}
 			break;
 			case "polyline":
@@ -851,7 +853,10 @@ class dxfFactory{
 		//{
 		//	$color = $this->defaultColor;
 		//}
-				
+		if($color == "0"){
+			$aciColor = "7";
+			$color = null;
+		}
 		array_push($strLayer, "  0");
 		array_push($strLayer, "LAYER");
 		array_push($strLayer, "  5");
@@ -994,7 +999,7 @@ class dxfFactory{
 			array_push($strGeom, "  6");
 			array_push($strGeom, $lineType);
 			array_push($strGeom, " 48");
-			array_push($strGeom, " 0.1");
+			array_push($strGeom, " ".$this->dxfLineScale);
 			array_push($strGeom, " 62");
 			array_push($strGeom, ($this->enableColors) ? "7" : "256");
 			if ($this->enableColors && !is_null($color)){
@@ -1033,7 +1038,7 @@ class dxfFactory{
 				array_push($strGeom, "  6");
 				array_push($strGeom, $lineType);
 				array_push($strGeom, " 48");
-				array_push($strGeom, " 0.1");
+				array_push($strGeom, " ".$this->dxfLineScale);
 				array_push($strGeom, " 62");
 				array_push($strGeom, ($this->enableColors) ? "7" : "256");
 				if ($this->enableColors && !is_null($color)){
@@ -1122,7 +1127,7 @@ class dxfFactory{
 			array_push($strGeom, "  6");
 			array_push($strGeom, $lineType);
 			array_push($strGeom, " 48");
-			array_push($strGeom, " 0.1");
+			array_push($strGeom, " ".$this->dxfLineScale);
 			array_push($strGeom, " 62");
 			array_push($strGeom, ($this->enableColors) ? "7" : "256");
 			if ($this->enableColors && !is_null($color)){
@@ -1514,7 +1519,7 @@ class dxfFactory{
 		array_push($strGeom, "  100");
 		array_push($strGeom, "AcDbEntity");
 		array_push($strGeom, "  8");
-		array_push($strGeom, ($this->enableSingleLayerBlock) ? $this->singleLayerBlockName : $layerName);
+		array_push($strGeom, ($this->enableSingleLayerBlock && !in_array($layerName, $this->excludeSingleLayerBlock)) ? $this->singleLayerBlockName : $layerName);
 		array_push($strGeom, "  6");
 		array_push($strGeom, "Continuous");
 		array_push($strGeom, " 62");
