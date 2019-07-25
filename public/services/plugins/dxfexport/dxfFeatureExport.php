@@ -40,6 +40,8 @@ class dxfFeatureExport {
 	
 	public $debug = False;
 	public $dxfSplitLayers = [];
+	public $dxfExcludeGroups = [];
+	public $dxfExcludeLayers = [];
 	public $logTxt = "";
 	public $logPath = "";
 	
@@ -109,7 +111,6 @@ class dxfFeatureExport {
 			//TODO Mettrere i parameteri
 			$themeList = "'" . implode("','", $themes) . "'";
 			$mapSetList = "'" . implode("','", $mapSet) . "'";
-			
 			$sqlFilter = 'mapset_name in ('.$mapSetList.') and theme_name in ('.$themeList.')'; //project = \''. $project .'\' and 
 		}
 		//Ricavo i layer visibili e che dispongano di esportazione WFS
@@ -125,7 +126,7 @@ class dxfFeatureExport {
 			INNER JOIN '.DB_SCHEMA.'.mapset_layergroup using (layergroup_id)
 			LEFT JOIN '.DB_SCHEMA.'.layer USING (layergroup_id)
 			LEFT JOIN '.DB_SCHEMA.'.layer_groups USING (layer_id)
-			WHERE ('.$sqlFilter.') AND ('.$authClause.") and queryable = 1 and layer.layer_name not like '%inquadrament%' ORDER BY layer.layer_order;";
+			WHERE ('.$sqlFilter.') AND ('.$authClause.") and queryable = 1 ORDER BY layer.layer_order;";
 			// 
 			
 		//die($sql);
@@ -138,12 +139,17 @@ class dxfFeatureExport {
 			//var_dump($thisLayer);
 			//echo '<pre>';
 			//verifico che sia un WMS
+			$layerName = $thisLayer["theme_name"]."_".$thisLayer["layer_name"];
 			//verifico che sia presente in temi se in forniti
-			if($thisLayer["owstype_id"] == 1 && (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes))){
+			if($thisLayer["owstype_id"] == 1 
+				&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes)) 
+				&& !in_array($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
+				&& !in_array($layerName, $this->dxfExcludeLayers)
+				){
 				//definizione del layer
 				$layer = new stdClass();
 				$styles = array(); //elenco degli stili restituire
-				$layer->{"layerName"} = $thisLayer["theme_name"]."_".$thisLayer["layer_name"];
+				$layer->{"layerName"} = $layerName;
 				//campo label
 				if($thisLayer["labelitem"] != NULL){
 					$layer->{"fieldText"} = $thisLayer["labelitem"];
@@ -312,7 +318,10 @@ class dxfFeatureExport {
 	* Elenco dei tipi di linea supportati
 	*/
 	public static $lineTypes = array(
-		'continuous',
+		'dash',
+		'dash_dash_dot_dot',
+		'dash_dash_dot',
+		'dash_dot_dot_dot',
 		'dash_dot_dot',
 		'dash_dot',
 		'linea_tratt',
@@ -609,11 +618,13 @@ class dxfFeatureExport {
      */
 	public static function getDecimalColor($r, $g, $b)
     {
+	
 		if(($r == "0" && $g == "0" && $b == "0") || ($r == "0" && $g == "0" && $b == "7"))
 		{
-			$r = "255";
-			$g = "255";
-			$b = "255";
+			//$r = "255";
+			//$g = "255";
+			//$b = "255";
+			return null;
 		}
 		//return $r.','.$g.','.$b;
 		return (256 * 256 * $r) + (256 * $g) + $b;
