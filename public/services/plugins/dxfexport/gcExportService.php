@@ -55,6 +55,7 @@ $project = $_REQUEST["project"];
 $epsg = $_REQUEST["epsg"];
 $template = $_REQUEST["template"];
 $enableLineThickness = $_REQUEST["enableLineThickness"];
+$lineScale = $_REQUEST["lineScale"];
 $enableColors = $_REQUEST["enableColors"];
 $enableSingleLayerBlock = $_REQUEST["enableSingleLayerBlock"];
 $textScaleMultiplier = $_REQUEST["textScaleMultiplier"];
@@ -70,6 +71,8 @@ $gcService->startSession();
 $dxfFeatureExport = new dxfFeatureExport($dxfLogPath);
 $dxfFeatureExport->debug = $dxfDebug;
 $dxfFeatureExport->dxfSplitLayers = $dxfSplitLayers;
+$dxfFeatureExport->dxfExcludeGroups = $dxfExcludeGroups;
+$dxfFeatureExport->dxfExcludeLayers = $dxfExcludeLayers;
 
 //eseguo la conversione di un mapset in un file di configurazione
 $configFile = new stdClass();
@@ -104,6 +107,7 @@ $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
 //abilita spessori
 $dxfFact->enableLineThickness = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
+$dxfFact->dxfLineScale = (is_null($lineScale)) ? $dxfLineScale : $lineScale;
 //abilita colori
 $dxfFact->enableColors = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
 //abilita layer singolo per i blocchi

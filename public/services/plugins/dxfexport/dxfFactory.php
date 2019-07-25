@@ -62,9 +62,9 @@ class dxfFactory{
 	private $entLines; //array con le linee del DXF
 	private $entPoints; //array con punti simboli e testi	
 	
-	private $handleHatches = 1000000; //offset degli handle per il draworder delle etitities
-	private $handleLines = 2000000; //offset degli handle per il draworder delle etitities	
-	private $handlePoints = 3000000; //offset degli handle per il draworder delle etitities	
+	private $handleHatches = 2000000; //offset degli handle per il draworder delle etitities
+	private $handleLines = 3000000; //offset degli handle per il draworder delle etitities	
+	private $handlePoints = 4000000; //offset degli handle per il draworder delle etitities	
 	
 	public $debug = False; //abilita le informazioni di debug
 	public $dummy = NULL; //abilita le geometrie dummy
@@ -91,8 +91,9 @@ class dxfFactory{
 	public $enableSingleLayerBlock = True;
 	public $excludeSingleLayerBlock = array();
 	public $singleLayerBlockName = "blocchi";
+	public $singleLayerColor = (256 * 256) * 255 + (256 * 255) + 255;
 	
-	public $dxfLineScale = 2.5;
+	public $dxfLineScale = 0.15;
 	public $dxfTextScaleMultiplier = 1;
 	public $dxfLabelScaleMultiplier = 1;
 	public $dxfInsertScaleMultiplier = 1;
@@ -112,7 +113,7 @@ class dxfFactory{
 		
 		$this->logPath = $dxfLogPath;
 		
-		$this->handle = 10000; //parto da un offset per evitare conflitti con elementi del template
+		$this->handle = 100000; //parto da un offset per evitare conflitti con elementi del template
 		$this->configExtractionStr = $configJson;
 		$this->entities = array(); //TODO ELIMINARE
 		$this->entHatches = array();
@@ -410,13 +411,7 @@ class dxfFactory{
 		
 		//aggiungo il layer con l'extent
 		$this->layers = array_merge($this->layers, $this->addLayer("boundingbox", 2, NULL, NULL));
-		
-		//aggiungo il layer unico per i blocchi
-		if($this->enableSingleLayerBlock){
-			$this->layers = array_merge($this->layers, $this->addLayer($this->singleLayerBlockName, 7, NULL, NULL));
-		}
-		
-		
+				
 		//Ciclo sui layer
 		foreach ($this->configExtraction->{'layers'} as $dLayer){
 			//aggiungo i layer
@@ -430,12 +425,13 @@ class dxfFactory{
 					//se ci sono delle feature aggiungo il layer
 					if(count($geojson->{'features'}) > 0){
 						if(!isset($dLayer->{'lineType'})){
-							$dLayer->{'lineType'} = NULL;
+							if(count($dLayer->{'styles'}) > 0){
+								$dLayer->{'lineType'} = $dLayer->{'styles'}[0]->{'lineType'}; //assegno il primo valore disponibile
+							}else{
+								$dLayer->{'lineType'} = NULL;
+							}
 						}
-						if(!isset($dLayer->{'color'})){
-							$dLayer->{'color'} = 7;
-						}
-						$this->layers = array_merge($this->layers, $this->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $dLayer->{'lineType'}));
+						$this->layers = array_merge($this->layers, $this->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
 					}
 					foreach ($geojson->{'features'} as $feature){
 						$coords = $feature->{'geometry'}->{'coordinates'};
@@ -474,7 +470,12 @@ class dxfFactory{
 			$this->setDxfProperty("AcDbViewportTableRecord", "40", ($this->configExtraction->{'maxX'} - $this->configExtraction->{'minX'}));
 			//$this->setDxfProperty("AcDbViewportTableRecord", "41", ($this->configExtraction->{'maxY'} - $this->configExtraction->{'minY'})/10);
 			$this->setDxfProperty("AcDbViewportTableRecord", "41", 5);
-			
+		
+		//aggiungo il layer unico per i blocchi
+		if($this->enableSingleLayerBlock){
+			$this->layers = array_merge($this->layers, $this->addLayer($this->singleLayerBlockName, NULL, $this->singleLayerColor, NULL));
+		}
+		
 		//Caricamento delle features	
 		//verifico se sono richieste le informazioni di debug
 		if($this->debug){
@@ -484,9 +485,7 @@ class dxfFactory{
 		if($this->dummy){
 			$this->addDummy();
 		}
-		
-		
-		
+				
 		//se il file è fornito lo salvo su disco
 		if(isset($this->outputFile)){
 			$this->writeDxf($this->outputFile);
@@ -807,12 +806,14 @@ class dxfFactory{
 					}
 				}
 				//sezione simboli associati alle linee
-				if(!is_null($symbolName)){
-					//$symbolName = "FGN_DIREZIONE_1";
-					$symbolCoords = $this->getPointCoordsDistance($coords, 10);
-					//aggiungo un insert
-					foreach($symbolCoords as $symbolCoord){
-						$this->addInsert($dLayer->{'layerName'}, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
+				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+					if(!is_null($symbolName)){
+						//$symbolName = "FGN_DIREZIONE_1";
+						$symbolCoords = $this->getPointCoordsDistance($coords, 10);
+						//aggiungo un insert
+						foreach($symbolCoords as $symbolCoord){
+							$this->addInsert($dLayer->{'layerName'}, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
+						}
 					}
 				}
 			break;
@@ -1507,6 +1508,11 @@ class dxfFactory{
 		{
 			$color = null;
 		}
+		$tempLayerName = ($this->enableSingleLayerBlock && !in_array($layerName, $this->excludeSingleLayerBlock)) ? $this->singleLayerBlockName : $layerName;
+		//definisco il primo colore se il layer è dei blocchi
+		if($this->singleLayerColor == $this->defaultColor && $tempLayerName == $this->singleLayerBlockName && !is_null($color)){
+			$this->singleLayerColor = $color;
+		}
 		$strGeom = array();
         $this->handle++;
 		$tmpHandle = $this->handle + $this->handlePoints;
@@ -1519,7 +1525,7 @@ class dxfFactory{
 		array_push($strGeom, "  100");
 		array_push($strGeom, "AcDbEntity");
 		array_push($strGeom, "  8");
-		array_push($strGeom, ($this->enableSingleLayerBlock && !in_array($layerName, $this->excludeSingleLayerBlock)) ? $this->singleLayerBlockName : $layerName);
+		array_push($strGeom, $tempLayerName);
 		array_push($strGeom, "  6");
 		array_push($strGeom, "Continuous");
 		array_push($strGeom, " 62");

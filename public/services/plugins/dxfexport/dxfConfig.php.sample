@@ -31,11 +31,13 @@ $dxfTempPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/";
 //Attivazione del salvataggio dei file
 $dxfSaveToDir = 1;
 //File di log
-$dxfLogPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/log.txt";
+$dxfLogPath = "/var/srv/geoweb/tmp/dxf/log.txt";
 //abilita l'inserimento dei riempimenti True attivi False non attivi
 $dxfDrawHatches = False;
 //abilita la dimensione personalizzata delle linee e polilinee. Mettendo a false la dimensione sarà DA LAYER
 $dxfEnableLineThickness = True;
+//scala della linea ai fini del disegno della tipologia di linea
+$dxfLineScale = 0.15;
 //abilita il colore personalizzato per gli oggetti. Mettendo a false il colore sarà DA LAYER
 $dxfEnableColors = True;
 //Singolo layer per blocchi
@@ -48,45 +50,91 @@ $dxfTextScaleMultiplier = 2;
 $dxfLabelScaleMultiplier = 5;
 //parametro di ridimensionamento dei simboli
 $dxfInsertScaleMultiplier = 3;
+//gruppi da escludere di default
+$dxfExcludeGroups = array(
+	'g_fuori_servizio',
+	'a_fuori_servizio',
+	'f_fuori_servizio',
+	't_fuori_servizio',
+	'ricerca'
+);
+//layers da escludere di default
+$dxfExcludeLayers = array(
+		'btu_circoscrizione',
+		'base_dbt_dbt_accesso_civici',
+		'base_dbt_dbt_reticolo_stradale',
+		'base_dbt_dbt_aree_verdi_coltura_agricola',
+		'base_dbt_dbt_toponimi_stradali',
+
+		'gas_pronto_intervento_etichette_tratte',
+		'gas_pronto_intervento_impianti_aeeg',
+		'gas_pronto_intervento_sedetecnica',
+		'gas_pronto_intervento_zone_gestione',
+		'gas_quote_t',
+		'gas_quote_p',
+		'gas_quote_l',
+		'gas_particolari_l',
+		'gas_particolari_a',
+		'gas_particolari_p',
+		'gas_etichette_tratte',
+		'gas_cantieri',
+		
+		'acqua_quote_t',
+		'acqua_quote_p',
+		'acqua_quote_l',
+		'acqua_distretti',
+		'acqua_acquedotto',
+		'acqua_acquedotto_frazionale',
+		'acqua_cantieri',
+		'acqua_etichette_tratte',
+		'acqua_zone_gestione',
+		'acqua_zone_omogenee',
+		'acqua_perdite',
+		
+
+		'fognature_agglomerati',
+		'fognature_quote_t',
+		'fognature_quote_p',
+		'fognature_quote_l',
+		'fognature_f_etichette_tratte',
+		'fognature_particolari_l',
+		'fognature_particolari_a',
+		'fognature_particolari_p',
+		'fognature_cantieri',
+		
+		'teleriscaldamento_particolari_l',
+		'teleriscaldamento_particolari_a',
+		'teleriscaldamento_particolari_p',
+		'teleriscaldamento_cantieri',
+		'teleriscaldamento_quote_testi',
+		'teleriscaldamento_quote_linee',
+		'teleriscaldamento_cantieri'
+
+);
+
 //layer geometrici da escludere di default
 $dxfExcludeGeometryLayers = array(
+		'fognature_frecce'	
+		/*
 		'etichette',
 		'etichette_cabine',
-		'etichette_tratte',
 		'etichette_sedetecnica',
 		'condotte_etichette',
 		'siti',
 		'aree_salvaguardia',
 		'avvisi',
-		'cantieri',
-		'distretti',
-		'acquedotto',
-		'acquedotto_frazionale',
-		'circoscrizione',
-		'sede_tecnica',
 		'zone_gestione',
-		'zone_omogenee',
-		'f_sede_tecnica',
-		'agglomerati',
-		'perdite',
-		'quote_t',
-		'quote_p',
-		'quote_l',
-		'quote_linee',
-		'quote_testi',
-		'particolari_l',
-		'particolari_a',
-		'particolari_p',
-		'base_dbt_dbt_accesso_civici',
-		'base_dbt_dbt_reticolo_stradale',
-		'base_dbt_dbt_aree_verdi_coltura_agricola'
+		*/
 	);
+
 //layer testuali da escludere di default
 $dxfExcludeTextLayers = array(
 		
 	);
 //split dei layer in base alle classi	
 $dxfSplitLayers = array(
-	
+	'tratte_condotte_principali',
+	'tratte_allacciamenti',
+	'reflui_condotte'
 	);
 ?>
