@@ -1415,9 +1415,9 @@ class dxfFactory{
 	*/
 	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color, $scaleMultiplier){
 		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
+		//if (is_null($color)){
+		//	return;
+		//}
 		//rimuovo gli a capo
 		$text = str_replace("\r", "", $text);
 		$text = str_replace("\n", "", $text);
