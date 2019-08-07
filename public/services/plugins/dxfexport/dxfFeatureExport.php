@@ -143,13 +143,14 @@ class dxfFeatureExport {
 			//verifico che sia presente in temi se in forniti
 			if($thisLayer["owstype_id"] == 1 
 				&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes)) 
-				&& !in_array($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
-				&& !in_array($layerName, $this->dxfExcludeLayers)
+				&& !$this->stringArrayCheck($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
+				&& !$this->stringArrayCheck($layerName, $this->dxfExcludeLayers)
 				){
 				//definizione del layer
 				$layer = new stdClass();
 				$styles = array(); //elenco degli stili restituire
 				$layer->{"layerName"} = $layerName;
+				$layer->{"splitted"} = False; //verifica se il layer è stato splittato
 				//campo label
 				if($thisLayer["labelitem"] != NULL){
 					$layer->{"fieldText"} = $thisLayer["labelitem"];
@@ -295,6 +296,7 @@ class dxfFeatureExport {
 						$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"}."_".$style->{"className"};
 						//var_dump($style);
 						$clonedLayer->{"styles"} = [$style];
+						$clonedLayer->{"splitted"} = True;
 						array_push($layers, $clonedLayer);
 					}
 				}else{
@@ -662,6 +664,21 @@ class dxfFeatureExport {
         return $aci;
     }
 	
+	/**
+     * Verifica se la stringa è presente in un array in base a un patterna
+     * @param string $str
+     * @param array $arrayMatch
+     * @return bool
+     */
+	public static function stringArrayCheck($str, $arrayMatch)
+	{
+		foreach($arrayMatch as $match) {
+			if (fnmatch($match, $str)) {
+			  return True;
+			}
+		}
+		return False;
+	}
 }
 
 ?>

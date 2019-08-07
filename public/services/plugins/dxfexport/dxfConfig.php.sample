@@ -91,7 +91,6 @@ $dxfExcludeLayers = array(
 		'acqua_zone_omogenee',
 		'acqua_perdite',
 		
-
 		'fognature_agglomerati',
 		'fognature_quote_t',
 		'fognature_quote_p',

@@ -771,10 +771,10 @@ class dxfFactory{
 				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
 					if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
 						for($li = 0; $li < count($coords); $li++){
-							$this->addPolyLine($dLayer->{'layerName'}, $coords[$li], $thickness, $linetype, $outlineColor);
+							$this->addPolyLine($dLayer->{'layerName'}, $coords[$li], $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
 						}
 					}else{
-						$this->addPolyLine($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor);
+						$this->addPolyLine($dLayer->{'layerName'}, $coords, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
 					}
 				}
 				//sezione etichette alle linee
@@ -973,10 +973,10 @@ class dxfFactory{
 		}
 		$strGeom = array();
 		$this->log("".$lineType);
-		if (is_null($lineType))
-		{
-			$lineType = "Continuous";
-		}
+		//if (is_null($lineType))
+		//{
+		//	$lineType = "CONTINUOUS";
+		//}
 		if ($color == 0)
 		{
 			$color = null;
@@ -997,8 +997,10 @@ class dxfFactory{
 			array_push($strGeom, $layerName);
 			array_push($strGeom, "  66");
 			array_push($strGeom, "1");
-			array_push($strGeom, "  6");
-			array_push($strGeom, $lineType);
+			if (!is_null($lineType)){
+				array_push($strGeom, "  6");
+				array_push($strGeom, $lineType);
+			}
 			array_push($strGeom, " 48");
 			array_push($strGeom, " ".$this->dxfLineScale);
 			array_push($strGeom, " 62");
@@ -1104,10 +1106,10 @@ class dxfFactory{
 		$strGeom = array();
 		$this->handle++;
 		$tmpHandle = $this->handle + $this->handleLines;
-		if (is_null($lineType))
-		{
-			$lineType = "Continuous";
-		}
+		//if (is_null($lineType))
+		//{
+		//	$lineType = "CONTINUOUS";
+		//}
 		if ($color == 0)
 		{
 			$color = null;
@@ -1125,8 +1127,10 @@ class dxfFactory{
 			array_push($strGeom, "AcDbEntity");
 			array_push($strGeom, "  8");
 			array_push($strGeom, $layerName);
-			array_push($strGeom, "  6");
-			array_push($strGeom, $lineType);
+			if (!is_null($lineType)){
+				array_push($strGeom, "  6");
+				array_push($strGeom, $lineType);
+			}
 			array_push($strGeom, " 48");
 			array_push($strGeom, " ".$this->dxfLineScale);
 			array_push($strGeom, " 62");
@@ -1411,9 +1415,9 @@ class dxfFactory{
 	*/
 	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color, $scaleMultiplier){
 		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
+		//if (is_null($color)){
+		//	return;
+		//}
 		//rimuovo gli a capo
 		$text = str_replace("\r", "", $text);
 		$text = str_replace("\n", "", $text);
