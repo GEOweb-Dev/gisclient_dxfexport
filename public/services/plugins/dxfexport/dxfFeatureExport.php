@@ -294,8 +294,20 @@ class dxfFeatureExport {
 					foreach($styles as $style){
 						$clonedLayer = unserialize(serialize($layer));
 						$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"}."_".$style->{"className"};
-						//var_dump($style);
 						$clonedLayer->{"styles"} = [$style];
+						//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
+						if($style->{"outlinecolor"} != NULL){
+							$thisColor = explode(" ",$style->{"outlinecolor"});;
+							$clonedLayer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+						}else if($style->{"color"} != NULL){
+							$thisColor = explode(" ", $style->{"color"});;
+							$clonedLayer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+						}
+						else if($style->{"label_color"} != NULL){
+							//poi al colore della label
+							$thisColor = explode(" ", $style->{"label_color"});;
+							$clonedLayer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+						}
 						$clonedLayer->{"splitted"} = True;
 						array_push($layers, $clonedLayer);
 					}
