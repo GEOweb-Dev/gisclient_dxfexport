@@ -139,7 +139,7 @@ class dxfFeatureExport {
 			//var_dump($thisLayer);
 			//echo '<pre>';
 			//verifico che sia un WMS
-			$layerName = $thisLayer["theme_name"]."_".$thisLayer["layer_name"];
+			$layerName = $thisLayer["theme_name"]."_".$thisLayer["layergroup_name"]."_".$thisLayer["layer_name"];
 			//verifico che sia presente in temi se in forniti
 			if($thisLayer["owstype_id"] == 1 
 				&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes)) 
@@ -297,16 +297,12 @@ class dxfFeatureExport {
 						$clonedLayer->{"styles"} = [$style];
 						//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
 						if($style->{"outlinecolor"} != NULL){
-							$thisColor = explode(" ",$style->{"outlinecolor"});;
-							$clonedLayer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+							$clonedLayer->{"color"} = $style->{"outlinecolor"};
 						}else if($style->{"color"} != NULL){
-							$thisColor = explode(" ", $style->{"color"});;
-							$clonedLayer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+							$clonedLayer->{"color"} = $style->{"color"};
 						}
 						else if($style->{"label_color"} != NULL){
-							//poi al colore della label
-							$thisColor = explode(" ", $style->{"label_color"});;
-							$clonedLayer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+							$clonedLayer->{"color"} = $style->{"label_color"};
 						}
 						$clonedLayer->{"splitted"} = True;
 						array_push($layers, $clonedLayer);
