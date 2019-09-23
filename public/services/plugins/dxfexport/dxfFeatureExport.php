@@ -139,7 +139,7 @@ class dxfFeatureExport {
 			//var_dump($thisLayer);
 			//echo '<pre>';
 			//verifico che sia un WMS
-			$layerName = $thisLayer["theme_name"]."_".$thisLayer["layer_name"];
+			$layerName = $thisLayer["theme_name"]."_".$thisLayer["layergroup_name"]."_".$thisLayer["layer_name"];
 			//verifico che sia presente in temi se in forniti
 			if($thisLayer["owstype_id"] == 1 
 				&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes)) 
@@ -149,6 +149,8 @@ class dxfFeatureExport {
 				//definizione del layer
 				$layer = new stdClass();
 				$styles = array(); //elenco degli stili restituire
+				$layer->{"themeName"} = $thisLayer["theme_name"];
+				$layer->{"groupName"} = $thisLayer["layergroup_name"];
 				$layer->{"layerName"} = $layerName;
 				$layer->{"splitted"} = False; //verifica se il layer è stato splittato
 				//campo label
@@ -296,6 +298,15 @@ class dxfFeatureExport {
 						$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"}."_".$style->{"className"};
 						//var_dump($style);
 						$clonedLayer->{"styles"} = [$style];
+						//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
+						if($style->{"outlinecolor"} != NULL){
+							$clonedLayer->{"color"} = $style->{"outlinecolor"};
+						}else if($style->{"color"} != NULL){
+							$clonedLayer->{"color"} = $style->{"color"};
+						}
+						else if($style->{"label_color"} != NULL){
+							$clonedLayer->{"color"} = $style->{"label_color"};
+						}
 						$clonedLayer->{"splitted"} = True;
 						array_push($layers, $clonedLayer);
 					}
