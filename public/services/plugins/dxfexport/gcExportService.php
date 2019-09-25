@@ -57,7 +57,7 @@ $template = $_REQUEST["template"];
 $enableLineThickness = $_REQUEST["enableLineThickness"];
 $lineScale = $_REQUEST["lineScale"];
 $enableColors = $_REQUEST["enableColors"];
-$enableSingleLayerBlock = $_REQUEST["enableSingleLayerBlock"];
+$enableTemplateLayer = $_REQUEST["enableTemplateLayer"];
 $textScaleMultiplier = $_REQUEST["textScaleMultiplier"];
 $labelScaleMultiplier = $_REQUEST["labelScaleMultiplier"];
 $insertScaleMultiplier = $_REQUEST["insertScaleMultiplier"];
@@ -81,17 +81,25 @@ $configFile->{"maxX"} = $maxX;
 $configFile->{"minY"} = $minY;
 $configFile->{"maxY"} = $maxY;
 $configFile->{"mapSet"} = $mapSet;
-$configFile->{"themes"} = $themes;
+$configFile->{"themes"} = explode(",", $themes);;
 $configFile->{"project"} = $project;
 $configFile->{"epsg"} = $epsg;
 $configFile->{"templateFile"} = "templates/".urldecode($template);
 $configFile->{"titolo"} = "Estrazione DXF";
 
+$configFile->{"dxfEnableTemplateContesti"} = (is_null($enableTemplateLayer)) ? boolval($dxfenableDxfContesti) : $enableTemplateLayer;
+$configFile->{"dxfTemplateContestiPath"} = $dxfTemplateContestiPath;
+
 //die($dxfFeatureExport->getAci(200,200,200)."");
 $layers = $dxfFeatureExport->getLayers($mapSet, $themes, $project, $epsg);
 
 $configFile->{"layers"} = $layers;
+$configFile->{"dxfDrawHatches"} = $dxfDrawHatches;
 
+//abilita spessori
+$configFile->{"dxfEnableLineThickness"} = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
+//abilita colori
+$configFile->{"dxfEnableColors"} = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
 //print json_encode($configFile);
 //die(var_dump($configFile));
 
@@ -99,20 +107,14 @@ $dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
-$dxfFact->drawHatches = $dxfDrawHatches;
 
 //imposto la blacklist di layer da eliminare
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
 //abilita spessori
-$dxfFact->enableLineThickness = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
 $dxfFact->dxfLineScale = (is_null($lineScale)) ? $dxfLineScale : $lineScale;
-//abilita colori
-$dxfFact->enableColors = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
-//abilita layer singolo per i blocchi
-$dxfFact->enableSingleLayerBlock = (is_null($enableSingleLayerBlock)) ? boolval($dxfEnableSingleLayerBlock) : $enableSingleLayerBlock;
-$dxfFact->excludeSingleLayerBlock = $dxfExcludeSingleLayerBlock;
+
 
 //aggiorna moltiplicatori rescale
 $dxfFact->dxfTextScaleMultiplier = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $dxfTextScaleMultiplier * doubleval($textScaleMultiplier);
@@ -122,7 +124,7 @@ $dxfFact->dxfInsertScaleMultiplier = (is_null($insertScaleMultiplier)) ? $dxfIns
 /**/
 $fileName = uniqid('dxf_', true).".dxf";
 if($dxfSaveToDir == 1){
-	//$dxfTempPath è definito in dxfConfig.php 
+	//$dxfTempPath ï¿½ definito in dxfConfig.php 
 	$fileHandle = $dxfTempPath.$fileName;
 	$dxfFact->createDxf($fileHandle);
 	$fileJson = new stdClass();
