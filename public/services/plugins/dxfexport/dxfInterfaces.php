@@ -1,4 +1,4 @@
-<?
+<?php
 interface iDxfFactory
 {
     public function getNextHandle();
