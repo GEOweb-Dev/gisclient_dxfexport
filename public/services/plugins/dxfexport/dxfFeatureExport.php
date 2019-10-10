@@ -86,7 +86,7 @@ class dxfFeatureExport {
 		//non considero mai l'utente amministratore per l'estrazione DXF
 		$isAdmin = false;
 		//leggo i permessi
-		//valutare la validità di questa sezione
+		//valutare la validitï¿½ di questa sezione
 		if(!$isAdmin) {
 			if(!empty($user->groups)) {
 				$in = array();
@@ -149,8 +149,10 @@ class dxfFeatureExport {
 				//definizione del layer
 				$layer = new stdClass();
 				$styles = array(); //elenco degli stili restituire
+				$layer->{"themeName"} = $thisLayer["theme_name"];
+				$layer->{"groupName"} = $thisLayer["layergroup_name"];
 				$layer->{"layerName"} = $layerName;
-				$layer->{"splitted"} = False; //verifica se il layer è stato splittato
+				$layer->{"splitted"} = False; //verifica se il layer ï¿½ stato splittato
 				//campo label
 				if($thisLayer["labelitem"] != NULL){
 					$layer->{"fieldText"} = $thisLayer["labelitem"];
@@ -166,7 +168,7 @@ class dxfFeatureExport {
 				//"geometryType" : "polygon", // TODO definire la geometria
 				
 				//ricavo gli stili e le classi
-				//non si riesce a sovrapporre più stili per una singola classe
+				//non si riesce a sovrapporre piï¿½ stili per una singola classe
 				$sqlStyle = "select pattern_id,symbol_name,class_id,layer_id,class_name,class_title	,class_text,expression,maxscale,minscale,class_template,class_order,legendtype_id,symbol_ttf_name,
                 label_font,label_angle,label_color,label_outlinecolor,label_bgcolor,label_size,label_minsize,label_maxsize,label_position,label_antialias,label_free,label_priority,
                 label_wrap,label_buffer,label_force,label_def,keyimage,style_id,style_name,color,outlinecolor,bgcolor,angle,size,minsize,maxsize,width,maxwidth,minwidth,
@@ -186,9 +188,9 @@ class dxfFeatureExport {
 					//echo '<pre>';
 					//var_dump($thisStyle);
 					//echo '</pre>';
-					//se è il primo stile lo uso per definire caratteristiche di base del layer
+					//se ï¿½ il primo stile lo uso per definire caratteristiche di base del layer
 					if($i == 0){
-						//per la selezione del colore del layer dò la precedenza all'outline
+						//per la selezione del colore del layer dï¿½ la precedenza all'outline
 						if($thisStyle["outlinecolor"] != NULL){
 							$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
 							$layer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
@@ -294,6 +296,7 @@ class dxfFeatureExport {
 					foreach($styles as $style){
 						$clonedLayer = unserialize(serialize($layer));
 						$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"}."_".$style->{"className"};
+						//var_dump($style);
 						$clonedLayer->{"styles"} = [$style];
 						//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
 						if($style->{"outlinecolor"} != NULL){
@@ -341,7 +344,7 @@ class dxfFeatureExport {
 	);
 	
 	/**
-	* Verifica se un tipo di linea è supportato altrmenti restituisce il tipo continuous
+	* Verifica se un tipo di linea ï¿½ supportato altrmenti restituisce il tipo continuous
 	* @param string $pattern
 	* @return string
 	*/
@@ -631,10 +634,10 @@ class dxfFeatureExport {
 	
 		if(($r == "0" && $g == "0" && $b == "0") || ($r == "0" && $g == "0" && $b == "7"))
 		{
-			//$r = "255";
-			//$g = "255";
-			//$b = "255";
-			return null;
+			$r = "255";
+			$g = "255";
+			$b = "255";
+			//return null;
 		}
 		//return $r.','.$g.','.$b;
 		return (256 * 256 * $r) + (256 * $g) + $b;
@@ -673,7 +676,7 @@ class dxfFeatureExport {
     }
 	
 	/**
-     * Verifica se la stringa è presente in un array in base a un patterna
+     * Verifica se la stringa ï¿½ presente in un array in base a un patterna
      * @param string $str
      * @param array $arrayMatch
      * @return bool
