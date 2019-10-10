@@ -21,7 +21,7 @@ interface iDxfCode
 	public function addPolyLine($layerName, $coords, $thickness, $lineType, $color);
 	public function addPolygon($layerName, $coords, $thickness, $lineType, $outlineColor, $color);
 	public function addHatch($layerName, $coords, $color, $pattern, $parentHandle);
-	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color, $scaleMultiplier);
+	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color);
 	public function addInsert($layerName, $x, $y, $z, $blockName, $angle, $color, $scaleInsert);
 }
 

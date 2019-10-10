@@ -100,26 +100,23 @@ $configFile->{"dxfDrawHatches"} = $dxfDrawHatches;
 $configFile->{"dxfEnableLineThickness"} = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
 //abilita colori
 $configFile->{"dxfEnableColors"} = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
+$configFile->{"dxfLineScale"} = (is_null($lineScale)) ? $dxfLineScale : $lineScale;
+
+$configFile->{"dxfTextScaleMultiplier"} = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $dxfTextScaleMultiplier * doubleval($textScaleMultiplier);
+$configFile->{"dxfLabelScaleMultiplier"} = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $dxfLabelScaleMultiplier * doubleval($labelScaleMultiplier);
+$configFile->{"dxfInsertScaleMultiplier"} = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $dxfInsertScaleMultiplier * doubleval($insertScaleMultiplier);
+
 //print json_encode($configFile);
 //die(var_dump($configFile));
 
-$dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 
+$dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
-
 //imposto la blacklist di layer da eliminare
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
-//abilita spessori
-$dxfFact->dxfLineScale = (is_null($lineScale)) ? $dxfLineScale : $lineScale;
-
-
-//aggiorna moltiplicatori rescale
-$dxfFact->dxfTextScaleMultiplier = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $dxfTextScaleMultiplier * doubleval($textScaleMultiplier);
-$dxfFact->dxfLabelScaleMultiplier = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $dxfLabelScaleMultiplier * doubleval($labelScaleMultiplier);
-$dxfFact->dxfInsertScaleMultiplier = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $dxfInsertScaleMultiplier * doubleval($insertScaleMultiplier);
 
 /**/
 $fileName = uniqid('dxf_', true).".dxf";

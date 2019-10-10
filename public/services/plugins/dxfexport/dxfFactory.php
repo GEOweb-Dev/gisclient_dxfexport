@@ -147,6 +147,18 @@ class dxfFactory implements iDxfFactory {
 		
 		if(!is_null($this->configExtraction->{'dxfEnableColors'})) $this->enableColors = $this->configExtraction->{'dxfEnableColors'};
 		if(!is_null($this->configExtraction->{'dxfEnableLineThickness'})) $this->enableLineThickness = $this->configExtraction->{'dxfEnableLineThickness'};
+		if(!is_null($this->configExtraction->{'dxfLineScale'})) $this->dxfLineScale = $this->configExtraction->{'dxfLineScale'};
+		
+		if(!is_null($this->configExtraction->{'dxfTextScaleMultiplier'})) $this->dxfTextScaleMultiplier = $this->configExtraction->{'dxfTextScaleMultiplier'};
+		if(!is_null($this->configExtraction->{'dxfLabelScaleMultiplier'})) $this->dxfLabelScaleMultiplier = $this->configExtraction->{'dxfLabelScaleMultiplier'};
+		if(!is_null($this->configExtraction->{'dxfInsertScaleMultiplier'})) $this->dxfInsertScaleMultiplier = $this->configExtraction->{'dxfInsertScaleMultiplier'};
+
+		//TODO Unit test required
+		// print("dxfTextScaleMultiplier ".$this->dxfTextScaleMultiplier);
+		// print("<br/>dxfLabelScaleMultiplier ".$this->dxfLabelScaleMultiplier);
+		// print("<br/>dxfInsertScaleMultiplier ".$this->dxfInsertScaleMultiplier);
+		// print("<br/>dxfLineScale ".$this->dxfLineScale);
+
 		//creo il parser per le espressioni
 		$this->parserExpression = new Parser();
 		
@@ -573,6 +585,7 @@ class dxfFactory implements iDxfFactory {
 							//definizione dello stile custom
 							$featureStyle->{"color"} = $tLayer->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $tLayer->{"style"}->{"lineType"};
+							if(!is_null($tLayer->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $tLayer->{"style"}->{"labelSize"};
 							$layerFound = True;
 							break;
 						}
@@ -583,10 +596,12 @@ class dxfFactory implements iDxfFactory {
 						case "text":
 							$featureStyle->{"color"} = $theme->{"layer_default_testi"}->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $theme->{"layer_default_testi"}->{"style"}->{"lineType"};
+							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 							break;
 						case "insert":
 							$featureStyle->{"color"} = $theme->{"layer_default_blocchi"}->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $theme->{"layer_default_blocchi"}->{"style"}->{"lineType"};
+							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 							break;
 						case "polyline":
 						case "linestring":
@@ -597,6 +612,7 @@ class dxfFactory implements iDxfFactory {
 						default:
 							$featureStyle->{"color"} = $theme->{"layer_default"}->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $theme->{"layer_default"}->{"style"}->{"lineType"};
+							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 							break;
 						}
 					}
@@ -607,7 +623,32 @@ class dxfFactory implements iDxfFactory {
 	}
 		
 	/**
-	* Return the correct annotation autocad layer name based on current cofiguration
+	* Returns the correct insert autocad layer name based on current cofiguration
+	* @param object $dLayer Layer object
+	* @return void
+	*/
+	public function getInsertLayerNamebyLayer($dLayer){
+		$layerName = "";
+		if($this->dxfEnableTemplateContesti){
+			$themeFound = False;
+			foreach ($this->dxfTemplateContesti as $theme){
+				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					$themeFound = True;
+					$layerName = $theme->{"layer_default_blocchi"}->{"layerNameDxf"};	
+				}
+			}
+			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
+				$layerName = "0";
+			}
+		}else{
+			//disegno standard
+			$layerName = $dLayer->{"layerName"};
+		}
+		return $layerName;
+	}
+	
+	/**
+	* Returns the correct annotation autocad layer name based on current cofiguration
 	* @param object $dLayer Layer object
 	* @return void
 	*/
@@ -630,10 +671,9 @@ class dxfFactory implements iDxfFactory {
 		}
 		return $layerName;
 	}
-	
-	
+
 	/**
-	* Return the correct autocad layer name based on current cofiguration
+	* Returns the correct autocad layer name based on current cofiguration
 	* @param object $dLayer Layer object
 	* @param string $geometryType Geometry Type
 	* @return void
@@ -902,7 +942,7 @@ class dxfFactory implements iDxfFactory {
 		}
 		$labelSize = $this->defaultSize;
 		if(isset($style->{'labelSize'})){
-			$labelSize = $this->getLabelSize($style->{'labelSize'});
+			$labelSize = $style->{'labelSize'};
 		}
 		//fine definizione dei valori di default
 		$this->log("Simbolo ".$feature->{'geometry'}->{'type'});
@@ -936,12 +976,13 @@ class dxfFactory implements iDxfFactory {
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
 					if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)){
-						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfTextScaleMultiplier);
+						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, NULL, $labelColor);
 					}
 				}
 				//se il nome del simbolo � settato aggiungo un blocco altrimenti un punto
 				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					$this->log("Simbolo ".$symbolName);
+					$this->log("Colore ".$color);
 					if(!is_null($symbolName)){
 						$angle = 0;
 						$symbolName = $this->getSymbolName($symbolName);
@@ -968,8 +1009,7 @@ class dxfFactory implements iDxfFactory {
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}
-					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfTextScaleMultiplier);
-					//addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign)
+					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, NULL, $labelColor);
 				}
 			break;
 			case "insert":
@@ -1036,7 +1076,7 @@ class dxfFactory implements iDxfFactory {
 						$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfLabelScaleMultiplier);
+						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, NULL, $labelColor);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -1046,7 +1086,7 @@ class dxfFactory implements iDxfFactory {
 						$symbolCoords = $this->getPointCoordsDistance($coords, 10);
 						//aggiungo un insert
 						foreach($symbolCoords as $symbolCoord){
-							$this->dxfCode->addInsert($layerName, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
+							$this->dxfCode->addInsert($this->getInsertLayerNamebyLayer($dLayer), $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
 						}
 					}
 				//}
@@ -1231,9 +1271,12 @@ class dxfFactory implements iDxfFactory {
 		return $arrResult;
 	}
 		
-	public function getLabelSize($labelSize){
-		//la divisione per 20 � arbitraria. TODO Valutare se � corretta.
-		return $labelSize / 20;
+	public function getLabelSize($labelSize, $multiplier){
+		//Se i contesti non sono attivati abilito la scalatura
+		if(!$this->dxfEnableTemplateContesti){
+			$labelSize = $labelSize * $multiplier;
+		}
+		return $labelSize;
 	}
 	public function getSymbolName($name){
 		//return "CAMBIO ATTRIBUTI";
@@ -1385,7 +1428,7 @@ class dxfFactory implements iDxfFactory {
 		$this->entities = array_merge($this->entities, $this->dxfCode->addPoint3D("0", 10, 10, 0, 1));
 		$coords = array(array(11, 11, 11), array(22, 22, 22));
 		$this->entities = array_merge($this->entities, $this->dxfCode->addPolyLine3d("0", $coords, 1, NULL));
-		$this->entities = array_merge($this->entities, $this->dxfCode->addText("0", 20, 20, 0, "GEOIREN", 22, 90, ""), 1);
+		$this->entities = array_merge($this->entities, $this->dxfCode->addText("0", 20, 20, 0, "GEOIREN", 22, 90, ""));
 		$coords = array(array(33, 33), array(44, 44));
 		$this->entities = array_merge($this->entities, $this->dxfCode->addPolyLine("0", $coords, 1, NULL));
 		$this->entities = array_merge($this->entities, $this->dxfCode->addInsert("0", 50, 50, 0, "ENEL", 0));

@@ -150,7 +150,7 @@ class dxfCode implements iDxfCode {
 	* @return array
 	*/
     public function addPoint3D($layerName, $x, $y, $z, $thickness, $color){
-		//se il colore è nullo non disegno
+		//se il colore ï¿½ nullo non disegno
 		//if (is_null($color)){
 		//	return;
 		//}
@@ -212,7 +212,7 @@ class dxfCode implements iDxfCode {
 	* @return array
 	*/
 	public function addPolyLine3d($layerName, $coords, $thickness, $lineType, $color){
-		//se il colore è nullo non disegno
+		//se il colore ï¿½ nullo non disegno
 		if (is_null($color)){
 			return;
 		}
@@ -334,7 +334,7 @@ class dxfCode implements iDxfCode {
 	* @return array
 	*/
 	public function addPolyLine($layerName, $coords, $thickness, $lineType, $color){
-		//se il colore è nullo non disegno
+		//se il colore ï¿½ nullo non disegno
 		if (is_null($color)){
 			return;
 		}
@@ -501,7 +501,7 @@ class dxfCode implements iDxfCode {
 	* @return array
 	*/
 	public function addHatch($layerName, $coords, $color, $pattern, $parentHandle){
-		//se il colore è nullo non disegno
+		//se il colore ï¿½ nullo non disegno
 		if (is_null($color)){
 			return;
 		}
@@ -630,8 +630,8 @@ class dxfCode implements iDxfCode {
 	*
 	* @return array
 	*/
-	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color, $scaleMultiplier){		
-		//se il colore è nullo non disegno
+	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color){		
+		//se il colore ï¿½ nullo non disegno
 		//if (is_null($color)){
 		//	return;
 		//}
@@ -648,7 +648,6 @@ class dxfCode implements iDxfCode {
 		}
 		$tmpHandle = $this->dxfFactory->getNextHandlePoint();
 		$strGeom = array();
-		$labelSize = floatval($labelSize) * floatval($scaleMultiplier);
 		array_push($strGeom, "  0");
 		array_push($strGeom, "TEXT");
 		array_push($strGeom, "  5");
@@ -716,7 +715,7 @@ class dxfCode implements iDxfCode {
 	* @return array
 	*/
 	public function addInsert($layerName, $x, $y, $z, $blockName, $angle, $color, $scaleInsert){
-		//se il colore è nullo non disegno
+		//se il colore ï¿½ nullo non disegno
 		if (is_null($color)){
 			return;
 		}
@@ -772,7 +771,7 @@ class dxfCode implements iDxfCode {
 	}
 	
 	public function getThickness($thickness){
-		//la divisione per 30 è arbitraria. TODO Valutare se è corretta.
+		//la divisione per 30 ï¿½ arbitraria. TODO Valutare se ï¿½ corretta.
 		return $thickness / 30;
 	}
 	
