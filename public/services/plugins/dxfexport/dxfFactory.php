@@ -26,7 +26,7 @@
 *
 *
 * La classe richiede obbligatoriamente il file di configurazione con le informazioni
-* necessare alla generazione del Dxf. Il formato del file JSON di configurazione è
+* necessare alla generazione del Dxf. Il formato del file JSON di configurazione ï¿½
 * presente nel file config_extraction_schema.json
 *
 * Il processo di generazione del DXF viene elaborato dalla funzione CreateDxf
@@ -34,21 +34,27 @@
 *
 * initDxf         Caricamento template e verifica input/oputput su disco
 * addLayers       Creazione dei livelli
-* addEntities     Creazione delle entità
+* addEntities     Creazione delle entitï¿½
 * mergeDxf        Assemblaggio DXF
 * writeDxf        Scrittura DXF
 *
 ******************************************************************************/
 
 include_once('dxfErrors.php');
+include_once('dxfInterfaces.php');
 include_once('lexerParser.php');
+include_once('dxfCode.php');
+
 /**
 *	Classe per la generazione della di un file DXF
 *
 *
 */
-class dxfFactory{
-	private $handle = 0; //contatore univoco per le entità del dxf
+class dxfFactory implements iDxfFactory {
+	private $handle = 0; //contatore univoco per le entitï¿½ del dxf
+	
+	private $dxfCode = null; //classe per la gestione del codice DXF
+	
 	//public $rete = ""; //rete attualmente in uso
 	private $outputFile = ""; //file di destinazione
 	private $outputFilePoints = ""; //file di destinazione punti. Utilizzato in alternativa con $entPoints
@@ -68,7 +74,7 @@ class dxfFactory{
 	
 	public $debug = False; //abilita le informazioni di debug
 	public $dummy = NULL; //abilita le geometrie dummy
-	public $drawHatches = True; //abilita disegno dei riempimenti
+	public $drawHatches = False; //abilita disegno dei riempimenti
 	
 	public $configExtraction = NULL;
 	public $configExtractionStr = NULL;
@@ -88,15 +94,15 @@ class dxfFactory{
 	
 	public $enableLineThickness = True;
 	public $enableColors = True;
-	public $enableSingleLayerBlock = True;
-	public $excludeSingleLayerBlock = array();
-	public $singleLayerBlockName = "blocchi";
-	public $singleLayerColor = (256 * 256) * 255 + (256 * 255) + 255;
 	
 	public $dxfLineScale = 0.15;
 	public $dxfTextScaleMultiplier = 1;
 	public $dxfLabelScaleMultiplier = 1;
 	public $dxfInsertScaleMultiplier = 1;
+	
+	public $dxfEnableTemplateContesti = False;
+	public $dxfTemplateContestiPath = null;
+	public $dxfTemplateContesti = null;
 	
 	public $parserExpression;
 	
@@ -125,19 +131,66 @@ class dxfFactory{
 		$this->configExtraction = json_decode($configJson);
 	
 		//controllo della configurazione
-		if(empty($this->configExtraction->{'templateFile'})) throw new Exception(dxfErrors::template_non_configurato);
+		if(is_null($this->configExtraction->{'templateFile'})) throw new Exception(dxfErrors::template_non_configurato);
 		//if(empty($this->configExtraction->{'rete'})) throw new Exception(dxfErrors::rete_non_configurato);
-		if(empty($this->configExtraction->{'minX'})) throw new Exception(dxfErrors::bbox_undefined);
-		if(empty($this->configExtraction->{'minY'})) throw new Exception(dxfErrors::bbox_undefined);
-		if(empty($this->configExtraction->{'maxX'})) throw new Exception(dxfErrors::bbox_undefined);
-		if(empty($this->configExtraction->{'maxY'})) throw new Exception(dxfErrors::bbox_undefined);
-		if(empty($this->configExtraction->{'epsg'})) throw new Exception(dxfErrors::epsg_undefined);
-		if(empty($this->configExtraction->{'layers'})) throw new Exception(dxfErrors::layers_undefined);
+		if(is_null($this->configExtraction->{'minX'})) throw new Exception(dxfErrors::bbox_undefined);
+		if(is_null($this->configExtraction->{'minY'})) throw new Exception(dxfErrors::bbox_undefined);
+		if(is_null($this->configExtraction->{'maxX'})) throw new Exception(dxfErrors::bbox_undefined);
+		if(is_null($this->configExtraction->{'maxY'})) throw new Exception(dxfErrors::bbox_undefined);
+		if(is_null($this->configExtraction->{'epsg'})) throw new Exception(dxfErrors::epsg_undefined);
+		if(is_null($this->configExtraction->{'layers'})) throw new Exception(dxfErrors::layers_undefined);
+		if(is_null($this->configExtraction->{'themes'})) throw new Exception(dxfErrors::layers_undefined);
 		
+		if(!is_null($this->configExtraction->{'dxfEnableTemplateContesti'})) $this->dxfEnableTemplateContesti = $this->configExtraction->{'dxfEnableTemplateContesti'};
+		if(!is_null($this->configExtraction->{'dxfTemplateContestiPath'})) $this->dxfTemplateContestiPath = $this->configExtraction->{'dxfTemplateContestiPath'};
+		if(!is_null($this->configExtraction->{'dxfDrawHatches'})) $this->drawHatches = $this->configExtraction->{'dxfDrawHatches'};
+		
+		if(!is_null($this->configExtraction->{'dxfEnableColors'})) $this->enableColors = $this->configExtraction->{'dxfEnableColors'};
+		if(!is_null($this->configExtraction->{'dxfEnableLineThickness'})) $this->enableLineThickness = $this->configExtraction->{'dxfEnableLineThickness'};
+		if(!is_null($this->configExtraction->{'dxfLineScale'})) $this->dxfLineScale = $this->configExtraction->{'dxfLineScale'};
+		
+		if(!is_null($this->configExtraction->{'dxfTextScaleMultiplier'})) $this->dxfTextScaleMultiplier = $this->configExtraction->{'dxfTextScaleMultiplier'};
+		if(!is_null($this->configExtraction->{'dxfLabelScaleMultiplier'})) $this->dxfLabelScaleMultiplier = $this->configExtraction->{'dxfLabelScaleMultiplier'};
+		if(!is_null($this->configExtraction->{'dxfInsertScaleMultiplier'})) $this->dxfInsertScaleMultiplier = $this->configExtraction->{'dxfInsertScaleMultiplier'};
+
+		//TODO Unit test required
+		// print("dxfTextScaleMultiplier ".$this->dxfTextScaleMultiplier);
+		// print("<br/>dxfLabelScaleMultiplier ".$this->dxfLabelScaleMultiplier);
+		// print("<br/>dxfInsertScaleMultiplier ".$this->dxfInsertScaleMultiplier);
+		// print("<br/>dxfLineScale ".$this->dxfLineScale);
+
 		//creo il parser per le espressioni
 		$this->parserExpression = new Parser();
+		
+		//creo la classe per la gestione del codice
+		$this->dxfCode = new dxfCode($this, $this->dxfLineScale, $this->enableColors, $this->enableLineThickness, $this->drawHatches);
+		
+		//abilito il template dei contesti
+		if($this->dxfEnableTemplateContesti){
+			$this->dxfTemplateContesti = json_decode(file_get_contents($this->dxfTemplateContestiPath));
+			if(is_null($this->dxfTemplateContesti)){
+				$this->log("File dei contesti non valido");
+			}
+		}
 	}
-
+		
+	public function getNextHandle(){
+		return $this->handle++;
+	}
+	
+	public function getNextHandlePoint(){
+		$this->handle++;
+		return  $this->handle + $this->handlePoints;
+	}
+	public function getNextHandleLine(){
+		$this->handle++;
+		return $this->handle + $this->handleLines;
+	}
+	public function getNextHandleHatch(){
+		$this->handle++;
+		return $this->handle + $this->handleHatches;
+	}
+	
 	
 	public function log($message){
 		if($this->debug){
@@ -147,6 +200,9 @@ class dxfFactory{
 		}
 		
 	}
+	
+	
+	
 	/**
 	* Funzione di debug
 	*
@@ -166,7 +222,7 @@ class dxfFactory{
 	}
 	
 	/**
-	* Imposta manualmente l'handle delle entità
+	* Imposta manualmente l'handle delle entitï¿½
 	*
 	* @param int $h Nuova handle
 	*
@@ -209,7 +265,7 @@ class dxfFactory{
 	* @return int
 	*/
 	private function endOfSection($section){
-		$currentSection = false; //controllo se la table è quella corrente
+		$currentSection = false; //controllo se la table ï¿½ quella corrente
 		for($i = 0; $i < count($this->dxf); $i++){
 			if($this->dxf[$i] == "SECTION"){
 				if($this->dxf[$i + 2] == strtoupper($section)){
@@ -250,7 +306,7 @@ class dxfFactory{
 	* @return int
 	*/
 	private function endOfTable($table){
-		$currentTable = false; //controllo se la table è quella corrente
+		$currentTable = false; //controllo se la table ï¿½ quella corrente
 		for($i = 0; $i < count($this->dxf); $i++){
 			if($this->dxf[$i] == "TABLE"){
 				if($this->dxf[$i + 2] == strtoupper($table)){
@@ -388,11 +444,10 @@ class dxfFactory{
 	* @return bool
 	*/
 	public function createDxf($fileDest = NULL){
-		
 		//setto il file di destinazione
 		$this->outputFile = $fileDest;
 		if(isset($this->outputFile)){
-			//creo i file per le singole entità
+			//creo i file per le singole entitï¿½
 			$path_parts = pathinfo($this->outputFile);
 			$this->outputFilePoints =  join('/',  array($path_parts['dirname'], $path_parts['filename']."_points".".txt")); 
 			$this->outputFileLines =  join('/',  array($path_parts['dirname'], $path_parts['filename']."_lines".".txt")); 
@@ -405,48 +460,62 @@ class dxfFactory{
 		//ricavo il filtro per il WFS
 		$filterEnvelope = "&FILTER=%3Cogc:Filter%20xmlns:ogc=%22http://www.opengis.net/ogc%22%3E%3Cogc:BBOX%3E%3Cogc:PropertyName%3Egeom%3C/ogc:PropertyName%3E%3Cgml:Envelope%20xmlns:gml=%22http://www.opengis.net/gml%22%3E%3Cgml:lowerCorner%3E".$this->configExtraction->{'minX'}."%20".$this->configExtraction->{'minY'}."%3C/gml:lowerCorner%3E%3Cgml:upperCorner%3E".$this->configExtraction->{'maxX'}."%20".$this->configExtraction->{'maxY'}."%3C/gml:upperCorner%3E%3C/gml:Envelope%3E%3C/ogc:BBOX%3E%3C/ogc:Filter%3E";
 		
-		//classe per il clipping
-		//$clip = new SutherlandHodgman($this->configExtraction->{'minX'}, $this->configExtraction->{'minY'}, $this->configExtraction->{'maxX'}, $this->configExtraction->{'maxY'});
-		//$clip = new SutherlandHodgman(10, 20, 20, 10);
-		
 		//aggiungo il layer con l'extent
-		$this->layers = array_merge($this->layers, $this->addLayer("boundingbox", 2, NULL, NULL));
-				
-		//Ciclo sui layer
-		foreach ($this->configExtraction->{'layers'} as $dLayer){
-			//aggiungo i layer
-			if(!empty($dLayer->{'wfs'}) && !empty($dLayer->{'layerName'})){
-				//aggiungo l'envelope
-				$wfsUrl = $dLayer->{'wfs'}.$filterEnvelope;
-				$geojson = $this->getFeatures($wfsUrl);
-				if(!is_null($geojson)){
-					(!empty($dLayer->{'thickness'})) ? $thickness = $dLayer->{'thickness'} : $thickness = 1;
-					//$geometryType = $dLayer->{'geometryType'};
-					//se ci sono delle feature aggiungo il layer
-					if(count($geojson->{'features'}) > 0){
-						if(!isset($dLayer->{'lineType'})){
-							if(count($dLayer->{'styles'}) > 0){
-								$dLayer->{'lineType'} = $dLayer->{'styles'}[0]->{'lineType'}; //assegno il primo valore disponibile
-							}else{
-								$dLayer->{'lineType'} = NULL;
-							}
+		$this->layers = array_merge($this->layers, $this->dxfCode->addLayer("boundingbox", 2, NULL, NULL));
+		
+		//aggiungo il layer del template contesti se utilizzato
+		if($this->dxfEnableTemplateContesti){
+			foreach ($this->configExtraction->{'themes'} as $theme){
+				foreach ($this->dxfTemplateContesti as $themeContesto){
+					if ($themeContesto->{"themeName"} == $theme){
+						foreach ($themeContesto->{"layers"} as $tLayer){
+							$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($tLayer->{"layerNameDxf"}, $tLayer->{"style"}->{"color"}, NULL, $tLayer->{"style"}->{"lineType"}));
 						}
-						$this->layers = array_merge($this->layers, $this->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
-					}
-					foreach ($geojson->{'features'} as $feature){
-						$coords = $feature->{'geometry'}->{'coordinates'};
-						//$coords = $clip->clip($coords);
-						$props = $feature->{'properties'};
-						//ricavo lo style relativo
-						$stylesFeature = $this->getStyles($props, $dLayer->{'styles'});
-						foreach ($stylesFeature as $style){
-							//print($dLayer->{'layerName'}."style<br/>".json_encode($stylesFeature)."<br/>");
-							$this->drawFeature($style, $dLayer, $feature);
-						}
+						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default"}->{"layerNameDxf"}, $themeContesto->{"layer_default"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default"}->{"style"}->{"lineType"}));
+						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default_blocchi"}->{"layerNameDxf"}, $themeContesto->{"layer_default_blocchi"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default_blocchi"}->{"style"}->{"lineType"}));
+						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default_testi"}->{"layerNameDxf"}, $themeContesto->{"layer_default_testi"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default_testi"}->{"style"}->{"lineType"}));
 					}
 				}
 			}
 		}
+		
+		//Ciclo sui layer
+		foreach ($this->configExtraction->{'layers'} as $dLayer){
+			//aggiungo i layer
+			if(empty($dLayer->{'wfs'}) || empty($dLayer->{'layerName'})){
+				continue;
+			}
+			//aggiungo l'envelope
+			$wfsUrl = $dLayer->{'wfs'}.$filterEnvelope;
+			$geojson = $this->getFeatures($wfsUrl);
+			if(!is_null($geojson)){
+				//$geometryType = $dLayer->{'geometryType'};
+				//se ci sono delle feature aggiungo il layer
+				if(count($geojson->{'features'}) > 0){
+					if(!isset($dLayer->{'lineType'})){
+						if(count($dLayer->{'styles'}) > 0){
+							$dLayer->{'lineType'} = $dLayer->{'styles'}[0]->{'lineType'}; //assegno il primo valore disponibile
+						}else{
+							$dLayer->{'lineType'} = NULL;
+						}
+					}
+					if(!$this->dxfEnableTemplateContesti){
+						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
+					}
+				}
+				foreach ($geojson->{'features'} as $feature){
+					$coords = $feature->{'geometry'}->{'coordinates'};
+					//$coords = $clip->clip($coords);
+					$props = $feature->{'properties'};
+					//ricavo lo style relativo
+					$stylesFeature = $this->getStyles($props, $dLayer->{'styles'});
+					foreach ($stylesFeature as $style){									
+						$this->drawFeature($this->getFeatureStylebyLayer($style, $dLayer, $feature->{'geometry'}->{'type'}), $dLayer, $this->getLayerNamebyLayer($dLayer, $feature->{'geometry'}->{'type'}), $feature);
+					}
+				}
+			}
+		}
+		
 		//aggiungo il rettangolo di estrazione
 			$coords = [
 				[$this->configExtraction->{'minX'}, $this->configExtraction->{'minY'}, 0],
@@ -455,7 +524,7 @@ class dxfFactory{
 				[$this->configExtraction->{'maxX'}, $this->configExtraction->{'minY'}, 0],
 				[$this->configExtraction->{'minX'}, $this->configExtraction->{'minY'}, 0],
 			];
-			$this->addPolygon("boundingbox", $coords, 1, NULL, "".((256 * 256 * 255) + (256 * 255)) , NULL);
+			$this->dxfCode->addPolygon("boundingbox", $coords, 1, NULL, "".((256 * 256 * 255) + (256 * 255)) , NULL);
 			//setto l'extent
 			//$this->setDxfProperty("\$EXTMAX", "10", $this->configExtraction->{'maxX'});
 			//$this->setDxfProperty("\$EXTMAX", "20", $this->configExtraction->{'maxY'});
@@ -471,11 +540,6 @@ class dxfFactory{
 			//$this->setDxfProperty("AcDbViewportTableRecord", "41", ($this->configExtraction->{'maxY'} - $this->configExtraction->{'minY'})/10);
 			$this->setDxfProperty("AcDbViewportTableRecord", "41", 5);
 		
-		//aggiungo il layer unico per i blocchi
-		if($this->enableSingleLayerBlock){
-			$this->layers = array_merge($this->layers, $this->addLayer($this->singleLayerBlockName, NULL, $this->singleLayerColor, NULL));
-		}
-		
 		//Caricamento delle features	
 		//verifico se sono richieste le informazioni di debug
 		if($this->debug){
@@ -486,7 +550,7 @@ class dxfFactory{
 			$this->addDummy();
 		}
 				
-		//se il file è fornito lo salvo su disco
+		//se il file ï¿½ fornito lo salvo su disco
 		if(isset($this->outputFile)){
 			$this->writeDxf($this->outputFile);
 			return;
@@ -500,14 +564,224 @@ class dxfFactory{
 		$this->mergeDxf();
 		return implode(PHP_EOL, $this->dxf);
 		
-		
-		
 	}
 	
 	/**
-	* Ricava gli style in base alle proprietà dell'utente
+	* Return the correct style based on current cofiguration
+	* @param object $style Style object
+	* @param object $dLayer Layer object
+	* @return void
+	*/
+	public function getFeatureStylebyLayer($style, $dLayer, $geometryType){
+		$featureStyle = $style;
+		if($this->dxfEnableTemplateContesti){
+			$themeFound = False;
+			foreach ($this->dxfTemplateContesti as $theme){
+				$layerFound = False;
+				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					$themeFound = True;
+					foreach ($theme->{"layers"} as $tLayer){
+						if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
+							//definizione dello stile custom
+							$featureStyle->{"color"} = $tLayer->{"style"}->{"color"};
+							$featureStyle->{"lineType"} = $tLayer->{"style"}->{"lineType"};
+							if(!is_null($tLayer->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $tLayer->{"style"}->{"labelSize"};
+							$layerFound = True;
+							break;
+						}
+					}
+					if(!$layerFound){
+						//in base alla geometria lo mando su layer di default
+						switch (strtolower($geometryType)) {
+						case "text":
+							$featureStyle->{"color"} = $theme->{"layer_default_testi"}->{"style"}->{"color"};
+							$featureStyle->{"lineType"} = $theme->{"layer_default_testi"}->{"style"}->{"lineType"};
+							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
+							break;
+						case "insert":
+							$featureStyle->{"color"} = $theme->{"layer_default_blocchi"}->{"style"}->{"color"};
+							$featureStyle->{"lineType"} = $theme->{"layer_default_blocchi"}->{"style"}->{"lineType"};
+							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
+							break;
+						case "polyline":
+						case "linestring":
+						case "multilinestring":
+						case "polygon":
+						case "multipolygon":
+						case "point":
+						default:
+							$featureStyle->{"color"} = $theme->{"layer_default"}->{"style"}->{"color"};
+							$featureStyle->{"lineType"} = $theme->{"layer_default"}->{"style"}->{"lineType"};
+							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
+							break;
+						}
+					}
+				}
+			}
+		}
+		return $featureStyle;
+	}
+		
+	/**
+	* Returns the correct insert autocad layer name based on current cofiguration
+	* @param object $dLayer Layer object
+	* @return void
+	*/
+	public function getInsertLayerNamebyLayer($dLayer){
+		$layerName = "";
+		if($this->dxfEnableTemplateContesti){
+			$themeFound = False;
+			foreach ($this->dxfTemplateContesti as $theme){
+				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					$themeFound = True;
+					$layerName = $theme->{"layer_default_blocchi"}->{"layerNameDxf"};	
+				}
+			}
+			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
+				$layerName = "0";
+			}
+		}else{
+			//disegno standard
+			$layerName = $dLayer->{"layerName"};
+		}
+		return $layerName;
+	}
+	
+	/**
+	* Returns the correct annotation autocad layer name based on current cofiguration
+	* @param object $dLayer Layer object
+	* @return void
+	*/
+	public function getAnnotationLayerNamebyLayer($dLayer){
+		$layerName = "";
+		if($this->dxfEnableTemplateContesti){
+			$themeFound = False;
+			foreach ($this->dxfTemplateContesti as $theme){
+				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					$themeFound = True;
+					$layerName = $theme->{"layer_default_testi"}->{"layerNameDxf"};	
+				}
+			}
+			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
+				$layerName = "0";
+			}
+		}else{
+			//disegno standard
+			$layerName = $dLayer->{"layerName"};
+		}
+		return $layerName;
+	}
+
+	/**
+	* Returns the correct autocad layer name based on current cofiguration
+	* @param object $dLayer Layer object
+	* @param string $geometryType Geometry Type
+	* @return void
+	*/
+	public function getLayerNamebyLayer($dLayer, $geometryType){
+		$layerName = "";
+		if($this->dxfEnableTemplateContesti){
+			$themeFound = False;
+			foreach ($this->dxfTemplateContesti as $theme){
+				$layerFound = False;
+				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					$themeFound = True;
+					foreach ($theme->{"layers"} as $tLayer){
+						if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
+							//definizione dello stile custom
+							$layerName = $tLayer->{"layerNameDxf"};
+							$layerFound = True;
+							break;
+						}
+					}
+					if(!$layerFound){
+						//in base alla geometria lo mando su layer di default
+						switch (strtolower($geometryType)) {
+							case "text":
+								$layerName = $theme->{"layer_default_testi"}->{"layerNameDxf"};
+								break;
+							case "insert":
+								$layerName = $theme->{"layer_default_blocchi"}->{"layerNameDxf"};
+								break;
+							case "polyline":
+							case "linestring":
+							case "multilinestring":
+							case "polygon":
+							case "multipolygon":
+							case "point":
+							default:
+								$layerName = $theme->{"layer_default"}->{"layerNameDxf"};
+								break;
+						}
+					}
+				}
+			}
+			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
+				$layerName = "0";
+			}
+		}else{
+			//disegno standard
+			$layerName = $dLayer->{"layerName"};
+		}
+		return $layerName;
+	}
+	
+	
+	/**
+	* Add entity to polylines' array
+	* @param Array $strGeom Dxf array codes
+	* @return void
+	*/
+	public function writeLine($strGeom){
+		if(isset($this->outputFile)){
+			file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
+			file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
+		}else{
+			//$this->entLines = array_merge($this->entLines, $strGeom);
+			foreach ($strGeom as $fline){
+				array_push($this->entLines, $fline);
+			}
+		}
+	}
+	
+	/**
+	* Add entity to points' array
+	* @param Array $strGeom Dxf array codes
+	* @return void
+	*/
+	public function writePoint($strGeom){
+		//valuto se scrivere su disco o utilizzare array in memoria
+		if(isset($this->outputFile)){
+			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
+			file_put_contents($this->outputFilePoints, PHP_EOL, FILE_APPEND);
+		}else{
+			//$this->entPoints = array_merge($this->entPoints, $strGeom);
+			foreach ($strGeom as $fline){
+				array_push($this->entPoints, $fline);
+			}
+		}
+	}
+	
+	/**
+	* Add entity to polygon' array
+	* @param Array $strGeom Dxf array codes
+	* @return void
+	*/
+	public function writeHatch($strGeom){
+		if(isset($this->outputFile)){			
+			file_put_contents($this->outputFileHatches, implode(PHP_EOL, $strGeom), FILE_APPEND);
+			file_put_contents($this->outputFileHatches, PHP_EOL, FILE_APPEND);
+		}else{
+			foreach ($strGeom as $fline){
+				array_push($this->entHatches, $fline);
+			}
+		}
+	}
+	
+	/**
+	* Ricava gli style in base alle proprietï¿½ dell'utente
 	*
-	* @param object $props Proprietà della feature
+	* @param object $props Proprietï¿½ della feature
 	* @param object $styles Array degli stili
 	*
 	* @return object Primo stile trovato con le caratteristiche fornite
@@ -540,7 +814,7 @@ class dxfFactory{
 							$valueProp = str_replace(array("\n","\r","\t"), '', $valueProp);
 						}
 						if($valueProp == ""){
-							//questa verifica controlla se il valore è una stringa in base agli apici
+							//questa verifica controlla se il valore ï¿½ una stringa in base agli apici
 							//non ho il tipo di campo e i valori nulli non vengono valutati con i numeri
 							if( substr($expression, strrpos($expression, $field) -1, 1) != "'"){
 								$valueProp = "0";
@@ -567,9 +841,9 @@ class dxfFactory{
 	}
 	
 	/**
-	* Calcola una espressione in base alle proprietà dell'utente
+	* Calcola una espressione in base alle proprietï¿½ dell'utente
 	*
-	* @param object $props Proprietà della feature
+	* @param object $props Proprietï¿½ della feature
 	* @param object $expression Espressione da valutare
 	*
 	* @return object Primo stile trovato con le caratteristiche fornite
@@ -582,7 +856,7 @@ class dxfFactory{
 			if($expression == NULL){
 				return "";
 			}
-			//Valuto se l'espressione è una sola parola
+			//Valuto se l'espressione ï¿½ una sola parola
 			if(strpos($expression, ' ') === false){
 				if(isset($props->{$this->normalizeField($expression)})){
 					$result =  utf8_decode($props->{$this->normalizeField($expression)});
@@ -613,8 +887,7 @@ class dxfFactory{
 		}
 		return "";
 	}
-	
-	
+		
 	public function evalExpression($expression){
 		//
 		
@@ -624,12 +897,13 @@ class dxfFactory{
 	}
 	//**************************************************************************************************************
 	
-	public function drawFeature($style, $dLayer, $feature){
+	public function drawFeature($style, $dLayer, $layerName, $feature){
+		
 		$props = $feature->{'properties'};
 		$coords = $feature->{'geometry'}->{'coordinates'};
 		$this->log("Style: ".json_encode($style));
 		if(is_null($style)){
-			$this->log("Impossibile definire lo stile".$dLayer->{'layerName'}." la feature non sarà visualizzata");
+			$this->log("Impossibile definire lo stile".$dLayer->{'layerName'}." la feature non sarï¿½ visualizzata");
 			return;
 		}
 		//colore
@@ -662,13 +936,13 @@ class dxfFactory{
 		if(isset($style->{'symbol_name'})){
 			$symbolName = $style->{'symbol_name'};
 		}
-		$thickness = null;
+		(!empty($dLayer->{'thickness'})) ? $thickness = $dLayer->{'thickness'} : $thickness = 1;
 		if(isset($style->{'thickness'})){
 			$thickness = $style->{'thickness'};
 		}
 		$labelSize = $this->defaultSize;
 		if(isset($style->{'labelSize'})){
-			$labelSize = $this->getLabelSize($style->{'labelSize'});
+			$labelSize = $style->{'labelSize'};
 		}
 		//fine definizione dei valori di default
 		$this->log("Simbolo ".$feature->{'geometry'}->{'type'});
@@ -701,27 +975,28 @@ class dxfFactory{
 					}
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
-					if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
-						$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfTextScaleMultiplier);
+					if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)){
+						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, NULL, $labelColor);
 					}
 				}
-				//se il nome del simbolo è settato aggiungo un blocco altrimenti un punto
-				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+				//se il nome del simbolo ï¿½ settato aggiungo un blocco altrimenti un punto
+				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					$this->log("Simbolo ".$symbolName);
+					$this->log("Colore ".$color);
 					if(!is_null($symbolName)){
 						$angle = 0;
 						$symbolName = $this->getSymbolName($symbolName);
 						//print_r($style);
 						(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
 						if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
-						$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
+						$this->dxfCode->addInsert($this->getLayerNamebyLayer($dLayer, "insert"), $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
 					}else{
-						$this->addPoint3D($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], 1, $color);
+						$this->dxfCode->addPoint3D($this->getLayerNamebyLayer($dLayer, "insert"), $coords[0], $coords[1], $coords[2], 1, $color);
 					}
 				}
 			break;
 			case "text":
-				if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
+				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)){
 					$text = "";
 					$angle = 0;
 					if(!empty($props)){
@@ -734,12 +1009,11 @@ class dxfFactory{
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}
-					$this->addText($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfTextScaleMultiplier);
-					//addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign)
+					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, NULL, $labelColor);
 				}
 			break;
 			case "insert":
-				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					$symbolName = $this->getSymbolName($symbolName);
 					$angle = 0;
 					//$size = $this->defaultSize;
@@ -752,13 +1026,13 @@ class dxfFactory{
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}				
-					$this->addInsert($dLayer->{'layerName'}, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
+					$this->dxfCode->addInsert($layerName, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
 				}
 			break;
 			case "polyline":
 			case "linestring":
 			case "multilinestring":
-				//setto l'outline come il colore se non è definito
+				//setto l'outline come il colore se non ï¿½ definito
 				if(is_null($outlineColor)){
 					$outlineColor = $color;
 				}
@@ -768,17 +1042,17 @@ class dxfFactory{
 				}
 				//TODO non aggiungo se il nome contiene una etichetta, andrebbe definita in maniera differente
 				//ma al momento non esistono soluzioni alternative
-				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
 						for($li = 0; $li < count($coords); $li++){
-							$this->addPolyLine($dLayer->{'layerName'}, $coords[$li], $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
+							$this->dxfCode->addPolyLine($layerName, $coords[$li], $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
 						}
 					}else{
-						$this->addPolyLine($dLayer->{'layerName'}, $coords, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
+						$this->dxfCode->addPolyLine($layerName, $coords, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
 					}
 				}
 				//sezione etichette alle linee
-				if(!in_array($dLayer->{'layerName'}, $this->excludeTextLayers)){
+				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)){
 					if(!is_null($fieldText)){
 						//aggiungo una etichetta
 						$text = "TEXT NOT FOUND";
@@ -802,7 +1076,7 @@ class dxfFactory{
 						$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->addText($dLayer->{'layerName'}, $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $labelSize, $angle, NULL, $labelColor, $this->dxfLabelScaleMultiplier);
+						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, NULL, $labelColor);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -812,7 +1086,7 @@ class dxfFactory{
 						$symbolCoords = $this->getPointCoordsDistance($coords, 10);
 						//aggiungo un insert
 						foreach($symbolCoords as $symbolCoord){
-							$this->addInsert($dLayer->{'layerName'}, $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
+							$this->dxfCode->addInsert($this->getInsertLayerNamebyLayer($dLayer), $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
 						}
 					}
 				//}
@@ -820,14 +1094,13 @@ class dxfFactory{
 			case "polygon":
 			case "multipolygon":
 				//verifica del multipolygon
-				//print($dLayer->{'layerName'}." out ". $outlineColor. " col ".$color);
-				if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
+				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){		
 					if(is_array($coords[0])){
 						for($i=0; $i< count($coords); $i++){
-							$this->addPolygon($dLayer->{'layerName'}, $coords[$i], $thickness, $linetype, $outlineColor, $color);
+							$this->dxfCode->addPolygon($layerName, $coords[$i], $thickness, $linetype, $outlineColor, $color);
 						}
 					}else{
-						$this->addPolygon($dLayer->{'layerName'}, $coords, $thickness, $linetype, $outlineColor, $color);
+						$this->dxfCode->addPolygon($layerName, $coords, $thickness, $linetype, $outlineColor, $color);
 					}
 				}
 			break;
@@ -843,732 +1116,6 @@ class dxfFactory{
 	*
 	* @return array
 	*/
-	public function addLayer($layerName, $aciColor, $color, $lineType){
-		$this->handle++;
-        $strLayer = array();
-		if (is_null($lineType))
-		{
-			$lineType = "Continuous";
-		}
-		//if (is_null($color))
-		//{
-		//	$color = $this->defaultColor;
-		//}
-		if($color == "0"){
-			$aciColor = "7";
-			$color = null;
-		}
-		array_push($strLayer, "  0");
-		array_push($strLayer, "LAYER");
-		array_push($strLayer, "  5");
-		array_push($strLayer, $this->handle."");
-		array_push($strLayer, "330");
-		array_push($strLayer, "2");
-		array_push($strLayer, "100");
-		array_push($strLayer, "AcDbSymbolTableRecord");
-		array_push($strLayer, "100");
-		array_push($strLayer, "AcDbLayerTableRecord");
-		array_push($strLayer, "  2");
-		array_push($strLayer, $layerName."");
-		array_push($strLayer, " 70");
-		array_push($strLayer, "	 0");
-		array_push($strLayer, " 62");
-		array_push($strLayer, !is_null($aciColor) ? $aciColor."" : "7");
-		if (!is_null($color)){
-			array_push($strLayer, " 420");
-			array_push($strLayer,  $color."");
-		}
-		array_push($strLayer, "  6");
-		array_push($strLayer,  $lineType);
-		array_push($strLayer, "370");
-		array_push($strLayer, "	-3");
-		array_push($strLayer, "390");
-		array_push($strLayer, "0");
-		
-		return $strLayer;
-	}
-	
-	/**
-	* Crea l'array per l'inserimento di un punto
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double $x Coordinata X
-	* @param double $y Coordinata Y
-	* @param double $z Coordinata Z
-	* @param double $thickness Dimensione del punto
-	*
-	* @return array
-	*/
-    public function addPoint3D($layerName, $x, $y, $z, $thickness, $color){
-		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
-		//if (is_null($color))
-		//{
-		//	$color = $this->defaultColor;
-		//}
-		if ($color == 0)
-		{
-			$color = null;
-			//$color = $this->defaultColor;
-		}
-		$this->handle++;
-		$tmpHandle = $this->handle + $this->handlePoints;
-        $strGeom = array();
-        array_push($strGeom, "  0");
-        array_push($strGeom, "POINT");
-		array_push($strGeom, "  5");
-		array_push($strGeom, $tmpHandle."");
-		array_push($strGeom, "100");
-		array_push($strGeom, "AcDbEntity");
-        array_push($strGeom, "  8");
-        array_push($strGeom, $layerName);
-		array_push($strGeom, "100");
-		array_push($strGeom, "AcDbPoint");
-		array_push($strGeom, " 62");
-		array_push($strGeom, ($this->enableColors) ? "7" : "256");
-		if ($this->enableColors && !is_null($color)){
-			array_push($strGeom, " 420");
-			array_push($strGeom,  $color."");
-		}
-        array_push($strGeom, "  10");
-        array_push($strGeom, $x."");
-        array_push($strGeom, "  20");
-        array_push($strGeom, $y."");
-		array_push($strGeom, "  30");
-        array_push($strGeom, $z."");
-		if($this->enableLineThickness){
-			array_push($strGeom, "  39");
-			array_push($strGeom, $thickness."");
-		}
-		//valuto se scrivere su disco o utilizzare array in memoria
-		if(isset($this->outputFile)){
-			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFilePoints, PHP_EOL, FILE_APPEND);
-		}else{
-			//$this->entPoints = array_merge($this->entPoints, $strGeom);
-			foreach ($strGeom as $fline){
-				array_push($this->entPoints, $fline);
-			}
-		}
-		$this->log("POINT added ".$tmpHandle);
-		return $strGeom;
-    }
-	
-	/**
-	* Crea l'array per l'inserimento di una polilinea 3d
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double[double[2]] $coords Array di coordinate 3D
-	* @param double $thickness Dimensione della linea
-	* @param string $lineType Stile della linea (Default CONTINUOUS)
-	*
-	* @return array
-	*/
-	public function addPolyLine3d($layerName, $coords, $thickness, $lineType, $color){
-		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
-		$strGeom = array();
-		$this->log("".$lineType);
-		//if (is_null($lineType))
-		//{
-		//	$lineType = "CONTINUOUS";
-		//}
-		if ($color == 0)
-		{
-			$color = null;
-		}
-		$this->handle++;
-		$tmpHandle = $this->handle + $this->handleLines;
-		if (count(coords) > 0)
-		{
-			array_push($strGeom, "  0");
-			array_push($strGeom, "POLYLINE");
-			array_push($strGeom, "  5");
-			array_push($strGeom, $tmpHandle."");
-			array_push($strGeom, "  330");
-			array_push($strGeom, "1E");
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDbEntity");
-			array_push($strGeom, "  8");
-			array_push($strGeom, $layerName);
-			array_push($strGeom, "  66");
-			array_push($strGeom, "1");
-			if (!is_null($lineType)){
-				array_push($strGeom, "  6");
-				array_push($strGeom, $lineType);
-			}
-			array_push($strGeom, " 48");
-			array_push($strGeom, " ".$this->dxfLineScale);
-			array_push($strGeom, " 62");
-			array_push($strGeom, ($this->enableColors) ? "7" : "256");
-			if ($this->enableColors && !is_null($color)){
-				array_push($strGeom, " 420");
-				array_push($strGeom,  $color."");
-			}
-			if($this->enableLineThickness){
-				array_push($strGeom, "  39");
-				array_push($strGeom, $thickness."");
-			}
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDb3dPolyline");
-			array_push($strGeom, "10");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, "20");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, "30");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, "70");
-			array_push($strGeom, " 8");
-			
-			for($i = 0; $i < count($coords); $i++){
-				$this->handle++;
-				$tmpHandle = $this->handle + $this->handleLines;
-				$coord = $coords[$i];
-				array_push($strGeom, "  0");
-				array_push($strGeom, "VERTEX");
-				array_push($strGeom, "  5");
-				array_push($strGeom, $tmpHandle."");
-				array_push($strGeom, "  330");
-				array_push($strGeom, "4037");
-				array_push($strGeom, "  100");
-				array_push($strGeom, "AcDbEntity");
-				array_push($strGeom, "  8");
-				array_push($strGeom, $layerName);
-				array_push($strGeom, "  6");
-				array_push($strGeom, $lineType);
-				array_push($strGeom, " 48");
-				array_push($strGeom, " ".$this->dxfLineScale);
-				array_push($strGeom, " 62");
-				array_push($strGeom, ($this->enableColors) ? "7" : "256");
-				if ($this->enableColors && !is_null($color)){
-					array_push($strGeom, " 420");
-					array_push($strGeom,  $color."");
-				}
-				array_push($strGeom, "  100");
-				array_push($strGeom, "AcDbVertex");
-				array_push($strGeom, "  100");
-				array_push($strGeom, "AcDb3dPolylineVertex");
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]);
-				array_push($strGeom, "  30");
-				array_push($strGeom, $coord[2]);
-				array_push($strGeom, "  70");
-				array_push($strGeom, "32");
-			}
-			$this->handle++;
-			$tmpHandle = $this->handle + $this->handleLines;
-			array_push($strGeom, "  0");
-			array_push($strGeom, "SEQEND");
-			array_push($strGeom, "  5");
-			array_push($strGeom, $tmpHandle."");
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDbEntity");
-			array_push($strGeom, "  8");
-			array_push($strGeom, $layerName);
-			array_push($strGeom, "  6");
-			array_push($strGeom, "CONTINUOUS");
-		}
-		//$this->entLines = array_merge($this->entLines, $strGeom);
-		if(isset($this->outputFile)){
-			file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
-		}else{
-			foreach ($strGeom as $fline){
-				array_push($this->entLines, $fline);
-			}
-		}
-		$this->log("POLILYNE added ".$tmpHandle);
-		return $strGeom;
-		
-	}
-	
-	/**
-	* Crea l'array per l'inserimento di una polilinea 
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double[double[2]] $coords Array di coordinate
-	* @param double $thickness Dimensione della linea
-	* @param string $lineType Stile della linea (Default CONTINUOUS)
-	*
-	* @return array
-	*/
-	public function addPolyLine($layerName, $coords, $thickness, $lineType, $color){
-		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
-		$strGeom = array();
-		$this->handle++;
-		$tmpHandle = $this->handle + $this->handleLines;
-		//if (is_null($lineType))
-		//{
-		//	$lineType = "CONTINUOUS";
-		//}
-		if ($color == 0)
-		{
-			$color = null;
-		}
-		if (count($coords) > 0)
-		{
-			//inizio
-			array_push($strGeom, "  0");
-			array_push($strGeom, "LWPOLYLINE");
-			array_push($strGeom, "  5");
-			array_push($strGeom, $tmpHandle."");
-			array_push($strGeom, "  330");
-			array_push($strGeom, "1E");
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDbEntity");
-			array_push($strGeom, "  8");
-			array_push($strGeom, $layerName);
-			if (!is_null($lineType)){
-				array_push($strGeom, "  6");
-				array_push($strGeom, $lineType);
-			}
-			array_push($strGeom, " 48");
-			array_push($strGeom, " ".$this->dxfLineScale);
-			array_push($strGeom, " 62");
-			array_push($strGeom, ($this->enableColors) ? "7" : "256");
-			if ($this->enableColors && !is_null($color)){
-				array_push($strGeom, " 420");
-				array_push($strGeom,  $color."");
-			}
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDbPolyline");
-			array_push($strGeom, "  90");
-			array_push($strGeom, count($coords)."");
-			array_push($strGeom, "  70");
-			array_push($strGeom, "0");
-			//array_push($strGeom, "  43");
-			//array_push($strGeom, "0.0");
-			if($this->enableLineThickness && !is_null($thickness)){
-				array_push($strGeom, " 43");
-				array_push($strGeom, $this->getThickness($thickness));
-			}
-			$this->handle++;
-			$tmpHandle = $this->handle + $this->handleLines;
-			for($i = 0; $i < count($coords); $i++){
-				$coord = $coords[$i];
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]."");
-			}
-		}
-		if(isset($this->outputFile)){
-			file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
-		}else{
-			//$this->entLines = array_merge($this->entLines, $strGeom);
-			foreach ($strGeom as $fline){
-				array_push($this->entLines, $fline);
-			}
-		}
-		$this->log("POLILYNE added ".$tmpHandle);
-		return $strGeom;
-    }
-	
-	/**
-	* Crea l'array per l'inserimento di un poligono
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double[double[2]] $coords Array di coordinate
-	* @param double $thickness Dimensione della linea del poligono
-	* @param string $lineType Stile della linea (Default CONTINUOUS)
-	* @param string $outlineColor Colore della linea
-	* @param string $color Colore del riempimento se inserito aggiunge una HATCH
-	*
-	* @return array
-	*/
-	public function addPolygon($layerName, $coords, $thickness, $lineType, $outlineColor, $color){
-		//disegno solo se ho un colore
-		if (count($coords) > 0 && !is_null($outlineColor))
-		{
-			$this->handle++;
-			$tmpHandle = $this->handle + $this->handleHatches;
-			$strGeom = array();
-			if (is_null($lineType))
-			{
-				$lineType = "Continuous";
-			}
-			//if (is_null($outlineColor))
-			//{
-			//	$outlineColor = $this->defaultColor;
-			//}
-			if ($outlineColor == 0)
-			{
-				$outlineColor = null;
-				//$outlineColor = $this->defaultColor;
-			}
-		//inizio
-			array_push($strGeom, "  0");
-			array_push($strGeom, "LWPOLYLINE");
-			array_push($strGeom, "  5");
-			array_push($strGeom, $tmpHandle."");
-			array_push($strGeom, "  330");
-			array_push($strGeom, "1E");
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDbEntity");
-			array_push($strGeom, "  8");
-			array_push($strGeom, $layerName);
-			array_push($strGeom, "  6");
-			array_push($strGeom, $lineType);
-			//array_push($strGeom, "  43");
-			//array_push($strGeom, $thickness);
-			array_push($strGeom, " 48");
-			array_push($strGeom, " 0.1");
-			array_push($strGeom, " 62");
-			array_push($strGeom, ($this->enableColors) ? "7" : "256");
-			if ($this->enableColors && !is_null($outlineColor)){
-				array_push($strGeom, " 420");
-				array_push($strGeom,  $outlineColor."");
-			}
-			array_push($strGeom, "  100");
-			array_push($strGeom, "AcDbPolyline");
-			array_push($strGeom, "  90");
-			array_push($strGeom, count($coords)."");
-			array_push($strGeom, "  70");
-			array_push($strGeom, "0");
-			if($this->enableLineThickness && !is_null($thickness)){
-				array_push($strGeom, " 43");
-				array_push($strGeom, $this->getThickness($thickness));
-			}
-			for($i = 0; $i < count($coords); $i++){
-				$coord = $coords[$i];
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]."");
-			}
-		
-			if(isset($this->outputFile)){
-				file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
-				file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
-			}else{
-				//$this->entLines = array_merge($this->entLines, $strGeom);
-				foreach ($strGeom as $fline){
-					array_push($this->entLines, $fline);
-				}
-			}
-		}
-		//print($layerName." ".empty($color)." ".$color."\n");
-		
-		if(!empty($color) && $drawHatches){
-			$this->addHatch($layerName, $coords, $color, NULL, $tmpHandle);
-		}
-		$this->log("POLYGON added ".$tmpHandle);
-		return $strGeom;
-    }
-	
-	
-/**
-	* Crea l'array per l'inserimento di un retino
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double[double[2]] $coords Array di coordinate
-	
-	
-	*
-	* @return array
-	*/
-	public function addHatch($layerName, $coords, $color, $pattern, $parentHandle){
-		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
-		$this->handle++;
-		$tmpHandle = $this->handle + $this->handleHatches;
-		$strGeom = array();
-		if (is_null($pattern))
-		{
-			$pattern = "SOLID";
-		}
-		if (count($coords) > 0)
-		{
-			array_push($strGeom, "0");
-			array_push($strGeom, "HATCH");
-			array_push($strGeom, "  5");
-			array_push($strGeom, ($tmpHandle)."");
-			array_push($strGeom, "330");
-			array_push($strGeom, "1F");
-			array_push($strGeom, "100");
-			array_push($strGeom, "AcDbEntity");
-			array_push($strGeom, "  8");
-			array_push($strGeom, $layerName);
-			array_push($strGeom, " 62");
-			array_push($strGeom, ($this->enableColors) ? "7" : "256");
-			if ($this->enableColors && !is_null($color)){
-				array_push($strGeom, " 420");
-				array_push($strGeom,  $color."");
-			}
-			array_push($strGeom, " 440");
-			array_push($strGeom, "0.1");
-			array_push($strGeom, "100");
-			array_push($strGeom, "AcDbHatch");
-			array_push($strGeom, " 10");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, " 20");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, " 30");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, "210");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, "220");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, "230");
-			array_push($strGeom, "1.0");
-			array_push($strGeom, "  2");
-			array_push($strGeom, $pattern);
-			array_push($strGeom, " 70");
-			array_push($strGeom, "     1");
-			array_push($strGeom, " 71");
-			array_push($strGeom, "     1");
-			array_push($strGeom, " 91");
-			array_push($strGeom, "        1");
-			array_push($strGeom, " 92");
-			array_push($strGeom, "        1");
-			array_push($strGeom, " 93");
-			array_push($strGeom, count($coords));
-			
-			for($i = 0; $i < count($coords); $i++){
-				$coord = $coords[$i];
-				if($i == count($coords) - 1){
-					$coord1 = $coords[0];
-				}else{
-					$coord1 = $coords[$i + 1];
-				}
-				array_push($strGeom, " 72");
-				array_push($strGeom, "     1");
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]."");
-				array_push($strGeom, "  11");
-				array_push($strGeom, $coord1[0]."");
-				array_push($strGeom, "  21");
-				array_push($strGeom, $coord1[1]."");				
-			}
-			
-			array_push($strGeom, " 97");
-			array_push($strGeom, "        1");
-			array_push($strGeom, "330");
-			array_push($strGeom, $parentHandle."");
-			array_push($strGeom, " 75");
-			array_push($strGeom, "     1");
-			array_push($strGeom, " 76");
-			array_push($strGeom, "     1");
-			array_push($strGeom, " 98");
-			array_push($strGeom, "        1");
-			array_push($strGeom, " 10");
-			array_push($strGeom, "0.0");
-			array_push($strGeom, " 20");
-			array_push($strGeom, "0.0");
-			//array_push($strGeom, "1001");
-			//array_push($strGeom, "GradientColor1ACI");
-			//array_push($strGeom, "1070");
-			//array_push($strGeom, "     5");
-			//array_push($strGeom, "1001");
-			//array_push($strGeom, "GradientColor2ACI");
-			//array_push($strGeom, "1070");
-			//array_push($strGeom, "     2");
-			//array_push($strGeom, "1001");
-			//array_push($strGeom, "ACAD");
-			//array_push($strGeom, "1010");
-			//array_push($strGeom, "0.0");
-			//array_push($strGeom, "1020");
-			//array_push($strGeom, "0.0");
-			//array_push($strGeom, "1030");
-			//array_push($strGeom, "0.0");
-		}
-		
-		if(isset($this->outputFile)){			
-			file_put_contents($this->outputFileHatches, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFileHatches, PHP_EOL, FILE_APPEND);
-		}else{
-			//$this->entHatches = array_merge($this->entHatches, $strGeom);
-			foreach ($strGeom as $fline){
-				array_push($this->entHatches, $fline);
-			}
-		}
-		$this->log("HATCH added ".$tmpHandle);
-		return $strGeom;
-	}
-	/**
-	* Crea l'array per l'inserimento di un testo
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double $x Coordinata X
-	* @param double $y Coordinata Y
-	* @param double $z Coordinata Z
-	* @param double $strValue Testo da inserire
-	* @param double $labelSize Dimensione del testo
-	* @param double $angle Angolo del testo
-	* @param double $textAlign Allineamento orizzontale del testo
-	*
-	* @return array
-	*/
-	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color, $scaleMultiplier){
-		//se il colore è nullo non disegno
-		//if (is_null($color)){
-		//	return;
-		//}
-		//rimuovo gli a capo
-		$text = str_replace("\r", "", $text);
-		$text = str_replace("\n", "", $text);
-		if (is_null($textAlign))
-		{
-			$textAlign = 0;
-		}
-		if ($color == 0)
-		{
-			$color = null;
-		}
-		$strGeom = array();
-        $this->handle++;
-		$tmpHandle = $this->handle + $this->handlePoints;
-		$labelSize = floatval($labelSize) * floatval($scaleMultiplier);
-		array_push($strGeom, "  0");
-		array_push($strGeom, "TEXT");
-		array_push($strGeom, "  5");
-		array_push($strGeom, $tmpHandle."");
-		array_push($strGeom, "  330");
-		array_push($strGeom, "1F");
-		array_push($strGeom, "  100");
-		array_push($strGeom, "AcDbEntity");
-		array_push($strGeom, "  8");
-		array_push($strGeom, $layerName);
-		array_push($strGeom, "  6");
-		array_push($strGeom, "Continuous");
-		array_push($strGeom, " 62");
-		array_push($strGeom, ($this->enableColors) ? "7" : "256");
-		if ($this->enableColors && !is_null($color)){
-			array_push($strGeom, " 420");
-			array_push($strGeom,  $color."");
-		}
-		array_push($strGeom, "  100");
-		array_push($strGeom, "AcDbText");
-		array_push($strGeom, "  10");
-		array_push($strGeom, $x."");
-		array_push($strGeom, "  20");
-		array_push($strGeom, $y."");
-		array_push($strGeom, "  30");
-		array_push($strGeom, $z."");
-		array_push($strGeom, " 40");
-		array_push($strGeom, number_format((float)$labelSize, 2, '.', '')."");
-		array_push($strGeom, "  1");
-		array_push($strGeom, $text);
-		array_push($strGeom, " 50");
-		array_push($strGeom, $angle."");
-		array_push($strGeom, " 72");
-		array_push($strGeom, $textAlign);
-		array_push($strGeom, "  11");
-		array_push($strGeom, $x."");
-		array_push($strGeom, "  21");
-		array_push($strGeom, $y."");
-		array_push($strGeom, "  31");
-		array_push($strGeom, $z."");
-		array_push($strGeom, "100");
-		array_push($strGeom, "AcDbText");
-		array_push($strGeom, " 73");
-		array_push($strGeom, "0");
-		if(isset($this->outputFile)){
-			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFilePoints, PHP_EOL, FILE_APPEND);
-		}else{
-			//$this->entPoints = array_merge($this->entPoints, $strGeom);
-			foreach ($strGeom as $fline){
-				array_push($this->entPoints, $fline);
-			}
-		}
-		$this->log("TEXT added ".$tmpHandle);
-		return $strGeom;
-
-    }
-	
-	/**
-	* Crea l'array per l'inserimento di un blocco
-	*
-	* @param string $layerName Nome del layer di destinazione nel file DXF
-	* @param double $x Coordinata X
-	* @param double $y Coordinata Y
-	* @param double $z Coordinata Z
-	* @param double $blockName Testo da inserire
-	* @param double $angle Angolo del testo
-	*
-	* @return array
-	*/
-	public function addInsert($layerName, $x, $y, $z, $blockName, $angle, $color, $scaleInsert){
-		//se il colore è nullo non disegno
-		if (is_null($color)){
-			return;
-		}
-		if ($color == 0)
-		{
-			$color = null;
-		}
-		$tempLayerName = ($this->enableSingleLayerBlock && !in_array($layerName, $this->excludeSingleLayerBlock)) ? $this->singleLayerBlockName : $layerName;
-		//definisco il primo colore se il layer è dei blocchi
-		if($this->singleLayerColor == $this->defaultColor && $tempLayerName == $this->singleLayerBlockName && !is_null($color)){
-			$this->singleLayerColor = $color;
-		}
-		$strGeom = array();
-        $this->handle++;
-		$tmpHandle = $this->handle + $this->handlePoints;
-		array_push($strGeom, "  0");
-		array_push($strGeom, "INSERT");
-		array_push($strGeom, "  5");
-		array_push($strGeom, $tmpHandle."");
-		array_push($strGeom, "  330");
-		array_push($strGeom, "1E");
-		array_push($strGeom, "  100");
-		array_push($strGeom, "AcDbEntity");
-		array_push($strGeom, "  8");
-		array_push($strGeom, $tempLayerName);
-		array_push($strGeom, "  6");
-		array_push($strGeom, "Continuous");
-		array_push($strGeom, " 62");
-		array_push($strGeom, ($this->enableColors) ? "7" : "256");
-		if ($this->enableColors && !is_null($color)){
-			array_push($strGeom, " 420");
-			array_push($strGeom,  $color."");
-		}
-		array_push($strGeom, "  100");
-		array_push($strGeom, "AcDbBlockReference");
-		array_push($strGeom, "  2");
-		array_push($strGeom, $blockName);
-		array_push($strGeom, "  10");
-		array_push($strGeom, $x."");
-		array_push($strGeom, "  20");
-		array_push($strGeom, $y."");
-		array_push($strGeom, "  30");
-		array_push($strGeom, $z."");
-		array_push($strGeom, " 50");
-		array_push($strGeom, $angle."");
-		
-		array_push($strGeom, "  41");
-		array_push($strGeom, number_format((int)$scaleInsert, 0, '.', '')."");
-		array_push($strGeom, "  42");
-		array_push($strGeom, number_format((int)$scaleInsert, 0, '.', '')."");
-		
-		if(isset($this->outputFile)){
-			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFilePoints, PHP_EOL, FILE_APPEND);
-		}else{
-			//$this->entPoints = array_merge($this->entPoints, $strGeom);
-			foreach ($strGeom as $fline){
-				array_push($this->entPoints, $fline);
-			}
-		}
-		$this->log("INSERT added ".$tmpHandle);
-		return $strGeom;
-
-	}
 	
 	
 	/*
@@ -1723,15 +1270,13 @@ class dxfFactory{
 		}
 		return $arrResult;
 	}
-	
-	public function getThickness($thickness){
-		//la divisione per 30 è arbitraria. TODO Valutare se è corretta.
-		return $thickness / 30;
-	}
-	
-	public function getLabelSize($labelSize){
-		//la divisione per 20 è arbitraria. TODO Valutare se è corretta.
-		return $labelSize / 20;
+		
+	public function getLabelSize($labelSize, $multiplier){
+		//Se i contesti non sono attivati abilito la scalatura
+		if(!$this->dxfEnableTemplateContesti){
+			$labelSize = $labelSize * $multiplier;
+		}
+		return $labelSize;
 	}
 	public function getSymbolName($name){
 		//return "CAMBIO ATTRIBUTI";
@@ -1859,18 +1404,34 @@ class dxfFactory{
 	}
 	
 	/**
+     * Verifica se la stringa ï¿½ presente in un array in base a un patterna
+     * @param string $str
+     * @param array $arrayMatch
+     * @return bool
+     */
+	public static function stringArrayCheck($str, $arrayMatch)
+	{
+		foreach($arrayMatch as $match) {
+			if (fnmatch($match, $str)) {
+			  return True;
+			}
+		}
+		return False;
+	}
+	
+	/**
 	* Aggiunge delle geometrie di prova al file
 	*
 	* @return void
 	*/
 	public function addDummy(){
-		$this->entities = array_merge($this->entities, $this->addPoint3D("0", 10, 10, 0, 1));
+		$this->entities = array_merge($this->entities, $this->dxfCode->addPoint3D("0", 10, 10, 0, 1));
 		$coords = array(array(11, 11, 11), array(22, 22, 22));
-		$this->entities = array_merge($this->entities, $this->addPolyLine3d("0", $coords, 1, NULL));
-		$this->entities = array_merge($this->entities, $this->addText("0", 20, 20, 0, "GEOIREN", 22, 90, ""), 1);
+		$this->entities = array_merge($this->entities, $this->dxfCode->addPolyLine3d("0", $coords, 1, NULL));
+		$this->entities = array_merge($this->entities, $this->dxfCode->addText("0", 20, 20, 0, "GEOIREN", 22, 90, ""));
 		$coords = array(array(33, 33), array(44, 44));
-		$this->entities = array_merge($this->entities, $this->addPolyLine("0", $coords, 1, NULL));
-		$this->entities = array_merge($this->entities, $this->addInsert("0", 50, 50, 0, "ENEL", 0));
+		$this->entities = array_merge($this->entities, $this->dxfCode->addPolyLine("0", $coords, 1, NULL));
+		$this->entities = array_merge($this->entities, $this->dxfCode->addInsert("0", 50, 50, 0, "ENEL", 0));
 		$coords = array(array(55, 55), array(55, 66), array(66, 66), array(66, 55), array(55, 55));
 		$this->entities = array_merge($this->entities, $this->addPolygon("0", $coords, 1, NULL, 1, NULL));
 	}
