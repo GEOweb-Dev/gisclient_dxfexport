@@ -381,7 +381,7 @@ class dxfCode implements iDxfCode {
 			array_push($strGeom, "  90");
 			array_push($strGeom, count($coords)."");
 			array_push($strGeom, "  70");
-			array_push($strGeom, "0");
+			array_push($strGeom, "128");
 			//array_push($strGeom, "  43");
 			//array_push($strGeom, "0.0");
 			if($this->enableLineThickness && !is_null($thickness)){
@@ -465,7 +465,7 @@ class dxfCode implements iDxfCode {
 			array_push($strGeom, "  90");
 			array_push($strGeom, count($coords)."");
 			array_push($strGeom, "  70");
-			array_push($strGeom, "0");
+			array_push($strGeom, "128");
 			if($this->enableLineThickness && !is_null($thickness)){
 				array_push($strGeom, " 43");
 				array_push($strGeom, $this->getThickness($thickness));
@@ -757,6 +757,21 @@ class dxfCode implements iDxfCode {
 		array_push($strGeom, $y."");
 		array_push($strGeom, "  30");
 		array_push($strGeom, $z."");
+			//annotativo
+			/*array_push($strGeom, "1001");
+			array_push($strGeom, "AcadAnnotativeDecomposition");
+			array_push($strGeom, "1000");
+			array_push($strGeom, "AnnotativeData");
+			array_push($strGeom, "1002");
+			array_push($strGeom, "{");
+			array_push($strGeom, "1070");
+			array_push($strGeom, "     1");
+			array_push($strGeom, "1070");
+			array_push($strGeom, "     1");
+			array_push($strGeom, "1002");
+			array_push($strGeom, "}");
+			*/
+			//fine annotativo
 		array_push($strGeom, " 50");
 		array_push($strGeom, $angle."");
 		
