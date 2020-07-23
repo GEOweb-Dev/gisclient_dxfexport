@@ -2,11 +2,11 @@
 > Plugin per l'esportazione delle mappe GisClient in formato DXF 
 
 **Download DXF**
-> Request
+### Request
 Per estrarre un file DXF è necessario chiamare il servizio gcExportService.php con i seguenti parametri
-```
-### Parameteri
-| Paramtero | Tipo | Obbligatorio | Descrizione |
+
+##### Parametri
+| Parametro | Tipo | Obbligatorio | Descrizione |
 | :--- | :--- | :--- | :--- |
 | minx | double | true | Coordinata X minima |
 | maxx | double | true | Coordinata X massima |
@@ -24,7 +24,7 @@ Per estrarre un file DXF è necessario chiamare il servizio gcExportService.php 
 | labelScaleMultiplier | double | true | Moltiplicatore da applicare alla dimensione delle etichette inserite automaticamente |
 | insertScaleMultiplier | double | true | Moltiplicatore da applicare alla dimensione dei blocchi |
 
-> Response
+### Response
 In base alla proprietà _dxfSaveToDir_ il testo del DXF viene inviato direttamente nel corpo della risposta oppure viene inviato un documento JSON con i riferimenti per il download del file.
 {
     "filePath": "path relativo per il download",
