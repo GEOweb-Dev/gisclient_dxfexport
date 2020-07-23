@@ -30,3 +30,4 @@ In base alla proprietà _dxfSaveToDir_ il testo del DXF viene inviato direttamen
     "filePath": "path relativo per il download",
     "fileName": "nome del file da scaricare"
 }
+Il file può essere scaricato richiamando la pagina dxfDownload.php indicando come parametro _filename_ il valore della proprietà dello stesso nome dell'oggetto JSON. 
