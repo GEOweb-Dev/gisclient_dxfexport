@@ -23,11 +23,14 @@ Per estrarre un file DXF è necessario chiamare il servizio gcExportService.php 
 | textScaleMultiplier | double | true | Moltiplicatore da applicare alla dimensione dei testi con punto |
 | labelScaleMultiplier | double | true | Moltiplicatore da applicare alla dimensione delle etichette inserite automaticamente |
 | insertScaleMultiplier | double | true | Moltiplicatore da applicare alla dimensione dei blocchi |
+| outputFormat | string | false | Modalità di output. (download -> scarica direttamente il file, json -> file json con i parametri per scaricare i file) Se non fornita sarà utilizzato il valore server di default indicato dalla variabile _dxfSaveToDir_ |
 
 ### Response
-In base alla proprietà _dxfSaveToDir_ il testo del DXF viene inviato direttamente nel corpo della risposta oppure viene inviato un documento JSON con i riferimenti per il download del file.
+In base alla proprietà _outputFormat_ il testo del DXF viene inviato direttamente nel corpo della risposta oppure viene inviato un documento JSON con i riferimenti per il download del file. Il formato del file JSON è il seguente
 {
     "filePath": "path relativo per il download",
     "fileName": "nome del file da scaricare"
 }
-Il file può essere scaricato richiamando la pagina dxfDownload.php indicando come parametro _filename_ il valore della proprietà dello stesso nome dell'oggetto JSON. 
+Per il formato JSON, il file può essere scaricato richiamando la pagina dxfDownload.php indicando come parametro _fileName_ il valore della proprietà dello stesso nome dell'oggetto JSON. 
+
+

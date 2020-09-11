@@ -61,6 +61,7 @@ $enableTemplateLayer = $_REQUEST["enableTemplateLayer"];
 $textScaleMultiplier = $_REQUEST["textScaleMultiplier"];
 $labelScaleMultiplier = $_REQUEST["labelScaleMultiplier"];
 $insertScaleMultiplier = $_REQUEST["insertScaleMultiplier"];
+$outputFormat = $_REQUEST["outputFormat"]; //empty server default json || download
 
 //inizializzazione del servizio
 $gcService = GCService::instance();
@@ -118,16 +119,22 @@ $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 
 
-/**/
+/*definizione del tipo di output*/
+if(is_null($outputFormat)){
+	$outputFormat = "download";
+	if($dxfSaveToDir == 1){ //server default json
+		$outputFormat = "json";
+	}
+}
+
 $fileName = uniqid('dxf_', true).".dxf";
-if($dxfSaveToDir == 1){
+if($outputFormat == "json"){
 	//$dxfTempPath � definito in dxfConfig.php 
 	$fileHandle = $dxfTempPath.$fileName;
 	$dxfFact->createDxf($fileHandle);
 	$fileJson = new stdClass();
 	$fileJson->{"filePath"} = $fileHandle;
 	$fileJson->{"fileName"} = $fileName;
-	
 	die(json_encode($fileJson));
 }else{
 	header ("Expires: Mon, 26 Jul 1997 05:00:00 GMT"); // Date in the past
