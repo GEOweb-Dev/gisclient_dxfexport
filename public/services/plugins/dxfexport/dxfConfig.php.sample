@@ -28,6 +28,8 @@
 $dxfDebug = True;
 //Directory di salvataggio del dxf e dei file temporanei
 $dxfTempPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/";
+//Nome file del template di default
+$dxfStandardTemplate = "template_dxf.dxf";
 //Attivazione del salvataggio dei file
 $dxfSaveToDir = 1;
 //File di log

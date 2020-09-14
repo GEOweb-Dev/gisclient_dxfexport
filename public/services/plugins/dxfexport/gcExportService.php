@@ -85,6 +85,14 @@ $configFile->{"mapSet"} = $mapSet;
 $configFile->{"themes"} = explode(",", $themes);;
 $configFile->{"project"} = $project;
 $configFile->{"epsg"} = $epsg;
+//default template
+if(is_null($template)){
+	if(is_null($dxfStandardTemplate)){
+		$template="template_dxf.dxf";
+	}else{
+		$template = $dxfStandardTemplate;
+	}
+}
 $configFile->{"templateFile"} = "templates/".urldecode($template);
 $configFile->{"titolo"} = "Estrazione DXF";
 
