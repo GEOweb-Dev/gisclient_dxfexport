@@ -1070,10 +1070,14 @@ class dxfFactory implements iDxfFactory {
 							}
 						}
 						//calcolo della coordinata per l'etichetta
-						$midCount = intval(count($coords)/2);
-						$midPoint = [$this->midPointX($coords[$midCount-1][0],$coords[$midCount][0]),$this->midPointY($coords[$midCount-1][1],$coords[$midCount][1]), 0];
+						$coordsLabel = $coords;
+						if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
+							$coordsLabel = $coords[0];
+						}
+						$midCount = intval(count($coordsLabel)/2);
+						$midPoint = [$this->midPointX($coordsLabel[$midCount-1][0],$coordsLabel[$midCount][0]),$this->midPointY($coordsLabel[$midCount-1][1],$coordsLabel[$midCount][1]), 0];
 						//calcolo l'angolo
-						$angle = $this->calcAngle($coords[$midCount-1][0], $coords[$midCount][0], $coords[$midCount-1][1], $coords[$midCount][1] );
+						$angle = $this->calcAngle($coordsLabel[$midCount-1][0], $coordsLabel[$midCount][0], $coordsLabel[$midCount-1][1], $coordsLabel[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
 						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, NULL, $labelColor);
