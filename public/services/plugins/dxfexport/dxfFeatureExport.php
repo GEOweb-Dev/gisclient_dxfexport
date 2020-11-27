@@ -173,10 +173,10 @@ class dxfFeatureExport {
                 label_font,label_angle,label_color,label_outlinecolor,label_bgcolor,label_size,label_minsize,label_maxsize,label_position,label_antialias,label_free,label_priority,
                 label_wrap,label_buffer,label_force,label_def,keyimage,style_id,style_name,color,outlinecolor,bgcolor,angle,size,minsize,maxsize,width,maxwidth,minwidth,
                 style_def,style_order,symbolcategory_id,icontype,symbol_def,symbol_type,font_name,ascii_code,filled,points,image,pattern_name,pattern_def,pattern_order
-                from gisclient_3.class c
-                left join gisclient_3.style s using (class_id)
-                left join gisclient_3.symbol using (symbol_name)
-                left join gisclient_3.e_pattern using(pattern_id)
+                from ".DB_SCHEMA.".class c
+                left join ".DB_SCHEMA.".style s using (class_id)
+                left join ".DB_SCHEMA.".symbol using (symbol_name)
+                left join ".DB_SCHEMA.".e_pattern using(pattern_id)
                 where c.layer_id=?
                 order by style_order";
 				$stmtStyle = $db->prepare($sqlStyle);
