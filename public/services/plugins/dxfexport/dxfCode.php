@@ -689,8 +689,6 @@ class dxfCode implements iDxfCode {
 		array_push($strGeom, $angle."");
 		array_push($strGeom, " 72");
 		array_push($strGeom, $textAlignHorizontal);
-		//array_push($strGeom, " 73");
-		//array_push($strGeom, $textAlignVertical);
 		array_push($strGeom, "  11");
 		array_push($strGeom, $x."");
 		array_push($strGeom, "  21");
@@ -700,8 +698,8 @@ class dxfCode implements iDxfCode {
 		array_push($strGeom, "100");
 		array_push($strGeom, "AcDbText");
 		array_push($strGeom, " 73");
-		array_push($strGeom, "0");
-		
+		array_push($strGeom, $textAlignVertical);
+				
 		$this->dxfFactory->writePoint($strGeom);
 		$this->dxfFactory->log("TEXT added ".$tmpHandle);
 		return $strGeom;

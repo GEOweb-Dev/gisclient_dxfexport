@@ -1348,13 +1348,13 @@ class dxfFactory implements iDxfFactory {
 			return NULL;
 		}
 		if(strtoupper($geoWebCode[1]) == "U"){
-			return 3;
+			return 1;
 		}
 		if(strtoupper($geoWebCode[1]) == "C"){
 			return 2;
 		}
 		if(strtoupper($geoWebCode[1]) == "L"){
-			return 1;
+			return 3;
 		}
 		return NULL;
 	}
@@ -1437,21 +1437,22 @@ class dxfFactory implements iDxfFactory {
 	}
 	
 	public function getOffsetX($angle){
-		while($angle > 360){
-			$angle = $angle - 360;
-		}
-		if($angle > 0 && $angle <= 90){
-			return -0.2;
-		}
-		return 0.2;
+		//Offset temporary disabled
+		// while($angle > 360){
+		// 	$angle = $angle - 360;
+		// }
+		// if($angle > 0 && $angle <= 90){
+		// 	return -0.2;
+		// }
+		// return 0.2;
+		return 0;
+		
 	}
 	
 	public function getOffsetY($angle){
-		//if(($angle >= 0 && $angle <= 180)){
-		//		return 1;
-		//}
-		//return -1;
-		return 0.2;
+		//Offset temporary disabled
+		// return 0.2;
+		return 0;
 	}
 	
 	
