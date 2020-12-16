@@ -212,6 +212,10 @@ class dxfFeatureExport {
 					$style->{"className"} = $thisStyle["class_name"];
 					//print $thisStyle["expression"]."\n";
 					//verifica del campo classitem da unire con l'espressione
+					//verifica del campo etichetta
+					if($thisStyle["label_position"] != NULL){
+						$style->{"labelPosition"} = $thisStyle["label_position"];
+					}
 					if($thisLayer["classitem"] != NULL){
 						$style->{"expression"} = "'[".$thisLayer["classitem"]."]' = ".$thisStyle["expression"];
 					}
@@ -234,10 +238,6 @@ class dxfFeatureExport {
 						//print($thisLayer["layer_name"]." color ".$thisStyle["color"]." aci ".$this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2])."\n");
 						$style->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
 					}
-					if($thisStyle["label_position"] != NULL){
-						//posizione del testo
-						$style->{"labelPosition"} = $thisStyle["label_position"];
-					}	
 					if($thisStyle["label_color"] != NULL){
 						//poi al colore della label
 						$thisColor = explode(" ", $thisStyle["label_color"]);;
