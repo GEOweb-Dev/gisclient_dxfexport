@@ -827,17 +827,20 @@ class dxfFactory implements iDxfFactory {
 					//valuto l'espressione
 					$this->log($expression);
 					//print($expression."\n");
-					$result = $this->parserExpression->evaluateString($expression);
-					$this->log("Risultato espressione ".$result);
-					//se valida uso lo stile
-					if ($result == 1){
-						array_push($styleResult, $thisStyle);
+					try {
+						$result = $this->parserExpression->evaluateString($expression);
+						$this->log("Risultato espressione ".$result);
+						//se valida uso lo stile
+						if ($result == 1){
+							array_push($styleResult, $thisStyle);
+						}
+					} catch (Exception $e) {
+						$this->log("Espressione non valida ".$expression); //var_dump($e)
 					}
 				}
 			}
 		} catch (Exception $e) {
 			$this->log("Espressione non valida ".$expression); //var_dump($e)
-			//$styleResult = [$styles[0]];
 		}
 		return $styleResult;
 	}
@@ -994,7 +997,10 @@ class dxfFactory implements iDxfFactory {
 					if(!is_null($symbolName)){
 						$angle = 0;
 						$symbolName = $this->getSymbolName($symbolName);
-						//print_r($style);
+						//setto il colore come outiline se non è definito
+						if(is_null($color) && !is_null($outlineColor)){
+							$color = $outlineColor;
+						}
 						(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
 						if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
 						$this->dxfCode->addInsert($this->getLayerNamebyLayer($dLayer, "insert"), $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
@@ -1088,7 +1094,7 @@ class dxfFactory implements iDxfFactory {
 						$angle = $this->calcAngle($coordsLabel[$midCount-1][0], $coordsLabel[$midCount][0], $coordsLabel[$midCount-1][1], $coordsLabel[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, 0, 0, $labelColor);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -1347,13 +1353,13 @@ class dxfFactory implements iDxfFactory {
 		if(is_null($geoWebCode)){
 			return NULL;
 		}
-		if(strtoupper($geoWebCode[1]) == "U"){
+		if(strtoupper($geoWebCode[0]) == "U"){
 			return 1;
 		}
-		if(strtoupper($geoWebCode[1]) == "C"){
+		if(strtoupper($geoWebCode[0]) == "C"){
 			return 2;
 		}
-		if(strtoupper($geoWebCode[1]) == "L"){
+		if(strtoupper($geoWebCode[0]) == "L"){
 			return 3;
 		}
 		return NULL;
@@ -1438,21 +1444,21 @@ class dxfFactory implements iDxfFactory {
 	
 	public function getOffsetX($angle){
 		//Offset temporary disabled
-		// while($angle > 360){
-		// 	$angle = $angle - 360;
-		// }
-		// if($angle > 0 && $angle <= 90){
-		// 	return -0.2;
-		// }
-		// return 0.2;
-		return 0;
+		while($angle > 360){
+			$angle = $angle - 360;
+		}
+		if($angle > 0 && $angle <= 90){
+			return -0.2;
+		}
+		return 0.2;
+		//return 0;
 		
 	}
 	
 	public function getOffsetY($angle){
 		//Offset temporary disabled
-		// return 0.2;
-		return 0;
+		return 0.2;
+		//return 0;
 	}
 	
 	
