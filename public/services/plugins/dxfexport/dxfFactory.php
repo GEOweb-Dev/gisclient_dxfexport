@@ -197,9 +197,12 @@ class dxfFactory implements iDxfFactory {
 			$now = DateTime::createFromFormat('U.u', number_format(microtime(true), 6, '.', ''));
 			file_put_contents($this->logPath, PHP_EOL.$now->format('Y-m-d H:i:s.u')." ".$message, FILE_APPEND);
 			//$this->logTxt .= date('Y-m-d H:i:s')." ".$message."\n";
-		}	
-	}
+		}
 		
+	}
+	
+	
+	
 	/**
 	* Funzione di debug
 	*
@@ -501,6 +504,7 @@ class dxfFactory implements iDxfFactory {
 					}
 				}
 				foreach ($geojson->{'features'} as $feature){
+					$this->log("Inizio valutazione feature");
 					$coords = $feature->{'geometry'}->{'coordinates'};
 					//$coords = $clip->clip($coords);
 					$props = $feature->{'properties'};
@@ -509,6 +513,7 @@ class dxfFactory implements iDxfFactory {
 					foreach ($stylesFeature as $style){									
 						$this->drawFeature($this->getFeatureStylebyLayer($style, $dLayer, $feature->{'geometry'}->{'type'}), $dLayer, $this->getLayerNamebyLayer($dLayer, $feature->{'geometry'}->{'type'}), $feature);
 					}
+					$this->log("Termine valutazione feature");
 				}
 			}
 		}
@@ -823,7 +828,7 @@ class dxfFactory implements iDxfFactory {
 					$this->log($expression);
 					//print($expression."\n");
 					$result = $this->parserExpression->evaluateString($expression);
-					$this->log("result ".$result);
+					$this->log("Risultato espressione ".$result);
 					//se valida uso lo stile
 					if ($result == 1){
 						array_push($styleResult, $thisStyle);
@@ -929,13 +934,15 @@ class dxfFactory implements iDxfFactory {
 		if(isset($style->{'labelColor'})){
 			$labelColor = $style->{'labelColor'};
 		}
+		$textAlignHorizontal = NULL;
+		$textAlignVertical = NULL;
+		if(isset($style->{'labelPosition'})){
+			$textAlignHorizontal = $this->getTextAlignHorizontal($style->{'labelPosition'});
+			$textAlignVertical = $this->getTextAlignVertical($style->{'labelPosition'});
+		}
 		$symbolName = NULL;
 		if(isset($style->{'symbol_name'})){
 			$symbolName = $style->{'symbol_name'};
-		}
-		$labelPosition = NULL;
-		if(isset($style->{'label_position'})){
-			$labelPosition = $style->{'label_position'};
 		}
 		(!empty($dLayer->{'thickness'})) ? $thickness = $dLayer->{'thickness'} : $thickness = 1;
 		if(isset($style->{'thickness'})){
@@ -977,7 +984,7 @@ class dxfFactory implements iDxfFactory {
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
 					if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)){
-						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, NULL, $labelColor);
+						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 					}
 				}
 				//se il nome del simbolo � settato aggiungo un blocco altrimenti un punto
@@ -987,7 +994,6 @@ class dxfFactory implements iDxfFactory {
 					if(!is_null($symbolName)){
 						$angle = 0;
 						$symbolName = $this->getSymbolName($symbolName);
-						$this->log("symbolName ".$symbolName);
 						//print_r($style);
 						(isset($style->{'fieldAngle'})) ? $angle = intval($props->{$this->normalizeField($style->{'fieldAngle'})}): $angle = 0;
 						if(isset($style->{'angle'})) { $angle += intval($style->{'angle'}); };
@@ -1011,13 +1017,12 @@ class dxfFactory implements iDxfFactory {
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}
-					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, NULL, $labelColor);
+					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 				}
 			break;
 			case "insert":
 				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					$symbolName = $this->getSymbolName($symbolName);
-					$this->log("symbolName ".$symbolName);
 					$angle = 0;
 					//$size = $this->defaultSize;
 					if(!empty($props)){
@@ -1083,7 +1088,7 @@ class dxfFactory implements iDxfFactory {
 						$angle = $this->calcAngle($coordsLabel[$midCount-1][0], $coordsLabel[$midCount][0], $coordsLabel[$midCount-1][1], $coordsLabel[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, NULL, $labelColor);
+						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -1285,15 +1290,74 @@ class dxfFactory implements iDxfFactory {
 		}
 		return $labelSize;
 	}
-
 	public function getSymbolName($name){
-		//if ($name == "ELLIPSE") {
-		//	$this->log("TRASFORMAZIONE ELLIPSE");
-		//	return "TLR_SOTTOSTAZIONE";
-		//}
+		//return "CAMBIO ATTRIBUTI";
 		return $name;
 	}
+
+
 	
+	public function getTextAlignHorizontal($geoWebCode){
+		//DXF Codes
+		//Group 72 and 73 integer codes
+		// Group 1 2 3 4 5
+		// 72
+		// 0
+		// Group 73
+		// 3 (top) TLeft TCenter TRight
+		// 2 (middle) MLeft MCenter MRight
+		// 1 (bottom) BLeft BCenter BRight
+		// 0 (baseline) Left Center Right Aligned Middle Fit
+		//GeoWeb codes
+		//UL UC UR
+		//CL CC CR
+		//LL LC LR
+		//AUTO
+		if(is_null($geoWebCode)){
+			return NULL;
+		}
+		if(strtoupper($geoWebCode[1]) == "L"){
+			return 0;
+		}
+		if(strtoupper($geoWebCode[1]) == "C"){
+			return 1;
+		}
+		if(strtoupper($geoWebCode[1]) == "R"){
+			return 2;
+		}
+		return NULL;
+	}
+
+	public function getTextAlignVertical($geoWebCode){
+		//DXF Codes
+		//Group 72 and 73 integer codes
+		// Group 1 2 3 4 5
+		// 72
+		// 0
+		// Group 73
+		// 3 (top) TLeft TCenter TRight
+		// 2 (middle) MLeft MCenter MRight
+		// 1 (bottom) BLeft BCenter BRight
+		// 0 (baseline) Left Center Right Aligned Middle Fit
+		//GeoWeb codes
+		//UL UC UR
+		//CL CC CR
+		//LL LC LR
+		//AUTO
+		if(is_null($geoWebCode)){
+			return NULL;
+		}
+		if(strtoupper($geoWebCode[1]) == "U"){
+			return 1;
+		}
+		if(strtoupper($geoWebCode[1]) == "C"){
+			return 2;
+		}
+		if(strtoupper($geoWebCode[1]) == "L"){
+			return 3;
+		}
+		return NULL;
+	}
 	
 	public function getLineStyleName($name){
 		//return "CAMBIO ATTRIBUTI";
@@ -1373,21 +1437,22 @@ class dxfFactory implements iDxfFactory {
 	}
 	
 	public function getOffsetX($angle){
-		while($angle > 360){
-			$angle = $angle - 360;
-		}
-		if($angle > 0 && $angle <= 90){
-			return -0.2;
-		}
-		return 0.2;
+		//Offset temporary disabled
+		// while($angle > 360){
+		// 	$angle = $angle - 360;
+		// }
+		// if($angle > 0 && $angle <= 90){
+		// 	return -0.2;
+		// }
+		// return 0.2;
+		return 0;
+		
 	}
 	
 	public function getOffsetY($angle){
-		//if(($angle >= 0 && $angle <= 180)){
-		//		return 1;
-		//}
-		//return -1;
-		return 0.2;
+		//Offset temporary disabled
+		// return 0.2;
+		return 0;
 	}
 	
 	

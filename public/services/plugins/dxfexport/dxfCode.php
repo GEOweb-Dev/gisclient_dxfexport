@@ -630,17 +630,23 @@ class dxfCode implements iDxfCode {
 	*
 	* @return array
 	*/
-	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlign, $color){		
+	public function addText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlignHorizontal, $textAlignVertical, $color){		
 		//se il colore � nullo non disegno
 		//if (is_null($color)){
 		//	return;
-		//}
-		//rimuovo gli a capo
+		//}	
+		//rimuovo gli a capo e caratteri non compatibili
 		$text = str_replace("\r", "", $text);
 		$text = str_replace("\n", "", $text);
-		if (is_null($textAlign))
+		$text = utf8_encode($text);
+		$this->dxfFactory->log($text);
+		if (is_null($textAlignHorizontal))
 		{
-			$textAlign = 0;
+			$textAlignHorizontal = 0;
+		}
+		if (is_null($textAlignVertical))
+		{
+			$textAlignVertical = 0;
 		}
 		if ($color == 0)
 		{
@@ -684,7 +690,7 @@ class dxfCode implements iDxfCode {
 		array_push($strGeom, " 50");
 		array_push($strGeom, $angle."");
 		array_push($strGeom, " 72");
-		array_push($strGeom, $textAlign);
+		array_push($strGeom, $textAlignHorizontal);
 		array_push($strGeom, "  11");
 		array_push($strGeom, $x."");
 		array_push($strGeom, "  21");
@@ -694,8 +700,8 @@ class dxfCode implements iDxfCode {
 		array_push($strGeom, "100");
 		array_push($strGeom, "AcDbText");
 		array_push($strGeom, " 73");
-		array_push($strGeom, "0");
-		
+		array_push($strGeom, $textAlignVertical);
+				
 		$this->dxfFactory->writePoint($strGeom);
 		$this->dxfFactory->log("TEXT added ".$tmpHandle);
 		return $strGeom;
