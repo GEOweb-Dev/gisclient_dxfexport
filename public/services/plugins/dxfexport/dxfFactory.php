@@ -200,9 +200,7 @@ class dxfFactory implements iDxfFactory {
 		}
 		
 	}
-	
-	
-	
+		
 	/**
 	* Funzione di debug
 	*
@@ -1472,7 +1470,13 @@ class dxfFactory implements iDxfFactory {
 	public function getFeatures($url){
 		$this->log($url);
 		$this->log("Iniziata richiesta");
-		$json = file_get_contents($url);
+		$arrContextOptions=array(
+			"ssl"=>array(
+				"verify_peer"=>false,
+				"verify_peer_name"=>false,
+			),
+		);
+		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
 		$this->log("Terminata richiesta");
 		$arr = explode("\n", $json);
 		//elimino gli errori generati da mapserver
