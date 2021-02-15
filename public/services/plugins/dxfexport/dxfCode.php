@@ -117,15 +117,15 @@ class dxfCode implements iDxfCode {
 				array_push($strLayer, " 62");
 				array_push($strLayer, "7");
 			}else{
-				if($color < 256){
-					array_push($strLayer, " 62");
-					array_push($strLayer, $color."");
-				}else{
+				// if($color < 256){
+				// 	array_push($strLayer, " 62");
+				// 	array_push($strLayer, $color."");
+				// }else{
 					array_push($strLayer, " 62");
 					array_push($strLayer, !is_null($aciColor) ? $aciColor."" : "7");				
 					array_push($strLayer, " 420");
 					array_push($strLayer,  $color."");
-				}
+				// }
 			}
 		}		
 		array_push($strLayer, "  6");
@@ -803,9 +803,11 @@ class dxfCode implements iDxfCode {
 			array_push($colorArray, "256");
 			return $colorArray;
 		}
-		if(!is_null($color) && is_null($aciColor)){ //provo a trasformare il colore in ACI
-			$aciColor = $this->colorDecToAci($color);
-		}
+		//print (!is_null($color) && is_null($aciColor));
+		// if(!is_null($color) && is_null($aciColor)){ //provo a trasformare il colore in ACI
+		// 	print "$color _ $aciColor".(!is_null($color) && is_null($aciColor))."<br />";
+		// 	$aciColor = $this->colorDecToAci($color);
+		// }
 		if(!is_null($aciColor)){
 			array_push($colorArray, " 62");
 			array_push($colorArray, $aciColor);
@@ -838,6 +840,12 @@ class dxfCode implements iDxfCode {
 		switch($color){
 			case $this->getDecimalColor(255,0,0):
 				return 1;
+				break;
+			case $this->getDecimalColor(0,0,255):
+				return 5;
+				break;
+			case $this->getDecimalColor(0,3,0):
+				return 5;
 				break;
 			case $this->getDecimalColor(0,0,7):
 				return 7;

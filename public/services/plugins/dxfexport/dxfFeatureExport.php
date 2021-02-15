@@ -163,7 +163,6 @@ class dxfFeatureExport {
 				//url per il download dei file
 				$url = $owsUrl;
 				$url .= sprintf("?PROJECT=%s&MAP=%s&SERVICE=WFS&TYPENAME=%s&MAXFEATURES=-1&SRS=EPSG:%s&REQUEST=GetFeature&VERSION=1.0.0&outputFormat=geojson", $project, $thisLayer["mapset_name"], $thisLayer["layergroup_name"].".".$thisLayer["layer_name"], $epsg);
-				//print $url;
 				$layer->{"wfs"} = $url;
 				//"geometryType" : "polygon", // TODO definire la geometria
 				
@@ -183,7 +182,7 @@ class dxfFeatureExport {
 				$stmtStyle->execute([$thisLayer["layer_id"]]);
 				//loop sugli stili per la definizione delle classi
 				$i = 0;
-				
+			
 				while($thisStyle = $stmtStyle->fetch(PDO::FETCH_ASSOC)) {
 					//echo '<pre>';
 					//var_dump($thisStyle);
@@ -210,7 +209,7 @@ class dxfFeatureExport {
 					
 					$style->{"expression"} = $thisStyle["expression"];
 					$style->{"className"} = $thisStyle["class_name"];
-					//print $thisStyle["expression"]."\n";
+
 					//verifica del campo classitem da unire con l'espressione
 					if($thisLayer["classitem"] != NULL){
 						$style->{"expression"} = "'[".$thisLayer["classitem"]."]' = ".$thisStyle["expression"];
@@ -231,7 +230,7 @@ class dxfFeatureExport {
 					if($thisStyle["color"] != NULL){
 						//poi al colore normale
 						$thisColor = explode(" ", $thisStyle["color"]);;
-						//print($thisLayer["layer_name"]." color ".$thisStyle["color"]." aci ".$this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2])."\n");
+						
 						$style->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
 					}
 					if($thisStyle["label_position"] != NULL){
@@ -296,6 +295,7 @@ class dxfFeatureExport {
 				}
 				//controllo se il layer deve essere splittato per i propri stili
 				if(in_array($thisLayer["layer_name"], $this->dxfSplitLayers)){
+					
 					//eseguo lo split dei layer
 					foreach($styles as $style){
 						$clonedLayer = unserialize(serialize($layer));
@@ -312,6 +312,7 @@ class dxfFeatureExport {
 							$clonedLayer->{"color"} = $style->{"label_color"};
 						}
 						$clonedLayer->{"splitted"} = True;
+						
 						array_push($layers, $clonedLayer);
 					}
 				}else{

@@ -26,9 +26,9 @@
 ******************************************************************************/
 
 //variabili
-//error_reporting(E_ALL);
+error_reporting(E_ALL);
 //ini_set("display_errors", "on");
-//ini_set('display_errors', 1);
+ini_set('display_errors', 1);
 //ini_set('display_startup_errors', 1);
 //error_reporting(E_ALL);
 
@@ -45,7 +45,7 @@ require_once 'lexerParser.php';
 //non considero mai l'utente amministratore
 $isAdmin = false;
 //leggo i permessi
-//valutare la validità di questa sezione
+//valutare la validitï¿½ di questa sezione
 if(!$isAdmin) {
 	if(!empty($user->groups)) {
 		$in = array();
@@ -71,7 +71,7 @@ $mapSetList = "'" . implode("','", $mapSet) . "'";
 $sqlFilter = 'mapset_name in ('.$mapSetList.') and theme_name in ('.$themeList.')'; //project = \''. $project .'\' and 
 
 //ricavo tutte le espressioni
-$sql = 'select distinct expression
+$sql = 'select layergroup_name,layer_name,expression
                 from gisclient_3.class c
                 left join gisclient_3.style s using (class_id)
 				INNER JOIN gisclient_3.layer USING (layer_id)
@@ -86,11 +86,18 @@ $parserExpression = new Parser();
 
  while($thisRow = $stmt->fetch(PDO::FETCH_ASSOC)) {
 	$expression = $thisRow["expression"];
+	$layer_name = $thisRow["layer_name"];
+	$layergroup_name = $thisRow["layergroup_name"];
+	
 	$expressionValue = preg_replace('/[\[].*[\]\)]/U' , '1', $expression);
-	print("<strong>$expression</strong><br/>");
-	print("$expressionValue");
-	$result = ($parserExpression->evaluateString($expressionValue))? 1 : 0;
-	print("$result<br/>");
+	try{
+		$result = ($parserExpression->evaluateString($expressionValue))? 1 : 0;
+	}catch(Exception $e){
+		print("<strong>$layergroup_name $layer_name:</strong>$expression<br/>");
+		//print("$expressionValue");
+		//print("$result<br/>");
+	}
+	
 	ob_flush();
 }
 
