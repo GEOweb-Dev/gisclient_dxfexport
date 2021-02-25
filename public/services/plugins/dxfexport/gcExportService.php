@@ -125,6 +125,7 @@ $dxfFact->debug = $dxfDebug;
 //imposto la blacklist di layer da eliminare
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
+$dxfFact->layersGuaine = $dxfLayersGuaine;
 
 
 /*definizione del tipo di output*/

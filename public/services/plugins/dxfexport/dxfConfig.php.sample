@@ -139,4 +139,10 @@ $dxfSplitLayers = array(
 	'tratte_allacciamenti',
 	'reflui_condotte'
 	);
+$dxfLayersGuaine = array(
+	'vtlr_carta_tecnica_t_esercizio_tubo_guaina'
+	);
+
+$dxfTemplateContestiPath = "templates/template_contesti_.json";
+
 ?>

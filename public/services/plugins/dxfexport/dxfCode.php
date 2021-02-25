@@ -333,7 +333,7 @@ class dxfCode implements iDxfCode {
 	*
 	* @return array
 	*/
-	public function addPolyLine($layerName, $coords, $thickness, $lineType, $color){
+	public function addPolyLine($layerName, $coords, $thickness, $lineType, $color, $lineWeight){
 		//se il colore � nullo non disegno
 		if (is_null($color)){
 			return;
@@ -367,6 +367,10 @@ class dxfCode implements iDxfCode {
 			}
 			array_push($strGeom, " 48");
 			array_push($strGeom, " ".$this->lineScale);
+			if(!is_null($lineWeight)){
+				array_push($strGeom, "  370");
+				array_push($strGeom, " ".$lineWeight);
+			}
 			foreach($this->getColor($color, null, $this->enableColors) as $colorLine){
 				array_push($strGeom, $colorLine);
 			}

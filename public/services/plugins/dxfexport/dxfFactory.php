@@ -91,6 +91,11 @@ class dxfFactory implements iDxfFactory {
 	public $excludeTextLayers = array(
 		
 	);
+
+	//layer Guaine
+	public $layersGuaine = array(
+		
+	);
 	
 	public $enableLineThickness = True;
 	public $enableColors = True;
@@ -953,6 +958,11 @@ class dxfFactory implements iDxfFactory {
 		if(isset($style->{'labelSize'})){
 			$labelSize = $style->{'labelSize'};
 		}
+		$lineWeigth = null;
+		//controllo guaine
+		if($this->stringArrayCheck($dLayer->{'layerName'}, $this->layersGuaine)){
+			$lineWeigth = "211";
+		}
 		//fine definizione dei valori di default
 		$this->log("Simbolo ".$feature->{'geometry'}->{'type'});
 		switch (strtolower($feature->{'geometry'}->{'type'})) {
@@ -1057,10 +1067,10 @@ class dxfFactory implements iDxfFactory {
 				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
 						for($li = 0; $li < count($coords); $li++){
-							$this->dxfCode->addPolyLine($layerName, $coords[$li], $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
+							$this->dxfCode->addPolyLine($layerName, $coords[$li], $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, $lineWeigth);
 						}
 					}else{
-						$this->dxfCode->addPolyLine($layerName, $coords, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor);
+						$this->dxfCode->addPolyLine($layerName, $coords, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, $lineWeigth);
 					}
 				}
 				//sezione etichette alle linee
