@@ -818,15 +818,15 @@ class dxfCode implements iDxfCode {
 			return $colorArray;
 		}
 		if(!is_null($color)){
-			if($color <= 256){
-				array_push($colorArray, " 62");
-				array_push($colorArray, $color);
-			}else{
+			//if($color <= 256){
+			//	array_push($colorArray, " 62");
+			//	array_push($colorArray, $color);
+			//}else{
 				array_push($colorArray, " 62");
 				array_push($colorArray, "256");
 				array_push($colorArray, " 420");
 				array_push($colorArray,  $color."");
-			}
+			//}
 			return $colorArray;
 		}
 		//valore nullo
