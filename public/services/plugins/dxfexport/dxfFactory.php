@@ -99,6 +99,8 @@ class dxfFactory implements iDxfFactory {
 	
 	public $enableLineThickness = True;
 	public $enableColors = True;
+	public $exportEmptyLayers = True;
+	
 	
 	public $dxfLineScale = 0.15;
 	public $dxfTextScaleMultiplier = 1;
@@ -151,18 +153,13 @@ class dxfFactory implements iDxfFactory {
 		if(!is_null($this->configExtraction->{'dxfDrawHatches'})) $this->drawHatches = $this->configExtraction->{'dxfDrawHatches'};
 		
 		if(!is_null($this->configExtraction->{'dxfEnableColors'})) $this->enableColors = $this->configExtraction->{'dxfEnableColors'};
+		if(!is_null($this->configExtraction->{'dxfExportEmptyLayers'})) $this->exportEmptyLayers = $this->configExtraction->{'dxfExportEmptyLayers'};
 		if(!is_null($this->configExtraction->{'dxfEnableLineThickness'})) $this->enableLineThickness = $this->configExtraction->{'dxfEnableLineThickness'};
 		if(!is_null($this->configExtraction->{'dxfLineScale'})) $this->dxfLineScale = $this->configExtraction->{'dxfLineScale'};
 		
 		if(!is_null($this->configExtraction->{'dxfTextScaleMultiplier'})) $this->dxfTextScaleMultiplier = $this->configExtraction->{'dxfTextScaleMultiplier'};
 		if(!is_null($this->configExtraction->{'dxfLabelScaleMultiplier'})) $this->dxfLabelScaleMultiplier = $this->configExtraction->{'dxfLabelScaleMultiplier'};
 		if(!is_null($this->configExtraction->{'dxfInsertScaleMultiplier'})) $this->dxfInsertScaleMultiplier = $this->configExtraction->{'dxfInsertScaleMultiplier'};
-
-		//TODO Unit test required
-		// print("dxfTextScaleMultiplier ".$this->dxfTextScaleMultiplier);
-		// print("<br/>dxfLabelScaleMultiplier ".$this->dxfLabelScaleMultiplier);
-		// print("<br/>dxfInsertScaleMultiplier ".$this->dxfInsertScaleMultiplier);
-		// print("<br/>dxfLineScale ".$this->dxfLineScale);
 
 		//creo il parser per le espressioni
 		$this->parserExpression = new Parser();
@@ -213,7 +210,6 @@ class dxfFactory implements iDxfFactory {
 	private function info(){
 		$this->log( "handle: ".$this->handle."\n");
 		$this->log( "outputFile: ".$this->outputFile."\n");
-		//print "dxf:".$this->dxf."\n";
 		$this->log( "HEADER: ".$this->startOfSection("HEADER")."-".$this->endOfSection("HEADER")."\n");
 		$this->log( "CLASSES: ".$this->startOfSection("CLASSES")."-".$this->endOfSection("CLASSES")."\n");
 		$this->log( "TABLES: ".$this->startOfSection("TABLES")."-".$this->endOfSection("TABLES")."\n");
@@ -377,7 +373,6 @@ class dxfFactory implements iDxfFactory {
 		//eseguo il merge delle entities
 		$part1 = array_slice($this->dxf, 0, $this->endOfSection("ENTITIES"));
 		$part2 = array_slice($this->dxf, $this->endOfSection("ENTITIES"));
-		//print(count($this->dxf) - $this->endOfSection("ENTITIES"));
 		$this->dxf = array_merge($part1, $this->entHatches, $this->entLines, $this->entPoints, $part2);
 				
 	}
@@ -471,12 +466,20 @@ class dxfFactory implements iDxfFactory {
 			foreach ($this->configExtraction->{'themes'} as $theme){
 				foreach ($this->dxfTemplateContesti as $themeContesto){
 					if ($themeContesto->{"themeName"} == $theme){
-						foreach ($themeContesto->{"layers"} as $tLayer){
-							$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($tLayer->{"layerNameDxf"}, $tLayer->{"style"}->{"color"}, NULL, $tLayer->{"style"}->{"lineType"}));
+						if(!is_null($themeContesto->{"layers"})){
+							foreach ($themeContesto->{"layers"} as $tLayer){
+								$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($tLayer->{"layerNameDxf"}, $tLayer->{"style"}->{"color"}, NULL, $tLayer->{"style"}->{"lineType"}));
+							}
 						}
-						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default"}->{"layerNameDxf"}, $themeContesto->{"layer_default"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default"}->{"style"}->{"lineType"}));
-						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default_blocchi"}->{"layerNameDxf"}, $themeContesto->{"layer_default_blocchi"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default_blocchi"}->{"style"}->{"lineType"}));
-						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default_testi"}->{"layerNameDxf"}, $themeContesto->{"layer_default_testi"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default_testi"}->{"style"}->{"lineType"}));
+						if(!is_null($themeContesto->{"layer_default"})){
+							$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default"}->{"layerNameDxf"}, $themeContesto->{"layer_default"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default"}->{"style"}->{"lineType"}));
+						}
+						if(!is_null($themeContesto->{"layer_default_blocchi"})){
+							$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default_blocchi"}->{"layerNameDxf"}, $themeContesto->{"layer_default_blocchi"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default_blocchi"}->{"style"}->{"lineType"}));
+						}
+						if(!is_null($themeContesto->{"layer_default_testi"})){
+							$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($themeContesto->{"layer_default_testi"}->{"layerNameDxf"}, $themeContesto->{"layer_default_testi"}->{"style"}->{"color"}, NULL, $themeContesto->{"layer_default_testi"}->{"style"}->{"lineType"}));
+						}
 					}
 				}
 			}
@@ -491,6 +494,9 @@ class dxfFactory implements iDxfFactory {
 			//aggiungo l'envelope
 			$wfsUrl = $dLayer->{'wfs'}.$filterEnvelope;
 			$geojson = $this->getFeatures($wfsUrl);
+			if($this->exportEmptyLayers){//aggiungo tutti i layer
+				$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($this->getLayerNamebyLayer($dLayer, ""), NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
+			}
 			if(!is_null($geojson)){
 				//$geometryType = $dLayer->{'geometryType'};
 				//se ci sono delle feature aggiungo il layer
@@ -502,9 +508,9 @@ class dxfFactory implements iDxfFactory {
 							$dLayer->{'lineType'} = NULL;
 						}
 					}
-					if(!$this->dxfEnableTemplateContesti){
-						$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
-					}
+					//if(!$this->dxfEnableTemplateContesti){
+					//	$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($dLayer->{'layerName'}, NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
+					//}
 				}
 				foreach ($geojson->{'features'} as $feature){
 					$this->log("Inizio valutazione feature");
@@ -513,14 +519,17 @@ class dxfFactory implements iDxfFactory {
 					$props = $feature->{'properties'};
 					//ricavo lo style relativo
 					$stylesFeature = $this->getStyles($props, $dLayer->{'styles'});
-					foreach ($stylesFeature as $style){									
-						$this->drawFeature($this->getFeatureStylebyLayer($style, $dLayer, $feature->{'geometry'}->{'type'}), $dLayer, $this->getLayerNamebyLayer($dLayer, $feature->{'geometry'}->{'type'}), $feature);
+					foreach ($stylesFeature as $style){						
+						$layerNameDecoded = $this->getLayerNamebyLayer($dLayer, $feature->{'geometry'}->{'type'});
+						if (!in_array($layerNameDecoded, $this->layers)){ //se il layer non esiste lo aggiungo
+							$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($layerNameDecoded, NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
+						}
+						$this->drawFeature($this->getFeatureStylebyLayer($style, $dLayer, $feature->{'geometry'}->{'type'}), $dLayer, $layerNameDecoded, $feature);
 					}
 					$this->log("Termine valutazione feature");
 				}
 			}
 		}
-		
 		//aggiungo il rettangolo di estrazione
 			$coords = [
 				[$this->configExtraction->{'minX'}, $this->configExtraction->{'minY'}, 0],
@@ -531,18 +540,9 @@ class dxfFactory implements iDxfFactory {
 			];
 			$this->dxfCode->addPolygon("boundingbox", $coords, 1, NULL, "".((256 * 256 * 255) + (256 * 255)) , NULL);
 			//setto l'extent
-			//$this->setDxfProperty("\$EXTMAX", "10", $this->configExtraction->{'maxX'});
-			//$this->setDxfProperty("\$EXTMAX", "20", $this->configExtraction->{'maxY'});
-			//$this->setDxfProperty("\$EXTMIN", "10", $this->configExtraction->{'minX'});
-			//$this->setDxfProperty("\$EXTMIN", "20", $this->configExtraction->{'minY'});
-			//$this->setDxfProperty("AcDbViewportTableRecord", "10", $this->configExtraction->{'minX'});
-			//$this->setDxfProperty("AcDbViewportTableRecord", "20", $this->configExtraction->{'minY'});
-			//$this->setDxfProperty("AcDbViewportTableRecord", "11", $this->configExtraction->{'maxX'});
-			//$this->setDxfProperty("AcDbViewportTableRecord", "21", $this->configExtraction->{'maxY'});
 			$this->setDxfProperty("AcDbViewportTableRecord", "12", $this->configExtraction->{'minX'});
 			$this->setDxfProperty("AcDbViewportTableRecord", "22", $this->configExtraction->{'minY'});
 			$this->setDxfProperty("AcDbViewportTableRecord", "40", ($this->configExtraction->{'maxX'} - $this->configExtraction->{'minX'}));
-			//$this->setDxfProperty("AcDbViewportTableRecord", "41", ($this->configExtraction->{'maxY'} - $this->configExtraction->{'minY'})/10);
 			$this->setDxfProperty("AcDbViewportTableRecord", "41", 5);
 		
 		//Caricamento delle features	
@@ -585,28 +585,32 @@ class dxfFactory implements iDxfFactory {
 				$layerFound = False;
 				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
 					$themeFound = True;
-					foreach ($theme->{"layers"} as $tLayer){
-						if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
-							//definizione dello stile custom
-							$featureStyle->{"color"} = $tLayer->{"style"}->{"color"};
-							$featureStyle->{"lineType"} = $tLayer->{"style"}->{"lineType"};
-							if(!is_null($tLayer->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $tLayer->{"style"}->{"labelSize"};
-							$layerFound = True;
-							break;
+					if(!is_null($theme->{"layers"})){
+						foreach ($theme->{"layers"} as $tLayer){
+							if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
+								//definizione dello stile custom
+								$featureStyle->{"color"} = $tLayer->{"style"}->{"color"};
+								$featureStyle->{"lineType"} = $tLayer->{"style"}->{"lineType"};
+								if(!is_null($tLayer->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $tLayer->{"style"}->{"labelSize"};
+								$layerFound = True;
+								break;
+							}
 						}
 					}
 					if(!$layerFound){
 						//in base alla geometria lo mando su layer di default
 						switch (strtolower($geometryType)) {
 						case "text":
+							if(is_null($theme->{"layer_default_testi"})) continue;
 							$featureStyle->{"color"} = $theme->{"layer_default_testi"}->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $theme->{"layer_default_testi"}->{"style"}->{"lineType"};
-							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
+							$featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 							break;
 						case "insert":
+							if(is_null($theme->{"layer_default_blocchi"})) continue;
 							$featureStyle->{"color"} = $theme->{"layer_default_blocchi"}->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $theme->{"layer_default_blocchi"}->{"style"}->{"lineType"};
-							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
+							$featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 							break;
 						case "polyline":
 						case "linestring":
@@ -615,9 +619,10 @@ class dxfFactory implements iDxfFactory {
 						case "multipolygon":
 						case "point":
 						default:
+							if(is_null($theme->{"layer_default"})) continue;
 							$featureStyle->{"color"} = $theme->{"layer_default"}->{"style"}->{"color"};
 							$featureStyle->{"lineType"} = $theme->{"layer_default"}->{"style"}->{"lineType"};
-							if(!is_null($theme->{"layer_default_testi"}->{"style"}->{"labelSize"})) $featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
+							$featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 							break;
 						}
 					}
@@ -633,17 +638,21 @@ class dxfFactory implements iDxfFactory {
 	* @return void
 	*/
 	public function getInsertLayerNamebyLayer($dLayer){
-		$layerName = "";
+		$layerName = $dLayer->{"layerName"};
 		if($this->dxfEnableTemplateContesti){
 			$themeFound = False;
 			foreach ($this->dxfTemplateContesti as $theme){
 				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					if(is_null($theme->{"layer_default_blocchi"})) continue;					
 					$themeFound = True;
 					$layerName = $theme->{"layer_default_blocchi"}->{"layerNameDxf"};	
 				}
 			}
-			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
-				$layerName = "0";
+			//rename dei layer in base al tema del contesto
+			if(!is_null($theme->{"layerNameReplace"})){
+				foreach ($theme->{"layerNameReplace"} as $replaceObj){
+					$dLayer->{"layerName"} = str_replace($replaceObj->{"search"}, $replaceObj->{"replace"}, $dLayer->{"layerName"});
+				}
 			}
 		}else{
 			//disegno standard
@@ -658,17 +667,21 @@ class dxfFactory implements iDxfFactory {
 	* @return void
 	*/
 	public function getAnnotationLayerNamebyLayer($dLayer){
-		$layerName = "";
+		$layerName = $dLayer->{"layerName"};
 		if($this->dxfEnableTemplateContesti){
 			$themeFound = False;
 			foreach ($this->dxfTemplateContesti as $theme){
 				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+					if(is_null($theme->{"layer_default_testi"})) continue;
 					$themeFound = True;
 					$layerName = $theme->{"layer_default_testi"}->{"layerNameDxf"};	
 				}
 			}
-			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
-				$layerName = "0";
+			//rename dei layer in base al tema del contesto
+			if(!is_null($theme->{"layerNameReplace"})){
+				foreach ($theme->{"layerNameReplace"} as $replaceObj){
+					$dLayer->{"layerName"} = str_replace($replaceObj->{"search"}, $replaceObj->{"replace"}, $dLayer->{"layerName"});
+				}
 			}
 		}else{
 			//disegno standard
@@ -684,29 +697,35 @@ class dxfFactory implements iDxfFactory {
 	* @return void
 	*/
 	public function getLayerNamebyLayer($dLayer, $geometryType){
-		$layerName = "";
+		$layerName = $dLayer->{"layerName"};
 		if($this->dxfEnableTemplateContesti){
 			$themeFound = False;
+			$layerFound = False;
 			foreach ($this->dxfTemplateContesti as $theme){
-				$layerFound = False;
 				if ($dLayer->{"themeName"} == $theme->{"themeName"}){
 					$themeFound = True;
-					foreach ($theme->{"layers"} as $tLayer){
-						if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
-							//definizione dello stile custom
-							$layerName = $tLayer->{"layerNameDxf"};
-							$layerFound = True;
-							break;
+					if(!is_null($theme->{"layers"})){
+						foreach ($theme->{"layers"} as $tLayer){
+							if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
+								//definizione dello stile custom
+								$layerName = $tLayer->{"layerNameDxf"};
+								$layerFound = True;
+								break;
+							}
 						}
 					}
 					if(!$layerFound){
 						//in base alla geometria lo mando su layer di default
 						switch (strtolower($geometryType)) {
 							case "text":
+								if(is_null($theme->{"layer_default_testi"})) continue;
 								$layerName = $theme->{"layer_default_testi"}->{"layerNameDxf"};
+								$layerFound = True;
 								break;
 							case "insert":
+								if(is_null($theme->{"layer_default_blocchi"})) continue;							
 								$layerName = $theme->{"layer_default_blocchi"}->{"layerNameDxf"};
+								$layerFound = True;
 								break;
 							case "polyline":
 							case "linestring":
@@ -715,14 +734,22 @@ class dxfFactory implements iDxfFactory {
 							case "multipolygon":
 							case "point":
 							default:
+								if(is_null($theme->{"layer_default"})) continue;
+								$layerFound = True;
 								$layerName = $theme->{"layer_default"}->{"layerNameDxf"};
 								break;
 						}
 					}
+					//rename dei layer in base al tema del contesto
+					if(!is_null($theme->{"layerNameReplace"})){
+						foreach ($theme->{"layerNameReplace"} as $replaceObj){
+							$dLayer->{"layerName"} = str_replace($replaceObj->{"search"}, $replaceObj->{"replace"}, $dLayer->{"layerName"});
+						}
+					}
 				}
 			}
-			if(!$themeFound){ //se la feature non ha tema la disegno in maniera standard sullo 0
-				$layerName = "0";
+			if(!$themeFound || !$layerFound){ //se la feature non ha tema la disegno in maniera standard 
+				$layerName = $dLayer->{"layerName"};
 			}
 		}else{
 			//disegno standard
@@ -959,10 +986,7 @@ class dxfFactory implements iDxfFactory {
 			$labelSize = $style->{'labelSize'};
 		}
 		$lineWeigth = null;
-		//controllo guaine
-		if($this->stringArrayCheck($dLayer->{'layerName'}, $this->layersGuaine)){
-			$lineWeigth = "211";
-		}
+		
 		//fine definizione dei valori di default
 		$this->log("Simbolo ".$feature->{'geometry'}->{'type'});
 		switch (strtolower($feature->{'geometry'}->{'type'})) {
@@ -995,7 +1019,7 @@ class dxfFactory implements iDxfFactory {
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle +=0;
 					if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)){
-						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 					}
 				}
 				//se il nome del simbolo � settato aggiungo un blocco altrimenti un punto
@@ -1031,7 +1055,7 @@ class dxfFactory implements iDxfFactory {
 					if(count($coords) == 2){
 						array_push($coords, 0);
 					}
-					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 				}
 			break;
 			case "insert":
@@ -1067,9 +1091,43 @@ class dxfFactory implements iDxfFactory {
 				if(!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)){
 					if(strtolower($feature->{'geometry'}->{'type'}) == "multilinestring"){
 						for($li = 0; $li < count($coords); $li++){
+							//controllo guaine
+							if($this->stringArrayCheck($dLayer->{'layerName'}, $this->layersGuaine)){
+								$coords1 = $coords;
+								$coords2 = $coords;
+								for($c = 0; $c < count($coords); $c++){
+									//$slope = ($coords1[$c + 1][1] - $coords1[$c][1]) / ($coords1[$c + 1][0] - $coords1[$c + 1][0]);
+									if($slope>0){
+										$coords1[$c][0] = $coords1[$c][0] + 0.2;
+										$coords1[$c][1] = $coords1[$c][1] + 0.2;
+										$coords2[$c][0] = $coords2[$c][0] - 0.2;
+										$coords2[$c][1] = $coords2[$c][1] - 0.2;
+									}
+								}
+								$this->dxfCode->addPolyLine($layerName, $coords1, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, 30);
+								$this->dxfCode->addPolyLine($layerName, $coords2, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, 30);
+								continue;
+							}
+							//sezione normale
 							$this->dxfCode->addPolyLine($layerName, $coords[$li], $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, $lineWeigth);
 						}
 					}else{
+						//sezione guaine
+						if($this->stringArrayCheck($dLayer->{'layerName'}, $this->layersGuaine)){
+							$coords1 = $coords;
+							$coords2 = $coords;
+							for($c = 0; $c < count($coords); $c++){
+								//$slope = ($coords[$c + 1][1] - $coords[$c][1]) / ($coords[$c + 1][0] - $coords[$c + 1][0]);
+								$coords1[$c][0] = $coords[$c][0] + 0.2;
+								$coords1[$c][1] = $coords[$c][1] + 0.2;
+								$coords2[$c][0] = $coords[$c][0] - 0.2;
+								$coords2[$c][1] = $coords[$c][1] - 0.2;	
+							}
+							$this->dxfCode->addPolyLine($layerName, $coords1, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, 30);
+							$this->dxfCode->addPolyLine($layerName, $coords2, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, 30);
+							continue;
+						}
+						//sezione normale
 						$this->dxfCode->addPolyLine($layerName, $coords, $thickness, ($dLayer->{'splitted'}) ? null : $linetype, $outlineColor, $lineWeigth);
 					}
 				}
@@ -1102,7 +1160,7 @@ class dxfFactory implements iDxfFactory {
 						$angle = $this->calcAngle($coordsLabel[$midCount-1][0], $coordsLabel[$midCount][0], $coordsLabel[$midCount-1][1], $coordsLabel[$midCount][1] );
 						//rettifico l'orientamento
 						$angle = $this->labelAngle($angle);
-						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier), $angle, 0, 0, $labelColor);
+						$this->dxfCode->addText($this->getAnnotationLayerNamebyLayer($dLayer), $midPoint[0] + $this->getOffsetX($angle), $midPoint[1]+ $this->getOffsetY($angle), $midPoint[2], $text, $this->getLabelSize($labelSize, $this->dxfLabelScaleMultiplier, $dLayer), $angle, 0, 0, $labelColor);
 					}
 				}
 				//sezione simboli associati alle linee
@@ -1297,18 +1355,35 @@ class dxfFactory implements iDxfFactory {
 		return $arrResult;
 	}
 		
-	public function getLabelSize($labelSize, $multiplier){
+	public function getLabelSize($labelSize, $multiplier, $dLayer){
 		//Se i contesti non sono attivati abilito la scalatura
-		if(!$this->dxfEnableTemplateContesti){
+		if(!$this->isLabelContestoConfigured($dLayer)){
 			$labelSize = $labelSize * $multiplier;
 		}
 		return $labelSize;
 	}
+
 	public function getSymbolName($name){
 		//return "CAMBIO ATTRIBUTI";
 		return $name;
 	}
 
+	public function isLabelContestoConfigured($dLayer){
+		if(!$this->dxfEnableTemplateContesti) return False;
+		foreach ($this->dxfTemplateContesti as $theme){
+			if ($dLayer->{"themeName"} == $theme->{"themeName"}){
+				if(!is_null($theme->{"layers"})){
+					foreach ($theme->{"layers"} as $tLayer){
+						if($this->stringArrayCheck($dLayer->{"layerName"}, $tLayer->{"layerNames"})){
+							return True;
+						}
+					}
+				}
+				return !is_null($theme->{"layer_default_testi"});
+			}
+		}
+		return False;
+	}
 
 	
 	public function getTextAlignHorizontal($geoWebCode){

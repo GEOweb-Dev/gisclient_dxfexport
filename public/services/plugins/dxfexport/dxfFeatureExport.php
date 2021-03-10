@@ -177,7 +177,8 @@ class dxfFeatureExport {
                 left join ".DB_SCHEMA.".symbol using (symbol_name)
                 left join ".DB_SCHEMA.".e_pattern using(pattern_id)
                 where c.layer_id=?
-                order by style_order";
+				order by style_order";
+				
 				$stmtStyle = $db->prepare($sqlStyle);
 				$stmtStyle->execute([$thisLayer["layer_id"]]);
 				//loop sugli stili per la definizione delle classi
@@ -289,6 +290,9 @@ class dxfFeatureExport {
 						$style->{"labelSize"} = $label_maxsize;
 					} elseif($label_size>0){
 						$style->{"labelSize"} = $label_size;
+					}
+					if($style->{"labelSize"}==NULL){ //TODO MODIFICA F_HTEXT da modificare
+						$style->{"labelSize"} = 4;
 					}
 					$i++;/**/
 					array_push($styles, $style);

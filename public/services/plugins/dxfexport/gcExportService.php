@@ -57,6 +57,7 @@ $template = $_REQUEST["template"];
 $enableLineThickness = $_REQUEST["enableLineThickness"];
 $lineScale = $_REQUEST["lineScale"];
 $enableColors = $_REQUEST["enableColors"];
+$exportEmptyLayers = $_REQUEST["exportEmptyLayers"];
 $enableTemplateLayer = $_REQUEST["enableTemplateLayer"];
 $textScaleMultiplier = $_REQUEST["textScaleMultiplier"];
 $labelScaleMultiplier = $_REQUEST["labelScaleMultiplier"];
@@ -110,6 +111,7 @@ $configFile->{"dxfEnableLineThickness"} = (is_null($enableLineThickness)) ? bool
 //abilita colori
 $configFile->{"dxfEnableColors"} = (is_null($enableColors)) ? boolval($dxfEnableColors) : $enableColors;
 $configFile->{"dxfLineScale"} = (is_null($lineScale)) ? $dxfLineScale : $lineScale;
+$configFile->{"dxfExportEmptyLayers"} = (is_null($exportEmptyLayers)) ? boolval($dxfExportEmptyLayers) : $exportEmptyLayers;
 
 $configFile->{"dxfTextScaleMultiplier"} = (is_null($textScaleMultiplier)) ? $dxfTextScaleMultiplier : $dxfTextScaleMultiplier * doubleval($textScaleMultiplier);
 $configFile->{"dxfLabelScaleMultiplier"} = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $dxfLabelScaleMultiplier * doubleval($labelScaleMultiplier);

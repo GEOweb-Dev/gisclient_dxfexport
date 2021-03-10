@@ -36,12 +36,14 @@ $dxfSaveToDir = 1;
 $dxfLogPath = "/var/srv/geoweb/tmp/dxf/log.txt";
 //abilita l'inserimento dei riempimenti True attivi False non attivi
 $dxfDrawHatches = False;
-//abilita la dimensione personalizzata delle linee e polilinee. Mettendo a false la dimensione sarà DA LAYER
+//abilita la dimensione personalizzata delle linee e polilinee. Mettendo a false la dimensione sarï¿½ DA LAYER
 $dxfEnableLineThickness = True;
 //scala della linea ai fini del disegno della tipologia di linea
 $dxfLineScale = 0.15;
-//abilita il colore personalizzato per gli oggetti. Mettendo a false il colore sarà DA LAYER
+//abilita il colore personalizzato per gli oggetti. Mettendo a false il colore sarï¿½ DA LAYER
 $dxfEnableColors = True;
+//esporta i layer anche se vuoti
+$dxfExportEmptyLayers = False;
 //Singolo layer per blocchi
 $dxfEnableSingleLayerBlock = False;
 //Layer da escludere per singolo layer per blocchi
