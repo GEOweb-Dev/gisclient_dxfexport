@@ -808,10 +808,10 @@ class dxfCode implements iDxfCode {
 			return $colorArray;
 		}
 		//print (!is_null($color) && is_null($aciColor));
-		// if(!is_null($color) && is_null($aciColor)){ //provo a trasformare il colore in ACI
+		if(!is_null($color) && is_null($aciColor)){ //provo a trasformare il colore in ACI
 		// 	print "$color _ $aciColor".(!is_null($color) && is_null($aciColor))."<br />";
-		// 	$aciColor = $this->colorDecToAci($color);
-		// }
+		 	$aciColor = $this->colorDecToAci($color);
+		}
 		if(!is_null($aciColor)){
 			array_push($colorArray, " 62");
 			array_push($colorArray, $aciColor);
