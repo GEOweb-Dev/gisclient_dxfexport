@@ -857,6 +857,9 @@ class dxfCode implements iDxfCode {
 			case $this->getDecimalColor(0,0,0):
 				return 7;
 				break;
+			case $this->getDecimalColor(32,32,32):
+				return 7;
+				break;
 			case $this->getDecimalColor(255,255,255):
 				return 7;
 				break;
