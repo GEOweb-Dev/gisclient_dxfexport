@@ -213,7 +213,15 @@ class dxfFeatureExport {
 
 					//verifica del campo classitem da unire con l'espressione
 					if($thisLayer["classitem"] != NULL){
-						$style->{"expression"} = "'[".$thisLayer["classitem"]."]' = ".$thisStyle["expression"];
+						//supporto alla sintassi con {} 
+						//TODO è un wokaround deve essere migliorata
+						if (strpos($style->{"expression"}, '{') !== false) {
+							$style->{"expression"} = str_replace("{", "('", $style->{"expression"});
+							$style->{"expression"} = str_replace("}", "')", $style->{"expression"});
+							$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' in " . $style->{"expression"};
+						} else {
+							$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' = " . $thisStyle["expression"];
+						}
 					}
 					//verifica del campo etichetta
 					if($thisStyle["class_text"] != NULL){
