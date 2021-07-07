@@ -91,6 +91,9 @@ class dxfCode implements iDxfCode {
 			$aciColor = "7";
 			$color = null;
 		}
+		if (!is_null($color) && is_null($aciColor)) { //provo a trasformare il colore in ACI
+			$aciColor = $this->colorDecToAci($color);
+		}
 		//print $layerName." ".$color." ".$aciColor;
 		array_push($strLayer, "  0");
 		array_push($strLayer, "LAYER");
