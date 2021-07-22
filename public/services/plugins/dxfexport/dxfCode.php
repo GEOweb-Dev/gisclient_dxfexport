@@ -645,7 +645,7 @@ class dxfCode implements iDxfCode {
 		//rimuovo gli a capo e caratteri non compatibili
 		$text = str_replace("\r", "", $text);
 		$text = str_replace("\n", "", $text);
-		$text = utf8_encode($text);
+		//$text = utf8_encode($text);
 		$this->dxfFactory->log($text);
 		if (is_null($textAlignHorizontal))
 		{
@@ -870,5 +870,3 @@ class dxfCode implements iDxfCode {
 		return null;
 	}
 }
-
-?>
