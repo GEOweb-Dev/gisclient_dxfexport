@@ -1613,7 +1613,8 @@ class dxfFactory implements iDxfFactory
 
 	public function normalizeField($str)
 	{
-		//devo eliminare anche i caratteri non utili
+		//TODO devo eliminare anche i caratteri non utili
+		$str = str_replace("tostring([f_trimtesto],'%01.2f')", "f_trimtesto", $str);
 		$str = str_replace("'", "", $str);
 		return str_replace("[", "", str_replace("]", "", $str));
 	}
