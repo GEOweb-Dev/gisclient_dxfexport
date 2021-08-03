@@ -475,6 +475,7 @@ class dxfFactory implements iDxfFactory
 
 		if (!is_null($this->configExtraction->{'attributeFilters'})) {
 			$filterProperties = '&FILTER=%3Cogc:Filter xmlns:ogc=%22http://www.opengis.net/ogc%22%3E';
+			$filterProperties .= "%3Cogc%3AAnd%3E%0A%3Cogc%3ABBOX%3E%3Cogc%3APropertyName%3Egeom%3C%2Fogc%3APropertyName%3E%3Cgml%3AEnvelope%20xmlns%3Agml%3D%22http%3A%2F%2Fwww.opengis.net%2Fgml%22%3E%3Cgml%3AlowerCorner%3E-32690%204401560%3C%2Fgml%3AlowerCorner%3E%3Cgml%3AupperCorner%3E1114190%205548440%3C%2Fgml%3AupperCorner%3E%3C%2Fgml%3AEnvelope%3E%3C%2Fogc%3ABBOX%3E";
 			$filters = $this->configExtraction->{'attributeFilters'}->{'filters'};
 			if (count($filters) > 1) {
 				switch (strtoupper($this->configExtraction->{'attributeFilters'}->{"logic"})) {
@@ -531,9 +532,7 @@ class dxfFactory implements iDxfFactory
 						break;
 				}
 			}
-			$filterProperties = $filterProperties . "%3C/ogc:Filter%3E";
-			//print(var_dump($filters) . "<br/>");
-			//die($filterProperties);
+			$filterProperties = $filterProperties . "%3C%2Fogc%3AAnd%3E%0A%3C/ogc:Filter%3E";
 		}
 
 		//aggiungo il layer del template contesti se utilizzato
