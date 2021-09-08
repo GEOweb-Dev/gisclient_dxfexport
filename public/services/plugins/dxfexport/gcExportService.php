@@ -79,6 +79,7 @@ $dxfFeatureExport->debug = $dxfDebug;
 $dxfFeatureExport->dxfSplitLayers = $dxfSplitLayers;
 $dxfFeatureExport->dxfExcludeGroups = $dxfExcludeGroups;
 $dxfFeatureExport->dxfExcludeLayers = $dxfExcludeLayers;
+$dxfFeatureExport->dxfExcludeClassNames = $dxfExcludeClassNames;
 
 //eseguo la conversione di un mapset in un file di configurazione
 $configFile = new stdClass();

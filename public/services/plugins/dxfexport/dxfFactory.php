@@ -1179,13 +1179,14 @@ class dxfFactory implements iDxfFactory
 				if (is_null($outlineColor)) {
 					$outlineColor = $color;
 				}
-				if (is_null($color) && is_null($outlineColor)) {
-					//$this->printFeatureLayer("Impossibile definire il colore", $feature, $dLayer);
-					//return;
-				}
-				//TODO non aggiungo se il nome contiene una etichetta, andrebbe definita in maniera differente
+				//if (is_null($color) && is_null($outlineColor)) {
+				//$this->printFeatureLayer("Impossibile definire il colore", $feature, $dLayer);
+				//return;
+				//}
+				//TODO non aggiungo se il nome contiene una string da escludere, andrebbe definita in maniera differente
 				//ma al momento non esistono soluzioni alternative
-				if (!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)) {
+				//Se la definizione ha un simbolo la geometria non viene creata. Non è una soluzione ottimale ma anche in questo caso non ci sono soluzioni alternative
+				if (!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers) && is_null($symbolName)) {
 					if (strtolower($feature->{'geometry'}->{'type'}) == "multilinestring") {
 						for ($li = 0; $li < count($coords); $li++) {
 							//controllo guaine

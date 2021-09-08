@@ -44,6 +44,7 @@ class dxfFeatureExport
 	public $dxfSplitLayers = [];
 	public $dxfExcludeGroups = [];
 	public $dxfExcludeLayers = [];
+	public $dxfExcludeClassNames = [];
 	public $logTxt = "";
 	public $logPath = "";
 
@@ -227,6 +228,10 @@ class dxfFeatureExport
 
 					$style->{"expression"} = $thisStyle["expression"];
 					$style->{"className"} = $thisStyle["class_name"];
+					//se la classe non è valida procedo
+					if ($this->stringArrayCheck($thisStyle["class_name"], $this->dxfExcludeClassNames)) {
+						continue;
+					}
 
 					//verifica del campo classitem da unire con l'espressione
 					if ($thisLayer["classitem"] != NULL) {
@@ -320,11 +325,11 @@ class dxfFeatureExport
 						$style->{"labelSize"} = 4;
 					}
 					$i++;/**/
+
 					array_push($styles, $style);
 				}
 				//controllo se il layer deve essere splittato per i propri stili
 				if (in_array($thisLayer["layer_name"], $this->dxfSplitLayers)) {
-
 					//eseguo lo split dei layer
 					foreach ($styles as $style) {
 						$clonedLayer = unserialize(serialize($layer));
