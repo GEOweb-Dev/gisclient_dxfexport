@@ -130,9 +130,13 @@ $dxfExcludeGeometryLayers = array(
 		'zone_gestione',
 		*/
 	);
-
 //layer testuali da escludere di default
 $dxfExcludeTextLayers = array(
+		
+	);
+
+//Classi da escludere di default
+$dxfExcludeClassNames = array(
 		
 	);
 //split dei layer in base alle classi	
@@ -141,6 +145,7 @@ $dxfSplitLayers = array(
 	'tratte_allacciamenti',
 	'reflui_condotte'
 	);
+//definizione del layer delle guaine la cui geometrie viene trattata in modo differente
 $dxfLayersGuaine = array(
 	'vtlr_carta_tecnica_t_esercizio_tubo_guaina'
 	);
