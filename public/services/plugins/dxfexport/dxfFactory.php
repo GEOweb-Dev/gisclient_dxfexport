@@ -1262,16 +1262,13 @@ class dxfFactory implements iDxfFactory
 					}
 				}
 				//sezione simboli associati alle linee
-				//if(!in_array($dLayer->{'layerName'}, $this->excludeGeometryLayers)){
 				if (!is_null($symbolName)) {
-					//$symbolName = "FGN_DIREZIONE_1";
 					$symbolCoords = $this->getPointCoordsDistance($coords, 10);
 					//aggiungo un insert
 					foreach ($symbolCoords as $symbolCoord) {
 						$this->dxfCode->addInsert($this->getInsertLayerNamebyLayer($dLayer), $symbolCoord[0], $symbolCoord[1], 0, $symbolName, $symbolCoord[2], $color, 1);
 					}
 				}
-				//}
 				break;
 			case "polygon":
 			case "multipolygon":
