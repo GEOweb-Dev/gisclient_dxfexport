@@ -253,6 +253,24 @@ class dxfFeatureExport
 					if ($thisStyle["symbol_name"] != NULL) {
 						$style->{"symbol_name"} = $thisStyle["symbol_name"];
 					}
+					//verifica del simbolo all'interno dello stile
+					if ($thisStyle["style_def"] != NULL) {
+						$styleDefList = explode(PHP_EOL, $thisStyle["style_def"]);
+						foreach ($styleDefList as $defKey => $defValue) {
+							$styleValueList = explode(" ", $defValue);
+							if (sizeof($styleValueList) < 2) {
+								continue;
+							}
+							switch (strtoupper($styleValueList[0])) {
+								case 'SYMBOL':
+									$symbolStyleName = str_replace("[", "", $styleValueList[1]);
+									$symbolStyleName = str_replace("]", "", $symbolStyleName);
+									$style->{"symbol_name"} = $symbolStyleName;
+									break;
+							}
+						}
+					}
+
 					//verifica outline
 					if ($thisStyle["outlinecolor"] != NULL) {
 						$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
