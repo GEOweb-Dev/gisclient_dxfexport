@@ -265,8 +265,9 @@ class dxfFeatureExport
 							}
 							switch (strtoupper($styleValueList[0])) {
 								case 'SYMBOL':
-									$symbolStyleName = str_replace("[", "", $styleValueList[1]);
-									$symbolStyleName = str_replace("]", "", $symbolStyleName);
+									$symbolStyleName = $styleValueList[1];
+									//$symbolStyleName = str_replace("[", "", $symbolStyleName);
+									//$symbolStyleName = str_replace("]", "", $symbolStyleName);
 									$style->{"symbol_name"} = $symbolStyleName;
 									break;
 							}
