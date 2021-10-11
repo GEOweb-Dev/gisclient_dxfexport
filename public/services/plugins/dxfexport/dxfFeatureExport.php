@@ -145,7 +145,6 @@ class dxfFeatureExport
 			LEFT JOIN ' . DB_SCHEMA . '.layer USING (layergroup_id)
 			LEFT JOIN ' . DB_SCHEMA . '.layer_groups USING (layer_id)
 			WHERE (' . $sqlFilter . ') AND (' . $authClause . ") and queryable = 1 ORDER BY layer.layer_order;";
-		// 
 
 		//die($sql);
 		$stmt = $db->prepare($sql);
@@ -158,13 +157,16 @@ class dxfFeatureExport
 			//echo '<pre>';
 			//verifico che sia un WMS
 			$layerName = $thisLayer["theme_name"] . "_" . $thisLayer["layergroup_name"] . "_" . $thisLayer["layer_name"];
-			//verifico che sia presente in temi se in forniti
+
+
+			//verifico che sia presente in temi se forniti
 			if (
 				$thisLayer["owstype_id"] == 1
 				&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes))
 				&& !$this->stringArrayCheck($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
 				&& !$this->stringArrayCheck($layerName, $this->dxfExcludeLayers)
 			) {
+
 				//definizione del layer
 				$layer = new stdClass();
 				$styles = array(); //elenco degli stili restituire
@@ -373,6 +375,7 @@ class dxfFeatureExport
 				}
 			}
 		}
+
 		if ($this->debug) {
 			$this->log('<pre>');
 			$this->log(json_encode($layers));
