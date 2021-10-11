@@ -959,7 +959,6 @@ class dxfFactory implements iDxfFactory
 				$result = $this->parserExpression->calculateString($expression);
 				$this->log("result " . $result);
 				return utf8_decode($result);
-				break;
 			}
 		} catch (Exception $e) {
 			$this->log("Espressione non valida " . $expression);
@@ -1022,7 +1021,7 @@ class dxfFactory implements iDxfFactory
 		}
 		$symbolName = NULL;
 		if (isset($style->{'symbol_name'})) {
-			$symbolName = $style->{'symbol_name'};
+			$symbolName = $this->getSymbolName($style->{'symbol_name'}, $props);
 		}
 		(!empty($dLayer->{'thickness'})) ? $thickness = $dLayer->{'thickness'} : $thickness = 1;
 		if (isset($style->{'thickness'})) {
@@ -1075,7 +1074,6 @@ class dxfFactory implements iDxfFactory
 					$this->log("Colore " . $color);
 					if (!is_null($symbolName)) {
 						$angle = 0;
-						$symbolName = $this->getSymbolName($symbolName);
 						//setto il colore come outiline se non è definito
 						if (is_null($color) && !is_null($outlineColor)) {
 							$color = $outlineColor;
@@ -1109,7 +1107,6 @@ class dxfFactory implements iDxfFactory
 				break;
 			case "insert":
 				if (!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeGeometryLayers)) {
-					$symbolName = $this->getSymbolName($symbolName);
 					$angle = 0;
 					//$size = $this->defaultSize;
 					if (!empty($props)) {
@@ -1412,9 +1409,15 @@ class dxfFactory implements iDxfFactory
 		return $labelSize;
 	}
 
-	public function getSymbolName($name)
+	public function getSymbolName($name, $props)
 	{
-		//return "CAMBIO ATTRIBUTI";
+		$name = trim(preg_replace('/\s\s+/', '', $name));
+		if (strpos($name, '[') === false) {
+			return $name;
+		}
+		if (isset($props->{$this->normalizeField($name)})) {
+			$name = $props->{$this->normalizeField($name)};
+		}
 		return $name;
 	}
 
@@ -1682,7 +1685,7 @@ class dxfFactory implements iDxfFactory
 			for ($kin = 0; $kin < count($filterIn); $kin++) {
 				$filterProperties = $filterProperties . "%3Cogc:PropertyIsEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filter->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . trim($filterIn[$kin]) . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsEqualTo%3E";
 				$count++;
-				if ($count == 20) {
+				if ($count == 200) {
 					$filterProperties = $filterPropertiesHeader . "%3Cogc:Or%3E" . $filterProperties . "%3C/ogc:Or%3E" . $filterPropertiesEnd;
 					array_push($filterPropertiesArray, $filterProperties);
 					$filterProperties = "";
