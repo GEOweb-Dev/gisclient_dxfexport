@@ -959,7 +959,6 @@ class dxfFactory implements iDxfFactory
 				$result = $this->parserExpression->calculateString($expression);
 				$this->log("result " . $result);
 				return utf8_decode($result);
-				break;
 			}
 		} catch (Exception $e) {
 			$this->log("Espressione non valida " . $expression);
