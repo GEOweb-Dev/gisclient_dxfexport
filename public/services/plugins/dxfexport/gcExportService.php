@@ -104,6 +104,7 @@ $configFile->{"titolo"} = "Estrazione DXF";
 
 $configFile->{"dxfEnableTemplateContesti"} = (is_null($enableTemplateLayer)) ? boolval($dxfenableDxfContesti) : $enableTemplateLayer;
 $configFile->{"dxfTemplateContestiPath"} = $dxfTemplateContestiPath;
+$configFile->{"dxfRemoveWFSHeadersLines"} = $dxfRemoveWFSHeadersLines;
 
 //die($dxfFeatureExport->getAci(200,200,200)."");
 $layers = $dxfFeatureExport->getLayers($mapSet, $themes, $layerFilter, $project, $epsg);

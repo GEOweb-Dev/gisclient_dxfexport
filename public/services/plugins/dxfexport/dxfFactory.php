@@ -109,6 +109,8 @@ class dxfFactory implements iDxfFactory
 
 	public $parserExpression;
 
+	public $dxfRemoveWFSHeadersLines = 0;
+
 	public $logTxt = ""; //log per debugging
 
 	/**
@@ -159,6 +161,8 @@ class dxfFactory implements iDxfFactory
 		if (!is_null($this->configExtraction->{'dxfTextScaleMultiplier'})) $this->dxfTextScaleMultiplier = $this->configExtraction->{'dxfTextScaleMultiplier'};
 		if (!is_null($this->configExtraction->{'dxfLabelScaleMultiplier'})) $this->dxfLabelScaleMultiplier = $this->configExtraction->{'dxfLabelScaleMultiplier'};
 		if (!is_null($this->configExtraction->{'dxfInsertScaleMultiplier'})) $this->dxfInsertScaleMultiplier = $this->configExtraction->{'dxfInsertScaleMultiplier'};
+
+		if (!is_null($this->configExtraction->{'dxfRemoveWFSHeadersLines'})) $this->dxfRemoveWFSHeadersLines = $this->configExtraction->{'dxfRemoveWFSHeadersLines'};
 
 		//creo il parser per le espressioni
 		$this->parserExpression = new Parser();
@@ -1636,16 +1640,15 @@ class dxfFactory implements iDxfFactory
 		// $json = curl_exec($ch);
 
 		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
-		//die($json);
 		$this->log("Terminata richiesta");
 		$arr = explode("\n", $json);
 		//elimino gli errori generati da mapserver
-		array_shift($arr);
-		array_shift($arr);
-		array_shift($arr);
+		for ($i = 0; $i < $this->dxfRemoveWFSHeadersLines; $i++) {
+			array_shift($arr);
+		}
 		$json = implode("\n", $arr);
 		$geoJson = json_decode($json);
-
+		//die($json);
 		return $geoJson;
 	}
 

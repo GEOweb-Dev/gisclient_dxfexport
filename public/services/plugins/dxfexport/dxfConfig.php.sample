@@ -26,6 +26,8 @@
 ******************************************************************************/
 //Toggle del debug
 $dxfDebug = True;
+//Indica il numero di linee iniziali che devono essere rimossi dalle chiamate wfs
+$dxfRemoveWFSHeadersLines = 0;
 //Directory di salvataggio del dxf e dei file temporanei
 $dxfTempPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/";
 //Nome file del template di default
