@@ -90,6 +90,9 @@ class dxfFactory implements iDxfFactory
 	//eliminazione dei testi doppi indesiderati
 	public $excludeTextLayers = array();
 
+	//eliminazione dei blocchi indesiderati
+	public $excludeBlockNames = array();
+
 	//layer Guaine
 	public $layersGuaine = array();
 
@@ -1069,7 +1072,7 @@ class dxfFactory implements iDxfFactory
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle += 0;
 					if (!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)) {
-						$this->dxfCode->addText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+						$this->dxfCode->addMultilineText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 					}
 				}
 				//se il nome del simbolo � settato aggiungo un blocco altrimenti un punto
@@ -1106,7 +1109,7 @@ class dxfFactory implements iDxfFactory
 					if (count($coords) == 2) {
 						array_push($coords, 0);
 					}
-					$this->dxfCode->addText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+					$this->dxfCode->addMultilineText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
 				}
 				break;
 			case "insert":
@@ -1124,7 +1127,9 @@ class dxfFactory implements iDxfFactory
 					if (count($coords) == 2) {
 						array_push($coords, 0);
 					}
-					$this->dxfCode->addInsert($layerName, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
+					if (!is_null($symbolName)) {
+						$this->dxfCode->addInsert($layerName, $coords[0], $coords[1], $coords[2], $symbolName, $angle, $color, $this->dxfInsertScaleMultiplier);
+					}
 				}
 				break;
 			case "polyline":
@@ -1415,6 +1420,9 @@ class dxfFactory implements iDxfFactory
 
 	public function getSymbolName($name, $props)
 	{
+		if (in_array($name, $this->excludeBlockNames)) {	
+			return NULL;	
+		}
 		$name = trim(preg_replace('/\s\s+/', '', $name));
 		if (strpos($name, '[') === false) {
 			return $name;
