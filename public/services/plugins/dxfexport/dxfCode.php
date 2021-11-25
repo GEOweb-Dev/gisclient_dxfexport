@@ -645,6 +645,9 @@ class dxfCode implements iDxfCode {
 		//rimuovo gli a capo e caratteri non compatibili
 		$text = str_replace("\r", "", $text);
 		$text = str_replace("\n", "", $text);
+		//sostituisco la & con un a capo \P
+		$text = str_replace("&", "\\P", $text);
+		$text = str_replace("/", "\\P", $text);
 		//$text = utf8_encode($text);
 		$this->dxfFactory->log($text);
 		if (is_null($textAlignHorizontal))
@@ -715,6 +718,101 @@ class dxfCode implements iDxfCode {
 
     }
 	
+/**
+	* Crea l'array per l'inserimento di un testo
+	*
+	* @param string $layerName Nome del layer di destinazione nel file DXF
+	* @param double $x Coordinata X
+	* @param double $y Coordinata Y
+	* @param double $z Coordinata Z
+	* @param double $strValue Testo da inserire
+	* @param double $labelSize Dimensione del testo
+	* @param double $angle Angolo del testo
+	* @param double $textAlign Allineamento orizzontale del testo
+	*
+	* @return array
+	*/
+	public function addMultilineText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlignHorizontal, $textAlignVertical, $color){		
+		//se il colore � nullo non disegno
+		//if (is_null($color)){
+		//	return;
+		//}	
+		//rimuovo gli a capo e caratteri non compatibili
+		$text = str_replace("\r", "", $text);
+		$text = str_replace("\n", "", $text);
+		//sostituisco la & con un a capo \P
+		$text = str_replace("&", "\\P", $text);
+		$text = str_replace("/", "\\P", $text);
+		//$text = utf8_encode($text);
+		$this->dxfFactory->log($text);
+		if (is_null($textAlignHorizontal))
+		{
+			$textAlignHorizontal = 0;
+		}
+		if (is_null($textAlignVertical))
+		{
+			$textAlignVertical = 0;
+		}
+		if ($color == 0)
+		{
+			$color = null;
+		}
+		$tmpHandle = $this->dxfFactory->getNextHandlePoint();
+		$strGeom = array();
+		array_push($strGeom, "  0");
+		array_push($strGeom, "MTEXT");
+		array_push($strGeom, "  5");
+		array_push($strGeom, $tmpHandle."");
+		array_push($strGeom, "  330");
+		array_push($strGeom, "1F");
+		array_push($strGeom, "  100");
+		array_push($strGeom, "AcDbEntity");
+		array_push($strGeom, "  8");
+		array_push($strGeom, $layerName);
+		array_push($strGeom, "  6");
+		array_push($strGeom, "Continuous");
+		foreach($this->getColor($color, null, $this->enableColors) as $colorLine){
+			array_push($strGeom, $colorLine);
+		}
+		// array_push($strGeom, " 62");
+		// array_push($strGeom, ($this->enableColors) ? "7" : "256");
+		// if ($this->enableColors && !is_null($color)){
+			// array_push($strGeom, " 420");
+			// array_push($strGeom,  $color."");
+		// }
+		array_push($strGeom, "  100");
+		array_push($strGeom, "AcDbMText");
+		array_push($strGeom, "  10");
+		array_push($strGeom, $x."");
+		array_push($strGeom, "  20");
+		array_push($strGeom, $y."");
+		array_push($strGeom, "  30");
+		array_push($strGeom, $z."");
+		array_push($strGeom, " 40");
+		array_push($strGeom, number_format((float)$labelSize, 2, '.', '')."");
+		array_push($strGeom, "  1");
+		array_push($strGeom, $text);
+		array_push($strGeom, " 50");
+		array_push($strGeom, $angle."");
+		array_push($strGeom, " 72");
+		array_push($strGeom, $textAlignHorizontal);
+		//array_push($strGeom, "  11");
+		//array_push($strGeom, $x."");
+		//array_push($strGeom, "  21");
+		//array_push($strGeom, $y."");
+		//array_push($strGeom, "  31");
+		//array_push($strGeom, $z."");
+		//array_push($strGeom, "100");
+		//array_push($strGeom, "AcDbMText");
+		array_push($strGeom, " 73");
+		array_push($strGeom, $textAlignVertical);
+				
+		$this->dxfFactory->writePoint($strGeom);
+		$this->dxfFactory->log("MTEXT added ".$tmpHandle);
+		return $strGeom;
+
+    }
+
 	/**
 	* Crea l'array per l'inserimento di un blocco
 	*

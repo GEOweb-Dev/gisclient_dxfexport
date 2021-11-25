@@ -141,6 +141,12 @@ $dxfExcludeTextLayers = array(
 $dxfExcludeClassNames = array(
 		
 	);
+
+//blocchi da escludere di default
+$dxfExcludeBlockNames = array(
+		
+	);
+
 //split dei layer in base alle classi	
 $dxfSplitLayers = array(
 	'tratte_condotte_principali',
