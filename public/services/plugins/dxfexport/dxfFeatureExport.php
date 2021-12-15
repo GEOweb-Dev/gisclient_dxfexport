@@ -31,6 +31,9 @@
 //ini_set("display_errors", "on");
 
 include_once('dxfErrors.php');
+include_once('dxfWfsFilters.php');
+include_once('aciColors.php');
+
 require_once ROOT_PATH . 'lib/gcuser.class.php';
 
 /**
@@ -58,8 +61,9 @@ class dxfFeatureExport
 		$this->logTxt .= $message . "/n";
 	}
 
-	public function getLayers($mapSet, $themes, $layerFilter, $project, $epsg)
+	public function getLayers($filterType, $mapSet, $themes, $layerFilter, $project, $epsg, $attributeFilters, $processingFilter, $minX, $maxX, $minY, $maxY)
 	{
+		$poligonMask = null;
 		$layers = array(); //layer da restituire
 		if (!is_null($themes)) {
 			$themes = explode(",", $themes);
@@ -83,8 +87,8 @@ class dxfFeatureExport
 			$layerFilter = array();
 		}
 
-
 		$db = GCApp::getDB();
+		$dbData = new GCDataDB("geoirenweb_ut" . "/" .  USER_SCHEMA);
 
 		//definizione dell'url da chiamare
 		$owsUrl = NULL;
@@ -122,7 +126,7 @@ class dxfFeatureExport
 		$sqlValues = array();
 
 		if (!empty($themes)) {
-			//TODO Mettrere i parameteri
+			//TODO Mettere i parameteri
 			$themeList = "'" . implode("','", $themes) . "'";
 			$mapSetList = "'" . implode("','", $mapSet) . "'";
 			$sqlFilter = "mapset_name in ($mapSetList) and theme_name in ($themeList)"; //project = \''. $project .'\' and 
@@ -132,64 +136,158 @@ class dxfFeatureExport
 			}
 		}
 		//Ricavo i layer visibili e che dispongano di esportazione WFS
-		//al momento elimino anche gli inquadramenti
 		//case when coalesce(layer.private,1) = 1 then '.($isAdmin ? '1' : 'wms').' else 1 end as wms,
 		//case when coalesce(layer.private,1) = 1 then '.($isAdmin ? '1' : 'wfs').' else 1 end as wfs,
 		//case when coalesce(layer.private,1) = 1 then '.($isAdmin ? '1' : 'wfst').' else 1 end as wfst,
-		$sql = ' SELECT layer.*,mapset_name, layergroup.owstype_id, theme_id,theme_name,theme_title,theme_single,  layergroup.layergroup_name,
+		$sql = 'SELECT layer.*,
+			mapset_name, layergroup.owstype_id, theme_id,theme_name,theme_title,theme_single,  layergroup.layergroup_name,
 			layer.queryable as wfs,	
-			layer_order
-			FROM ' . DB_SCHEMA . '.theme 
+			layer_order,';
+		//Aggiungo la presenza del campo filtro nel caso sia disponibile
+		 if ($filterType == 3) {
+			$tableNamesArr = array();
+			 foreach ($processingFilter->{"tables"} as $tableValue) {
+				array_push($tableNamesArr, "'".$tableValue->{"tableName"}."'");
+			}
+			 $tableNames = implode(', ',$tableNamesArr);
+		 	//$sql .= " (select count(*) from " . DB_SCHEMA . ".field where field.layer_id = layer.layer_id and field_name ='" . $processingFilter->{"field"} . "') as processing_field_count ";
+			 $sql .= " (select count(*) from " . DB_SCHEMA . ".layer as layer2 where layer.layer_id = layer2.layer_id and data in (" . $tableNames . ")) as processing_field_count ";
+		 } else {
+		 	$sql .= ' 0 as processing_field_count ';
+		 }
+		$sql .= ' FROM ' . DB_SCHEMA . '.theme 
 			INNER JOIN ' . DB_SCHEMA . '.layergroup USING (theme_id) 
 			INNER JOIN ' . DB_SCHEMA . '.mapset_layergroup using (layergroup_id)
 			LEFT JOIN ' . DB_SCHEMA . '.layer USING (layergroup_id)
 			LEFT JOIN ' . DB_SCHEMA . '.layer_groups USING (layer_id)
 			WHERE (' . $sqlFilter . ') AND (' . $authClause . ") and queryable = 1 ORDER BY layer.layer_order;";
 
-		//die($sql);
 		$stmt = $db->prepare($sql);
 		$stmt->execute($sqlValues);
 
+		if($filterType==3){
+			$poligonMask = $this->getPoligonMask($processingFilter);
+		}
+		
 		//eseguo il loop sui layer per la generazione dei layer DXF
 		while ($thisLayer = $stmt->fetch(PDO::FETCH_ASSOC)) {
-			//echo '<pre>';
-			//var_dump($thisLayer);
-			//echo '<pre>';
 			//verifico che sia un WMS
 			$layerName = $thisLayer["theme_name"] . "_" . $thisLayer["layergroup_name"] . "_" . $thisLayer["layer_name"];
-
-
-			//verifico che sia presente in temi se forniti
+			//verifico che sia valido per l'estrazione
 			if (
-				$thisLayer["owstype_id"] == 1
-				&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes))
-				&& !$this->stringArrayCheck($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
-				&& !$this->stringArrayCheck($layerName, $this->dxfExcludeLayers)
+				!($thisLayer["owstype_id"] == 1
+					&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes))
+					&& !dxfFeatureExport::stringArrayCheck($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
+					&& !dxfFeatureExport::stringArrayCheck($layerName, $this->dxfExcludeLayers))
 			) {
+				continue;
+			}
 
-				//definizione del layer
-				$layer = new stdClass();
-				$styles = array(); //elenco degli stili restituire
-				$layer->{"themeName"} = $thisLayer["theme_name"];
-				$layer->{"groupName"} = $thisLayer["layergroup_name"];
-				$layer->{"layerName"} = $layerName;
-				$layer->{"splitted"} = False; //verifica se il layer � stato splittato
-				//campo label
-				if ($thisLayer["labelitem"] != NULL) {
-					$layer->{"fieldText"} = $thisLayer["labelitem"];
-				}
-				if ($thisLayer["classitem"] != NULL) {
-					$layer->{"classItem"} = $thisLayer["classitem"];
-				}
-				//url per il download dei file
-				$url = $owsUrl;
-				$url .= sprintf("?PROJECT=%s&MAP=%s&SERVICE=WFS&TYPENAME=%s&MAXFEATURES=-1&SRS=EPSG:%s&REQUEST=GetFeature&VERSION=1.0.0&outputFormat=geojson", $project, $thisLayer["mapset_name"], $thisLayer["layergroup_name"] . "." . $thisLayer["layer_name"], $epsg);
-				$layer->{"wfs"} = $url;
-				//"geometryType" : "polygon", // TODO definire la geometria
+			//definizione del layer
+			$layer = new stdClass();
 
-				//ricavo gli stili e le classi
-				//non si riesce a sovrapporre pi� stili per una singola classe
-				$sqlStyle = "select pattern_id,symbol_name,class_id,layer_id,class_name,class_title	,class_text,expression,maxscale,minscale,class_template,class_order,legendtype_id,symbol_ttf_name,
+			$layer->{"themeName"} = $thisLayer["theme_name"];
+			$layer->{"groupName"} = $thisLayer["layergroup_name"];
+			$layer->{"layerName"} = $layerName;
+			$layer->{"splitted"} = False; //verifica se il layer � stato splittato
+			//campo label
+			if ($thisLayer["labelitem"] != NULL) {
+				$layer->{"fieldText"} = $thisLayer["labelitem"];
+			}
+			if ($thisLayer["classitem"] != NULL) {
+				$layer->{"classItem"} = $thisLayer["classitem"];
+			}
+			//url per il download dei file
+			$url = $owsUrl;
+			$url .= sprintf("?PROJECT=%s&MAP=%s&SERVICE=WFS&TYPENAME=%s&MAXFEATURES=-1&SRS=EPSG:%s&REQUEST=GetFeature&VERSION=1.0.0&outputFormat=geojson", $project, $thisLayer["mapset_name"], $thisLayer["layergroup_name"] . "." . $thisLayer["layer_name"], $epsg);
+			$wfsUrls = [];
+			//applicazione dei filtri al layer
+			switch ($filterType) {
+				case 1: //BBOX
+					array_push($wfsUrls, $url . dxfWfsFilters::GetFilterBBOX($minX, $maxX, $minY, $maxY));
+					break;
+				case 2: //Attribute
+					$filterProperties = dxfWfsFilters::GetFilterProperties($attributeFilters);
+					foreach ($filterProperties as $value) {
+						array_push($wfsUrls, $url . $value);
+					}
+					break;
+				case 3: //Field
+					if ($thisLayer["processing_field_count"] > 0) {
+						//applico il filtro sul campo
+						foreach (dxfWfsFilters::GetFilterField($processingFilter->{'field'}, $processingFilter->{'value'}) as $value) {
+							array_push($wfsUrls, $url . $value);
+						}
+					} else {
+						//applico il filtro geografico
+						if (!is_null($poligonMask)) {
+							array_push($wfsUrls, $url . dxfWfsFilters::GetFilterPolygon($poligonMask));
+						} else {
+							$this->log("Maschera non valida");
+						}
+					}
+					break;
+				default:
+					# code...
+					break;
+			}
+
+			$layer->{"wfs"} = $wfsUrls;
+
+			//"geometryType" : "polygon", // TODO definire la geometria
+
+			$styles = $this->getStyles($db, $thisLayer, $layer, $this->dxfExcludeClassNames);
+
+			//controllo se il layer deve essere splittato per i propri stili
+			if (in_array($thisLayer["layer_name"], $this->dxfSplitLayers)) {
+				//eseguo lo split dei layer
+				foreach ($styles as $style) {
+					$clonedLayer = unserialize(serialize($layer));
+					$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"} . "_" . $style->{"className"};
+					//var_dump($style);
+					$clonedLayer->{"styles"} = [$style];
+					//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
+					if ($style->{"outlinecolor"} != NULL) {
+						$clonedLayer->{"color"} = $style->{"outlinecolor"};
+					} else if ($style->{"color"} != NULL) {
+						$clonedLayer->{"color"} = $style->{"color"};
+					} else if ($style->{"label_color"} != NULL) {
+						$clonedLayer->{"color"} = $style->{"label_color"};
+					}
+					$clonedLayer->{"splitted"} = True;
+
+					array_push($layers, $clonedLayer);
+				}
+			} else {
+				//inserisco il layer singolo
+				$layer->{"styles"} = $styles;
+				array_push($layers, $layer);
+			}
+		}
+
+		if ($this->debug) {
+			$this->log('<pre>');
+			$this->log(json_encode($layers));
+			$this->log('</pre>');
+			file_put_contents($this->logPath, $this->logTxt, FILE_APPEND);
+		}
+		
+		return $layers;
+	}
+
+
+	/**
+	 * Crea gli stili del layer
+	 * $db  connessione db
+	 * $thisLayer db row del layer
+	 * $layer layer di destinazione
+	 */
+	public static function getStyles($db, $thisLayer, $layer, $dxfExcludeClassNames)
+	{
+		//ricavo gli stili e le classi
+		$styles = array(); //elenco degli stili restituire
+		//non si riesce a sovrapporre pi� stili per una singola classe
+		$sqlStyle = "select pattern_id,symbol_name,class_id,layer_id,class_name,class_title	,class_text,expression,maxscale,minscale,class_template,class_order,legendtype_id,symbol_ttf_name,
                 label_font,label_angle,label_color,label_outlinecolor,label_bgcolor,label_size,label_minsize,label_maxsize,label_position,label_antialias,label_free,label_priority,
                 label_wrap,label_buffer,label_force,label_def,keyimage,style_id,style_name,color,outlinecolor,bgcolor,angle,size,minsize,maxsize,width,maxwidth,minwidth,
                 style_def,style_order,symbolcategory_id,icontype,symbol_def,symbol_type,font_name,ascii_code,filled,points,image,pattern_name,pattern_def,pattern_order
@@ -200,191 +298,218 @@ class dxfFeatureExport
                 where c.layer_id=?
 				order by style_order";
 
-				$stmtStyle = $db->prepare($sqlStyle);
-				$stmtStyle->execute([$thisLayer["layer_id"]]);
-				//loop sugli stili per la definizione delle classi
-				$i = 0;
+		$stmtStyle = $db->prepare($sqlStyle);
+		$stmtStyle->execute([$thisLayer["layer_id"]]);
+		//loop sugli stili per la definizione delle classi
+		$i = 0;
 
-				while ($thisStyle = $stmtStyle->fetch(PDO::FETCH_ASSOC)) {
-					//echo '<pre>';
-					//var_dump($thisStyle);
-					//echo '</pre>';
-					//se � il primo stile lo uso per definire caratteristiche di base del layer
-					if ($i == 0) {
-						//per la selezione del colore del layer d� la precedenza all'outline
-						if ($thisStyle["outlinecolor"] != NULL) {
-							$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
-							$layer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
-						} else if ($thisStyle["color"] != NULL) {
-							//poi al colore normale
-							$thisColor = explode(" ", $thisStyle["color"]);;
-							$layer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
-						} else if ($thisStyle["label_color"] != NULL) {
-							//poi al colore della label
-							$thisColor = explode(" ", $thisStyle["label_color"]);;
-							$layer->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
-						}
-					}
-
-					$style = new stdClass(); //classe generica
-
-					$style->{"expression"} = $thisStyle["expression"];
-					$style->{"className"} = $thisStyle["class_name"];
-					//se la classe non è valida procedo
-					if ($this->stringArrayCheck($thisStyle["class_name"], $this->dxfExcludeClassNames)) {
-						continue;
-					}
-
-					//verifica del campo classitem da unire con l'espressione
-					if ($thisLayer["classitem"] != NULL) {
-						//supporto alla sintassi con {} 
-						//TODO è un wokaround deve essere migliorata
-						if (strpos($style->{"expression"}, '{') !== false) {
-							$style->{"expression"} = str_replace("{", "('", $style->{"expression"});
-							$style->{"expression"} = str_replace("}", "')", $style->{"expression"});
-							$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' in " . $style->{"expression"};
-						} else {
-							$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' = " . $thisStyle["expression"];
-						}
-					}
-					//verifica del campo etichetta
-					if ($thisStyle["class_text"] != NULL) {
-						$style->{"fieldText"} = $thisStyle["class_text"];
-					}
-					//verifica del nome del simbolo
-					if ($thisStyle["symbol_name"] != NULL) {
-						$style->{"symbol_name"} = $thisStyle["symbol_name"];
-					}
-					//verifica del simbolo all'interno dello stile
-					if ($thisStyle["style_def"] != NULL) {
-						$styleDefList = explode(PHP_EOL, $thisStyle["style_def"]);
-						foreach ($styleDefList as $defKey => $defValue) {
-							$styleValueList = explode(" ", $defValue);
-							if (sizeof($styleValueList) < 2) {
-								continue;
-							}
-							switch (strtoupper($styleValueList[0])) {
-								case 'SYMBOL':
-									$symbolStyleName = $styleValueList[1];
-									//$symbolStyleName = str_replace("[", "", $symbolStyleName);
-									//$symbolStyleName = str_replace("]", "", $symbolStyleName);
-									$style->{"symbol_name"} = $symbolStyleName;
-									break;
-							}
-						}
-					}
-
-					//verifica outline
-					if ($thisStyle["outlinecolor"] != NULL) {
-						$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
-						$style->{"outlineColor"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
-					}
-					if ($thisStyle["color"] != NULL) {
-						//poi al colore normale
-						$thisColor = explode(" ", $thisStyle["color"]);;
-
-						$style->{"color"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
-					}
-					if ($thisStyle["label_position"] != NULL) {
-						//posizione del testo
-						$style->{"labelPosition"} = $thisStyle["label_position"];
-					}
-					if ($thisStyle["label_color"] != NULL) {
-						//poi al colore della label
-						$thisColor = explode(" ", $thisStyle["label_color"]);;
-						$style->{"labelColor"} = $this->getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
-					}
-					if ($thisStyle["label_angle"] != NULL) {
-						if (is_numeric($thisStyle["label_angle"])) {
-							$style->{"textAngle"} = intval($thisStyle["label_angle"]);
-						} else {
-							$style->{"fieldTextAngle"} = $thisStyle["label_angle"];
-						}
-					}
-					if ($thisStyle["angle"] != NULL) {
-						if (is_numeric($thisStyle["angle"])) {
-							$style->{"angle"} = $thisStyle["angle"];
-						} else {
-							$style->{"fieldAngle"} = $thisStyle["angle"];
-						}
-					}
-					if ($thisStyle["pattern_name"] != NULL) {
-						$style->{"lineType"} = $this->avaliablePattern($thisStyle["pattern_name"]);
-					}
-					if ($thisStyle["width"] != NULL) {
-						if (is_numeric($thisStyle["width"])) {
-							$style->{"thickness"} = floatval($thisStyle["width"]);
-						}
-					}
-
-					$label_maxsize = 0;
-					$label_minsize = 0;
-					$label_size = 0;
-					if ($thisStyle["label_maxsize"] != NULL) {
-						if (is_numeric($thisStyle["label_maxsize"])) {
-							$label_maxsize = floatval($thisStyle["label_maxsize"]);
-						}
-					}
-					if ($thisStyle["label_minsize"] != NULL) {
-						if (is_numeric($thisStyle["label_minsize"])) {
-							$label_minsize = floatval($thisStyle["label_minsize"]);
-						}
-					}
-					if ($thisStyle["label_size"] != NULL) {
-						if (is_numeric($thisStyle["label_size"])) {
-							$label_size = floatval($thisStyle["label_size"]);
-						}
-					}
-					if ($label_minsize > 0) {
-						$style->{"labelSize"} = $label_minsize;
-					} elseif ($label_maxsize > 0) {
-						$style->{"labelSize"} = $label_maxsize;
-					} elseif ($label_size > 0) {
-						$style->{"labelSize"} = $label_size;
-					}
-					if ($style->{"labelSize"} == NULL) { //TODO MODIFICA F_HTEXT da modificare
-						$style->{"labelSize"} = 4;
-					}
-					$i++;/**/
-
-					array_push($styles, $style);
-				}
-				//controllo se il layer deve essere splittato per i propri stili
-				if (in_array($thisLayer["layer_name"], $this->dxfSplitLayers)) {
-					//eseguo lo split dei layer
-					foreach ($styles as $style) {
-						$clonedLayer = unserialize(serialize($layer));
-						$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"} . "_" . $style->{"className"};
-						//var_dump($style);
-						$clonedLayer->{"styles"} = [$style];
-						//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
-						if ($style->{"outlinecolor"} != NULL) {
-							$clonedLayer->{"color"} = $style->{"outlinecolor"};
-						} else if ($style->{"color"} != NULL) {
-							$clonedLayer->{"color"} = $style->{"color"};
-						} else if ($style->{"label_color"} != NULL) {
-							$clonedLayer->{"color"} = $style->{"label_color"};
-						}
-						$clonedLayer->{"splitted"} = True;
-
-						array_push($layers, $clonedLayer);
-					}
-				} else {
-					//inserisco il layer singolo
-					$layer->{"styles"} = $styles;
-					array_push($layers, $layer);
+		while ($thisStyle = $stmtStyle->fetch(PDO::FETCH_ASSOC)) {
+			//echo '<pre>';
+			//var_dump($thisStyle);
+			//echo '</pre>';
+			//se � il primo stile lo uso per definire caratteristiche di base del layer
+			if ($i == 0) {
+				//per la selezione del colore del layer d� la precedenza all'outline
+				if ($thisStyle["outlinecolor"] != NULL) {
+					$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
+					$layer->{"color"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+				} else if ($thisStyle["color"] != NULL) {
+					//poi al colore normale
+					$thisColor = explode(" ", $thisStyle["color"]);;
+					$layer->{"color"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+				} else if ($thisStyle["label_color"] != NULL) {
+					//poi al colore della label
+					$thisColor = explode(" ", $thisStyle["label_color"]);;
+					$layer->{"color"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
 				}
 			}
-		}
 
-		if ($this->debug) {
-			$this->log('<pre>');
-			$this->log(json_encode($layers));
-			$this->log('</pre>');
-			file_put_contents($this->logPath, $this->logTxt, FILE_APPEND);
+			$style = new stdClass(); //classe generica
+
+			$style->{"expression"} = $thisStyle["expression"];
+			$style->{"className"} = $thisStyle["class_name"];
+			//se la classe non è valida procedo
+			if (dxfFeatureExport::stringArrayCheck($thisStyle["class_name"], $dxfExcludeClassNames)) {
+				continue;
+			}
+
+			//verifica del campo classitem da unire con l'espressione
+			if ($thisLayer["classitem"] != NULL) {
+				//supporto alla sintassi con {} 
+				//TODO è un wokaround deve essere migliorata
+				if (strpos($style->{"expression"}, '{') !== false) {
+					$style->{"expression"} = str_replace("{", "('", $style->{"expression"});
+					$style->{"expression"} = str_replace("}", "')", $style->{"expression"});
+					$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' in " . $style->{"expression"};
+				} else {
+					$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' = " . $thisStyle["expression"];
+				}
+			}
+			//verifica del campo etichetta
+			if ($thisStyle["class_text"] != NULL) {
+				$style->{"fieldText"} = $thisStyle["class_text"];
+			}
+			//verifica del nome del simbolo
+			if ($thisStyle["symbol_name"] != NULL) {
+				$style->{"symbol_name"} = $thisStyle["symbol_name"];
+			}
+			//verifica del simbolo all'interno dello stile
+			if ($thisStyle["style_def"] != NULL) {
+				$styleDefList = explode(PHP_EOL, $thisStyle["style_def"]);
+				foreach ($styleDefList as $defKey => $defValue) {
+					$styleValueList = explode(" ", $defValue);
+					if (sizeof($styleValueList) < 2) {
+						continue;
+					}
+					switch (strtoupper($styleValueList[0])) {
+						case 'SYMBOL':
+							$symbolStyleName = $styleValueList[1];
+							//$symbolStyleName = str_replace("[", "", $symbolStyleName);
+							//$symbolStyleName = str_replace("]", "", $symbolStyleName);
+							$style->{"symbol_name"} = $symbolStyleName;
+							break;
+					}
+				}
+			}
+
+			//verifica outline
+			if ($thisStyle["outlinecolor"] != NULL) {
+				$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
+				$style->{"outlineColor"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+			}
+			if ($thisStyle["color"] != NULL) {
+				//poi al colore normale
+				$thisColor = explode(" ", $thisStyle["color"]);;
+
+				$style->{"color"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+			}
+			if ($thisStyle["label_position"] != NULL) {
+				//posizione del testo
+				$style->{"labelPosition"} = $thisStyle["label_position"];
+			}
+			if ($thisStyle["label_color"] != NULL) {
+				//poi al colore della label
+				$thisColor = explode(" ", $thisStyle["label_color"]);;
+				$style->{"labelColor"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+			}
+			if ($thisStyle["label_angle"] != NULL) {
+				if (is_numeric($thisStyle["label_angle"])) {
+					$style->{"textAngle"} = intval($thisStyle["label_angle"]);
+				} else {
+					$style->{"fieldTextAngle"} = $thisStyle["label_angle"];
+				}
+			}
+			if ($thisStyle["angle"] != NULL) {
+				if (is_numeric($thisStyle["angle"])) {
+					$style->{"angle"} = $thisStyle["angle"];
+				} else {
+					$style->{"fieldAngle"} = $thisStyle["angle"];
+				}
+			}
+			if ($thisStyle["pattern_name"] != NULL) {
+				$style->{"lineType"} = dxfFeatureExport::avaliablePattern($thisStyle["pattern_name"]);
+			}
+			if ($thisStyle["width"] != NULL) {
+				if (is_numeric($thisStyle["width"])) {
+					$style->{"thickness"} = floatval($thisStyle["width"]);
+				}
+			}
+
+			$label_maxsize = 0;
+			$label_minsize = 0;
+			$label_size = 0;
+			if ($thisStyle["label_maxsize"] != NULL) {
+				if (is_numeric($thisStyle["label_maxsize"])) {
+					$label_maxsize = floatval($thisStyle["label_maxsize"]);
+				}
+			}
+			if ($thisStyle["label_minsize"] != NULL) {
+				if (is_numeric($thisStyle["label_minsize"])) {
+					$label_minsize = floatval($thisStyle["label_minsize"]);
+				}
+			}
+			if ($thisStyle["label_size"] != NULL) {
+				if (is_numeric($thisStyle["label_size"])) {
+					$label_size = floatval($thisStyle["label_size"]);
+				}
+			}
+			if ($label_minsize > 0) {
+				$style->{"labelSize"} = $label_minsize;
+			} elseif ($label_maxsize > 0) {
+				$style->{"labelSize"} = $label_maxsize;
+			} elseif ($label_size > 0) {
+				$style->{"labelSize"} = $label_size;
+			}
+			if ($style->{"labelSize"} == NULL) { //TODO MODIFICA F_HTEXT da modificare
+				$style->{"labelSize"} = 4;
+			}
+			$i++;/**/
+
+			array_push($styles, $style);
 		}
-		return $layers;
+		return $styles;
 	}
+
+	/**
+	 * Ricava la maschera per il filtro territoriale in formato wkt
+	 */
+	public static function getPoligonMask($processingFilter){
+		$dbData = new GCDataDB("geoirenweb_ut" . "/" .  USER_SCHEMA);
+		//ricavo il poligono nel caso di filter field
+			$fieldValue = $processingFilter->{"value"};
+			if ($processingFilter->{"fieldType"} == 's') {
+				$fieldValue  = "'$fieldValue'";
+			}
+			//calcolo il poligono maschera
+			$sqlPoligonMask = " select ST_ASTEXT(ST_MakePolygon(ST_ExteriorRing(ST_UNION(ST_Buffer(geom, 20,'endcap=square join=bevel'))))) as rmask from (";
+			$tables = $processingFilter->{"tables"};
+			$sqlTableMask = "";
+			for ($i = 0; $i < count($tables); $i++) {
+				$sqlTableMask .= " select " . $tables[$i]->{'geometryField'} . " from " . $tables[$i]->{'tableNameSql'} . " where " . $processingFilter->{"field"} . " = " . $fieldValue  . "";
+				if (!is_null($tables[$i]->{'sqlAdditionalFilter'})) {
+					$sqlTableMask .= $tables[$i]->{'sqlAdditionalFilter'};
+				}
+				if ($i < count($tables) - 1) {
+					$sqlTableMask .= " union ";
+				}
+			}
+			$sqlPoligonMask .= $sqlTableMask . ') as tmask;';
+			//print($sqlPoligonMask);
+			$stmtPolygon = $dbData->db->query($sqlPoligonMask);
+			//$stmtPolygon = $dbData->db->prepare($sqlPoligonMask);
+			//$stmtPolygon = $dbData->db->prepare("select 1 as mask;");
+			//$stmtPolygon =  $dbData->db->query("select ST_ASTEXT(ST_UNION(ST_Buffer(ST_Envelope(geom), 20,'endcap=square join=bevel'))) as rmask from ( select geom from elettricita.fcl_e_mt_section inner join elettricita.ocl_ut_e_mt_circuit on fcl_e_mt_section.circ_id = ocl_ut_e_mt_circuit.obj_id where circ_no ilike '200003%' and id_stato = 3) as tmask");
+			//$stmtPolygon = $dbData->db->query("select ST_ASTEXT(ST_UNION(ST_Buffer(ST_Envelope(geom), 20,'endcap=square join=bevel'))) as rmask from ( select geom from elettricita.fcl_e_bt_section inner join elettricita.ocl_ut_e_bt_circuit on fcl_e_bt_section.circ_id = ocl_ut_e_bt_circuit.obj_id where circ_no = '200003A02' and id_stato = 3) as tmask");
+			//var_dump($stmtPolygon);
+			//var_dump($dbData);
+			//$stmtPolygon->query($stmtPolygon);
+			//var_dump($stmtPolygon->fetch(PDO::FETCH_ASSOC));
+			$rowMask = $stmtPolygon->fetch(PDO::FETCH_ASSOC);
+			$poligonMask = $rowMask["rmask"];
+			//var_dump($poligonMask);
+			//print("mask " . $rowMask["rmask"]);
+			return $poligonMask;
+	}
+
+	/**
+	 * Ricava la maschera per il filtro territoriale in formato array di punti
+	 */
+	public static function getPoligonMaskArray($poligonMask){
+		$coords = array();
+		//"POLYGON((606850.7 4954556.9622,606840.7 4954566.9622,606840.7 4958979.5496,606838.1389 4958982.1107,606838.1389 4959048.9816,606546.6146 4959048.9816,606536.6146 4959058.9816,606536.6146 4959099.8,606515.5887 4959099.8,606511.2495 4959099.8,606501.2495 4959109.8,606501.2495 4959157.0562,606511.2495 4959167.0562,606540.1257 4959167.0562,606540.1257 4959168.9625,606541.1054 4959169.9422,606541.1054 4959370.2684,606551.1054 4959380.2684,606682.1432 4959380.2684,606682.1432 4959384.564,606576.2682 4959384.564,606566.2682 4959394.564,606566.2682 4959534.1458,606476.1286 4959534.1458,606466.1286 4959544.1458,606466.1286 4959654.1268,606476.1286 4959664.1268,606479.1116 4959664.1268,606479.1116 4959688.1558,606478.4837 4959688.1558,606478.4837 4959677.0172,606468.4837 4959667.0172,606255.759 4959667.0172,606245.759 4959677.0172,606245.759 4959904.6815,606246.2353 4959905.1578,606246.2353 4959933.7852,606256.2353 4959943.7852,606292.2747 4959943.7852,606425.0928 4959943.7852,606474.3044 4959943.7852,606484.3044 4959933.7852,606484.3044 4959884.3972,606850.7 4959884.3972,606860.7 4959874.3972,606860.7 4959821.2535,606972.9161 4959821.2535,606972.9161 4959875.4274,606982.9161 4959885.4274,607035.5421 4959885.4274,607035.5421 4960009.5054,607045.5421 4960019.5054,607089.8139 4960019.5054,607089.8139 4960134.6617,607099.8139 4960144.6617,607495.8361 4960144.6617,607505.8361 4960134.6617,607505.8361 4960039.1551,607513.9776 4960031.0136,607513.9776 4960028.8105,607513.9776 4959828.7271,607635.7332 4959828.7271,607643.2068 4959821.2535,607776.0055 4959821.2535,607776.0055 4960094.3768,607786.0055 4960104.3768,607797.8758 4960104.3768,607797.8758 4960144.504,607773.1713 4960144.504,607763.1713 4960154.504,607763.1713 4960312.8373,607773.1713 4960322.8373,607807.8758 4960322.8373,607814.9123 4960322.8373,607931.4126 4960322.8373,607941.4126 4960312.8373,607941.4126 4960092.3444,607936.5874 4960087.5192,607936.5874 4959821.2535,608208.4502 4959821.2535,608218.4502 4959811.2535,608218.4502 4954566.9622,608208.4502 4954556.9622,606850.7 4954556.9622),(606528.0534 4959688.1558,606528.0534 4959664.1268,606576.2682 4959664.1268,606586.2682 4959654.1268,606586.2682 4959565.509,606628.1718 4959565.509,606628.1718 4959621.0222,606628.1718 4959729.2976,606638.1718 4959739.2976,606693.6766 4959739.2976,606693.6766 4959795.1169,606695.224499999 4959796.6648,606560.2123 4959796.6648,606560.2123 4959698.1558,606550.2123 4959688.1558,606528.0534 4959688.1558),(607055.5421 4959821.2535,607364.1275 4959821.2535,607364.1275 4959822.1729,607374.1275 4959832.1729,607439.4997 4959832.1729,607439.4997 4959982.8233,607123.802 4959982.8233,607123.802 4959875.4274,607113.802 4959865.4274,607055.5421 4959865.4274,607055.5421 4959821.2535),(606722.9863 4959631.0222,606840.7 4959631.0222,606840.7 4959685.0308,606722.9863 4959685.0308,606722.9863 4959631.0222),(606840.7 4959506.5136,606840.7 4959542.232,606725.4891 4959542.232,606725.4891 4959431.6328,606823.6122 4959431.6328,606830.9458 4959424.2992,606830.9458 4959496.7594,606840.7 4959506.5136))"
+		$poligonMask = str_replace("POLYGON((", "", $poligonMask);
+		$poligonMask = str_replace("))", "", $poligonMask);
+		$coordsStr = explode(",", $poligonMask);
+		foreach ($coordsStr as $coordStr){
+			array_push($coords, explode(" ", $coordStr));
+		}
+    	return $coords;
+	}
+
+	public static function getPoligonMaskArrayFromfilter($processingFilter){
+    	return dxfFeatureExport::getPoligonMaskArray(dxfFeatureExport::getPoligonMask($processingFilter));
+	}
+
 
 	/*
 	* Elenco dei tipi di linea supportati
@@ -415,323 +540,6 @@ class dxfFeatureExport
 		} else {
 			return "Continuous";
 		}
-	}
-
-
-	/*
-	* Elenco dei colori Autocad convertiti in RGB
-	*/
-	public static $colors = [
-		0 => [0, 0, 0],
-		1 => [255, 0, 0],
-		2 => [255, 255, 0],
-		3 => [0, 255, 0],
-		4 => [0, 255, 255],
-		5 => [0, 0, 255],
-		6 => [255, 0, 255],
-		7 => [255, 255, 255],
-		8 => [65, 65, 65],
-		9 => [128, 128, 128],
-		10 => [255, 0, 0],
-		11 => [255, 170, 170],
-		12 => [189, 0, 0],
-		13 => [189, 126, 126],
-		14 => [129, 0, 0],
-		15 => [129, 86, 86],
-		16 => [104, 0, 0],
-		17 => [104, 69, 69],
-		18 => [79, 0, 0],
-		19 => [79, 53, 53],
-		20 => [255, 63, 0],
-		21 => [255, 191, 170],
-		22 => [189, 46, 0],
-		23 => [189, 141, 126],
-		24 => [129, 31, 0],
-		25 => [129, 96, 86],
-		26 => [104, 25, 0],
-		27 => [104, 78, 69],
-		28 => [79, 19, 0],
-		29 => [79, 59, 53],
-		30 => [255, 127, 0],
-		31 => [255, 212, 170],
-		32 => [189, 94, 0],
-		33 => [189, 157, 126],
-		34 => [129, 64, 0],
-		35 => [129, 107, 86],
-		36 => [104, 52, 0],
-		37 => [104, 86, 69],
-		38 => [79, 39, 0],
-		39 => [79, 66, 53],
-		40 => [255, 191, 0],
-		41 => [255, 234, 170],
-		42 => [189, 141, 0],
-		43 => [189, 173, 126],
-		44 => [129, 96, 0],
-		45 => [129, 118, 86],
-		46 => [104, 78, 0],
-		47 => [104, 95, 69],
-		48 => [79, 59, 0],
-		49 => [79, 73, 53],
-		50 => [255, 255, 0],
-		51 => [255, 255, 170],
-		52 => [189, 189, 0],
-		53 => [189, 189, 126],
-		54 => [129, 129, 0],
-		55 => [129, 129, 86],
-		56 => [104, 104, 0],
-		57 => [104, 104, 69],
-		58 => [79, 79, 0],
-		59 => [79, 79, 53],
-		60 => [191, 255, 0],
-		61 => [234, 255, 170],
-		62 => [141, 189, 0],
-		63 => [173, 189, 126],
-		64 => [96, 129, 0],
-		65 => [118, 129, 86],
-		66 => [78, 104, 0],
-		67 => [95, 104, 69],
-		68 => [59, 79, 0],
-		69 => [73, 79, 53],
-		70 => [127, 255, 0],
-		71 => [212, 255, 170],
-		72 => [94, 189, 0],
-		73 => [157, 189, 126],
-		74 => [64, 129, 0],
-		75 => [107, 129, 86],
-		76 => [52, 104, 0],
-		77 => [86, 104, 69],
-		78 => [39, 79, 0],
-		79 => [66, 79, 53],
-		80 => [63, 255, 0],
-		81 => [191, 255, 170],
-		82 => [46, 189, 0],
-		83 => [141, 189, 126],
-		84 => [31, 129, 0],
-		85 => [96, 129, 86],
-		86 => [25, 104, 0],
-		87 => [78, 104, 69],
-		88 => [19, 79, 0],
-		89 => [59, 79, 53],
-		90 => [0, 255, 0],
-		91 => [170, 255, 170],
-		92 => [0, 189, 0],
-		93 => [126, 189, 126],
-		94 => [0, 129, 0],
-		95 => [86, 129, 86],
-		96 => [0, 104, 0],
-		97 => [69, 104, 69],
-		98 => [0, 79, 0],
-		99 => [53, 79, 53],
-		100 => [0, 255, 63],
-		101 => [170, 255, 191],
-		102 => [0, 189, 46],
-		103 => [126, 189, 141],
-		104 => [0, 129, 31],
-		105 => [86, 129, 96],
-		106 => [0, 104, 25],
-		107 => [69, 104, 78],
-		108 => [0, 79, 19],
-		109 => [53, 79, 59],
-		110 => [0, 255, 127],
-		111 => [170, 255, 212],
-		112 => [0, 189, 94],
-		113 => [126, 189, 157],
-		114 => [0, 129, 64],
-		115 => [86, 129, 107],
-		116 => [0, 104, 52],
-		117 => [69, 104, 86],
-		118 => [0, 79, 39],
-		119 => [53, 79, 66],
-		120 => [0, 255, 191],
-		121 => [170, 255, 234],
-		122 => [0, 189, 141],
-		123 => [126, 189, 173],
-		124 => [0, 129, 96],
-		125 => [86, 129, 118],
-		126 => [0, 104, 78],
-		127 => [69, 104, 95],
-		128 => [0, 79, 59],
-		129 => [53, 79, 73],
-		130 => [0, 255, 255],
-		131 => [170, 255, 255],
-		132 => [0, 189, 189],
-		133 => [126, 189, 189],
-		134 => [0, 129, 129],
-		135 => [86, 129, 129],
-		136 => [0, 104, 104],
-		137 => [69, 104, 104],
-		138 => [0, 79, 79],
-		139 => [53, 79, 79],
-		140 => [0, 191, 255],
-		141 => [170, 234, 255],
-		142 => [0, 141, 189],
-		143 => [126, 173, 189],
-		144 => [0, 96, 129],
-		145 => [86, 118, 129],
-		146 => [0, 78, 104],
-		147 => [69, 95, 104],
-		148 => [0, 59, 79],
-		149 => [53, 73, 79],
-		150 => [0, 127, 255],
-		151 => [170, 212, 255],
-		152 => [0, 94, 189],
-		153 => [126, 157, 189],
-		154 => [0, 64, 129],
-		155 => [86, 107, 129],
-		156 => [0, 52, 104],
-		157 => [69, 86, 104],
-		158 => [0, 39, 79],
-		159 => [53, 66, 79],
-		160 => [0, 63, 255],
-		161 => [170, 191, 255],
-		162 => [0, 46, 189],
-		163 => [126, 141, 189],
-		164 => [0, 31, 129],
-		165 => [86, 96, 129],
-		166 => [0, 25, 104],
-		167 => [69, 78, 104],
-		168 => [0, 19, 79],
-		169 => [53, 59, 79],
-		170 => [0, 0, 255],
-		171 => [170, 170, 255],
-		172 => [0, 0, 189],
-		173 => [126, 126, 189],
-		174 => [0, 0, 129],
-		175 => [86, 86, 129],
-		176 => [0, 0, 104],
-		177 => [69, 69, 104],
-		178 => [0, 0, 79],
-		179 => [53, 53, 79],
-		180 => [63, 0, 255],
-		181 => [191, 170, 255],
-		182 => [46, 0, 189],
-		183 => [141, 126, 189],
-		184 => [31, 0, 129],
-		185 => [96, 86, 129],
-		186 => [25, 0, 104],
-		187 => [78, 69, 104],
-		188 => [19, 0, 79],
-		189 => [59, 53, 79],
-		190 => [127, 0, 255],
-		191 => [212, 170, 255],
-		192 => [94, 0, 189],
-		193 => [157, 126, 189],
-		194 => [64, 0, 129],
-		195 => [107, 86, 129],
-		196 => [52, 0, 104],
-		197 => [86, 69, 104],
-		198 => [39, 0, 79],
-		199 => [66, 53, 79],
-		200 => [191, 0, 255],
-		201 => [234, 170, 255],
-		202 => [141, 0, 189],
-		203 => [173, 126, 189],
-		204 => [96, 0, 129],
-		205 => [118, 86, 129],
-		206 => [78, 0, 104],
-		207 => [95, 69, 104],
-		208 => [59, 0, 79],
-		209 => [73, 53, 79],
-		210 => [255, 0, 255],
-		211 => [255, 170, 255],
-		212 => [189, 0, 189],
-		213 => [189, 126, 189],
-		214 => [129, 0, 129],
-		215 => [129, 86, 129],
-		216 => [104, 0, 104],
-		217 => [104, 69, 104],
-		218 => [79, 0, 79],
-		219 => [79, 53, 79],
-		220 => [255, 0, 191],
-		221 => [255, 170, 234],
-		222 => [189, 0, 141],
-		223 => [189, 126, 173],
-		224 => [129, 0, 96],
-		225 => [129, 86, 118],
-		226 => [104, 0, 78],
-		227 => [104, 69, 95],
-		228 => [79, 0, 59],
-		229 => [79, 53, 73],
-		230 => [255, 0, 127],
-		231 => [255, 170, 212],
-		232 => [189, 0, 94],
-		233 => [189, 126, 157],
-		234 => [129, 0, 64],
-		235 => [129, 86, 107],
-		236 => [104, 0, 52],
-		237 => [104, 69, 86],
-		238 => [79, 0, 39],
-		239 => [79, 53, 66],
-		240 => [255, 0, 63],
-		241 => [255, 170, 191],
-		242 => [189, 0, 46],
-		243 => [189, 126, 141],
-		244 => [129, 0, 31],
-		245 => [129, 86, 96],
-		246 => [104, 0, 25],
-		247 => [104, 69, 78],
-		248 => [79, 0, 19],
-		249 => [79, 53, 59],
-		250 => [51, 51, 51],
-		251 => [80, 80, 80],
-		252 => [105, 105, 105],
-		253 => [130, 130, 130],
-		254 => [190, 190, 190],
-		255 => [255, 255, 255]
-	];
-
-
-
-	/**
-	 * Converte un colore RGB in decimal
-	 * @param int $r
-	 * @param int $g
-	 * @param int $b
-	 * @return int
-	 */
-	public static function getDecimalColor($r, $g, $b)
-	{
-
-		if (($r == "0" && $g == "0" && $b == "0") || ($r == "0" && $g == "0" && $b == "7")) {
-			$r = "255";
-			$g = "255";
-			$b = "255";
-			//return null;
-		}
-		//return $r.','.$g.','.$b;
-		return (256 * 256 * $r) + (256 * $g) + $b;
-	}
-
-	/**
-	 * Converte un colore RGB in uno ACI
-	 * @param int $r
-	 * @param int $g
-	 * @param int $b
-	 * @return int
-	 */
-	public static function getAci($r, $g, $b)
-	{
-		$dist = 1000;
-		$aci = 0;
-		foreach (SELF::$colors as $key => $color) {
-			if ($r == $g && $g == $b) {
-				$red = pow(((intval($r) - $color[0])), 2);
-				$green = pow((intval($g) - $color[1]), 2);
-				$blue = pow((intval($b) - $color[2]), 2);
-			} else {
-				// sqrt(((r - r1) * .299)^2 + ((g - g1) * .587)^2 + ((b - b1) * .114)^2)
-				$red = pow(((intval($r) - $color[0]) * 0.299), 2);
-				$green = pow((intval($g) - $color[1]) * 0.587, 2);
-				$blue = pow((intval($b) - $color[2]) * 0.114, 2);
-			}
-
-			$c = sqrt($red + $green + $blue);
-			if ($c < $dist) {
-				$dist = $c;
-				$aci = $key;
-			}
-		}
-		return $aci;
 	}
 
 	/**

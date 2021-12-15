@@ -47,7 +47,7 @@ include_once('lexerParser.php');
 include_once('dxfCode.php');
 
 /**
- *	Classe per la generazione della di un file DXF
+ *	Classe per la generazione di un file DXF
  *
  *
  */
@@ -113,6 +113,7 @@ class dxfFactory implements iDxfFactory
 	public $parserExpression;
 
 	public $dxfRemoveWFSHeadersLines = 0;
+	public $dxfPoligonMask = null;
 
 	public $logTxt = ""; //log per debugging
 
@@ -142,13 +143,13 @@ class dxfFactory implements iDxfFactory
 		//controllo della configurazione
 		if (is_null($this->configExtraction->{'templateFile'})) throw new Exception(dxfErrors::template_non_configurato);
 		//if(empty($this->configExtraction->{'rete'})) throw new Exception(dxfErrors::rete_non_configurato);
-		if (is_null($this->configExtraction->{'attributeFilters'})) {
-			if (is_null($this->configExtraction->{'minX'})) throw new Exception(dxfErrors::bbox_undefined);
-			if (is_null($this->configExtraction->{'minY'})) throw new Exception(dxfErrors::bbox_undefined);
-			if (is_null($this->configExtraction->{'maxX'})) throw new Exception(dxfErrors::bbox_undefined);
-			if (is_null($this->configExtraction->{'maxY'})) throw new Exception(dxfErrors::bbox_undefined);
-			if (is_null($this->configExtraction->{'epsg'})) throw new Exception(dxfErrors::epsg_undefined);
-		}
+		// if (is_null($this->configExtraction->{'attributeFilters'})) {
+		// 	if (is_null($this->configExtraction->{'minX'})) throw new Exception(dxfErrors::bbox_undefined);
+		// 	if (is_null($this->configExtraction->{'minY'})) throw new Exception(dxfErrors::bbox_undefined);
+		// 	if (is_null($this->configExtraction->{'maxX'})) throw new Exception(dxfErrors::bbox_undefined);
+		// 	if (is_null($this->configExtraction->{'maxY'})) throw new Exception(dxfErrors::bbox_undefined);
+		// 	if (is_null($this->configExtraction->{'epsg'})) throw new Exception(dxfErrors::epsg_undefined);
+		// }
 		if (is_null($this->configExtraction->{'layers'})) throw new Exception(dxfErrors::layers_undefined);
 		if (is_null($this->configExtraction->{'themes'})) throw new Exception(dxfErrors::layers_undefined);
 
@@ -166,7 +167,8 @@ class dxfFactory implements iDxfFactory
 		if (!is_null($this->configExtraction->{'dxfInsertScaleMultiplier'})) $this->dxfInsertScaleMultiplier = $this->configExtraction->{'dxfInsertScaleMultiplier'};
 
 		if (!is_null($this->configExtraction->{'dxfRemoveWFSHeadersLines'})) $this->dxfRemoveWFSHeadersLines = $this->configExtraction->{'dxfRemoveWFSHeadersLines'};
-
+		if (!is_null($this->configExtraction->{'dxfPoligonMask'})) $this->dxfPoligonMask = $this->configExtraction->{'dxfPoligonMask'};
+		
 		//creo il parser per le espressioni
 		$this->parserExpression = new Parser();
 
@@ -470,19 +472,9 @@ class dxfFactory implements iDxfFactory
 		//inizializzo il file
 		$this->initDxf();
 
-		$filterEnvelope = null;
-		$filterProperties = null;
-
 		//aggiungo il layer con l'extent e filtro
-		if (!is_null($this->configExtraction->{'minX'})) {
-			//ricavo il filtro per il WFS
-			$filterEnvelope = "&FILTER=%3Cogc:Filter%20xmlns:ogc=%22http://www.opengis.net/ogc%22%3E%3Cogc:BBOX%3E%3Cogc:PropertyName%3Egeom%3C/ogc:PropertyName%3E%3Cgml:Envelope%20xmlns:gml=%22http://www.opengis.net/gml%22%3E%3Cgml:lowerCorner%3E" . $this->configExtraction->{'minX'} . "%20" . $this->configExtraction->{'minY'} . "%3C/gml:lowerCorner%3E%3Cgml:upperCorner%3E" . $this->configExtraction->{'maxX'} . "%20" . $this->configExtraction->{'maxY'} . "%3C/gml:upperCorner%3E%3C/gml:Envelope%3E%3C/ogc:BBOX%3E%3C/ogc:Filter%3E";
+		if (!is_null($this->configExtraction->{'minX'}) || !is_null($this->dxfPoligonMask)) {
 			$this->layers = array_merge($this->layers, $this->dxfCode->addLayer("boundingbox", 2, NULL, NULL));
-		}
-
-		if (!is_null($this->configExtraction->{'attributeFilters'})) {
-			$filters = $this->configExtraction->{'attributeFilters'}->{'filters'};
-			$filterProperties = $this->GetFilterProperties($filters);
 		}
 
 		//aggiungo il layer del template contesti se utilizzato
@@ -508,7 +500,7 @@ class dxfFactory implements iDxfFactory
 				}
 			}
 		}
-
+		
 		//Ciclo sui layer
 		foreach ($this->configExtraction->{'layers'} as $dLayer) {
 			//aggiungo i layer
@@ -519,20 +511,8 @@ class dxfFactory implements iDxfFactory
 				$this->layers = array_merge($this->layers, $this->dxfCode->addLayer($this->getLayerNamebyLayer($dLayer, ""), NULL, $dLayer->{'color'}, $this->getLineStyleName($dLayer->{'lineType'})));
 			}
 
-			$wfsUrl = [];
-			//aggiungo l'envelope
-			if (!is_null($filterEnvelope)) {
-				array_push($wfsUrl, $dLayer->{'wfs'} . $filterEnvelope);
-			}
-			if (sizeof($filterProperties) > 0) {
-				foreach ($filterProperties as $value) {
-					array_push($wfsUrl, $dLayer->{'wfs'} . $value);
-				}
-			}
-
 			$features = [];
-			foreach ($wfsUrl as $url) {
-				//print($url . "<br/>");
+			foreach ($dLayer->{'wfs'} as $url) {
 				$geojson = $this->getFeatures($url);
 				if (!is_null($geojson)) {
 					foreach ($geojson->{'features'} as $feature) {
@@ -590,6 +570,17 @@ class dxfFactory implements iDxfFactory
 			$this->setDxfProperty("AcDbViewportTableRecord", "40", ($this->configExtraction->{'maxX'} - $this->configExtraction->{'minX'}));
 			$this->setDxfProperty("AcDbViewportTableRecord", "41", 5);
 		}
+		
+		if (!is_null($this->dxfPoligonMask)) {	
+			$this->dxfCode->addPolygon("boundingbox", $this->dxfPoligonMask, 1, NULL, "" . ((256 * 256 * 255) + (256 * 255)), NULL);
+
+			//setto l'extent
+			// $this->setDxfProperty("AcDbViewportTableRecord", "12", $this->configExtraction->{'minX'});
+			// $this->setDxfProperty("AcDbViewportTableRecord", "22", $this->configExtraction->{'minY'});
+			// $this->setDxfProperty("AcDbViewportTableRecord", "40", ($this->configExtraction->{'maxX'} - $this->configExtraction->{'minX'}));
+			// $this->setDxfProperty("AcDbViewportTableRecord", "41", 5);
+		}
+
 		//Caricamento delle features	
 		//verifico se sono richieste le informazioni di debug
 		if ($this->debug) {
@@ -908,7 +899,6 @@ class dxfFactory implements iDxfFactory
 					}
 					//valuto l'espressione
 					$this->log($expression);
-					//print($expression."\n");
 					try {
 						$result = $this->parserExpression->evaluateString($expression);
 						$this->log("Risultato espressione " . $result);
@@ -1366,6 +1356,9 @@ class dxfFactory implements iDxfFactory
 	public function calcDistance($x1, $x2, $y1, $y2)
 	{
 		$distance = 0.0;
+		//print($x2);
+		//print($y1);
+		//print($y2);
 		$distance = sqrt(($x2 - $x1) * ($x2 - $x1)  + ($y2 - $y1) * ($y2 - $y1));
 		return $distance;
 	}
@@ -1411,16 +1404,20 @@ class dxfFactory implements iDxfFactory
 
 	public function getLabelSize($labelSize, $multiplier, $dLayer)
 	{
+		$this->log("labelSize". $labelSize);
+		$this->log("multiplier". $multiplier);
+		$this->log("dLayer". $dLayer->{"layerName"});
 		//Se i contesti non sono attivati abilito la scalatura
 		if (!$this->isLabelContestoConfigured($dLayer)) {
 			$labelSize = $labelSize * $multiplier;
 		}
+		$this->log("labelSize". $labelSize);
 		return $labelSize;
 	}
 
 	public function getSymbolName($name, $props)
 	{
-		if (in_array($name, $this->excludeBlockNames)) {	
+		if (in_array($name, $this->excludeBlockNames)) {
 			return NULL;	
 		}
 		$name = trim(preg_replace('/\s\s+/', '', $name));
@@ -1675,115 +1672,6 @@ class dxfFactory implements iDxfFactory
 		}
 		return False;
 	}
-
-
-	public static function GetFilterProperties($filters)
-	{
-		$filterPropertiesArray = [];
-		$filterProperties = "";
-		$filterPropertiesHeader = '&FILTER=%3Cogc:Filter xmlns:ogc=%22http://www.opengis.net/ogc%22%3E';
-		$filterPropertiesHeader .= "%3Cogc%3AAnd%3E%0A%3Cogc%3ABBOX%3E%3Cogc%3APropertyName%3Egeom%3C%2Fogc%3APropertyName%3E%3Cgml%3AEnvelope%20xmlns%3Agml%3D%22http%3A%2F%2Fwww.opengis.net%2Fgml%22%3E%3Cgml%3AlowerCorner%3E-32690%204401560%3C%2Fgml%3AlowerCorner%3E%3Cgml%3AupperCorner%3E1114190%205548440%3C%2Fgml%3AupperCorner%3E%3C%2Fgml%3AEnvelope%3E%3C%2Fogc%3ABBOX%3E";
-		$filterPropertiesEnd = "%3C%2Fogc%3AAnd%3E%0A%3C/ogc:Filter%3E";
-
-		$filterIn2 = array_filter($filters, function ($obj) {
-			return $obj->{"operator"} == "in2";
-		});
-		if (count($filterIn2) > 0) { //gestione filtri speciali
-			$filter = $filterIn2[0];
-			$filterPropertiesArray = [];
-			$filterIn = explode(",", $filter->{"value"});
-			$count = 0;
-			for ($kin = 0; $kin < count($filterIn); $kin++) {
-				$filterProperties = $filterProperties . "%3Cogc:PropertyIsEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filter->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . trim($filterIn[$kin]) . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsEqualTo%3E";
-				$count++;
-				if ($count == 200) {
-					$filterProperties = $filterPropertiesHeader . "%3Cogc:Or%3E" . $filterProperties . "%3C/ogc:Or%3E" . $filterPropertiesEnd;
-					array_push($filterPropertiesArray, $filterProperties);
-					$filterProperties = "";
-					$count = 0;
-				}
-			}
-			//ultime features
-			//verifica di un solo elemento
-			if ($count == 1) {
-				$filterProperties = $filterPropertiesHeader . $filterProperties . $filterPropertiesEnd;
-			} else if ($count > 1) {
-				$filterProperties = $filterPropertiesHeader . "%3Cogc:Or%3E" . $filterProperties . "%3C/ogc:Or%3E" . $filterPropertiesEnd;
-			}
-
-			array_push($filterPropertiesArray, $filterProperties);
-			return $filterPropertiesArray;
-		}
-
-		//filtri normali
-		$filterProperties = $filterPropertiesHeader;
-		if (count($filters) > 1) {
-			switch (strtoupper($this->configExtraction->{'attributeFilters'}->{"logic"})) {
-				case "AND":
-					$filterProperties = $filterProperties . "%3Cogc:And%3E";
-					break;
-				case "OR":
-					$filterProperties = $filterProperties . "%3Cogc:Or%3E";
-					break;
-			}
-		}
-		for ($i = 0; $i < count($filters); $i++) {
-			switch ($filters[$i]->{"operator"}) {
-				case "equalto":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . $filters[$i]->{"value"} . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsEqualTo%3E";
-					break;
-				case "notequalto":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsNotEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . $filters[$i]->{"value"} . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsNotEqualTo%3E";
-					break;
-				case "greaterthan":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsGreaterThanOrEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . $filters[$i]->{"value"} . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsGreaterThanOrEqualTo%3E";
-					break;
-				case "lessthan":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsLessThanOrEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . $filters[$i]->{"value"} . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsLessThanOrEqualTo%3E";
-					break;
-				case "contains":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsLike %20wildcard%3D%27*%27%20singleChar%3D%27.%27%20escape%3D%27!%27 matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E*" . $filters[$i]->{"value"} . "*%3C/ogc:Literal%3E%3C/ogc:PropertyIsLike%3E";
-					break;
-				case "startswith":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsLike %20wildcard%3D%27*%27%20singleChar%3D%27.%27%20escape%3D%27!%27 matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . $filters[$i]->{"value"} . "*%3C/ogc:Literal%3E%3C/ogc:PropertyIsLike%3E";
-					break;
-				case "endswith":
-					$filterProperties = $filterProperties . "%3Cogc:PropertyIsLike %20wildcard%3D%27*%27%20singleChar%3D%27.%27%20escape%3D%27!%27 matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E*" . $filters[$i]->{"value"} . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsLike%3E";
-					break;
-				case "in":
-					$filterIn = explode(",", $filters[$i]->{"value"});
-					if (count($filterIn) > 1) { //prefissi
-						$filterProperties = $filterProperties . "%3Cogc:Or%3E";
-					}
-					for ($iin = 0; $iin < count($filterIn); $iin++) {
-						$filterProperties = $filterProperties . "%3Cogc:PropertyIsEqualTo matchCase=%22false%22%3E%3Cogc:PropertyName%3E" . $filters[$i]->{"field"} . "%3C/ogc:PropertyName%3E%3Cogc:Literal%3E" . trim($filterIn[$iin]) . "%3C/ogc:Literal%3E%3C/ogc:PropertyIsEqualTo%3E";
-					}
-					if (count($filterIn) > 1) { //suffissi
-						$filterProperties = $filterProperties . "%3C/ogc:Or%3E";
-					}
-					break;
-				default:
-					break;
-			}
-		}
-
-		if (count($filters) > 1) {
-			switch (strtoupper($this->configExtraction->{'attributeFilters'}->{"logic"})) {
-				case "AND":
-					$filterProperties = $filterProperties . "%3C/ogc:And%3E";
-					break;
-				case "OR":
-					$filterProperties = $filterProperties . "%3C/ogc:Or%3E";
-					break;
-			}
-		}
-
-		$filterProperties = $filterProperties . $filterPropertiesEnd;
-		$filterPropertiesArray = [$filterProperties];
-		return $filterPropertiesArray;
-	}
-
-
 
 	/**
 	 * Aggiunge delle geometrie di prova al file

@@ -718,7 +718,7 @@ class dxfCode implements iDxfCode {
 
     }
 	
-/**
+	/**
 	* Crea l'array per l'inserimento di un testo
 	*
 	* @param string $layerName Nome del layer di destinazione nel file DXF
@@ -806,7 +806,7 @@ class dxfCode implements iDxfCode {
 		//array_push($strGeom, "AcDbMText");
 		array_push($strGeom, " 73");
 		array_push($strGeom, $textAlignVertical);
-				
+
 		$this->dxfFactory->writePoint($strGeom);
 		$this->dxfFactory->log("MTEXT added ".$tmpHandle);
 		return $strGeom;
