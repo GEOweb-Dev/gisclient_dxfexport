@@ -46,6 +46,10 @@ set_time_limit(300);
 if (empty($_REQUEST['themes'])) die(json_encode(array('error' => 200, 'message' => 'No themes defined')));
 
 //elaborazione dei parametri della richiesta
+$filterType = $_REQUEST["filterType"]; //1:BBOX 2:Attribute 3:Field
+if (is_null($filterType)) {
+	$filterType = 1; //BBOX default
+}
 $minX = $_REQUEST["minx"];
 $maxX = $_REQUEST["maxx"];
 $minY = $_REQUEST["miny"];
@@ -63,8 +67,10 @@ $enableTemplateLayer = $_REQUEST["enableTemplateLayer"];
 $textScaleMultiplier = $_REQUEST["textScaleMultiplier"];
 $labelScaleMultiplier = $_REQUEST["labelScaleMultiplier"];
 $insertScaleMultiplier = $_REQUEST["insertScaleMultiplier"];
-$attributeFilters = $_REQUEST["attributeFilters"];
 $layerFilter = $_REQUEST["layers"];
+$attributeFilters = $_REQUEST["attributeFilters"];
+$processingFilter = $_REQUEST["processingFilter"];
+
 $outputFormat = $_REQUEST["outputFormat"]; //empty server default json || download
 
 
@@ -106,11 +112,22 @@ $configFile->{"dxfEnableTemplateContesti"} = (is_null($enableTemplateLayer)) ? b
 $configFile->{"dxfTemplateContestiPath"} = $dxfTemplateContestiPath;
 $configFile->{"dxfRemoveWFSHeadersLines"} = $dxfRemoveWFSHeadersLines;
 
-//die($dxfFeatureExport->getAci(200,200,200)."");
-$layers = $dxfFeatureExport->getLayers($mapSet, $themes, $layerFilter, $project, $epsg);
+$configFile->{"attributeFilters"} = null;
+if (!is_null($attributeFilters)) {
+	$attributeFilters = json_decode($attributeFilters);
+	$configFile->{"attributeFilters"} = $attributeFilters;
+}
+if (!is_null($processingFilter)) {
+	$processingFilter = json_decode($processingFilter);
+}
+$layers = $dxfFeatureExport->getLayers($filterType, $mapSet, $themes, $layerFilter, $project, $epsg, $attributeFilters, $processingFilter, $minX, $maxX, $minY, $maxY);
 
 $configFile->{"layers"} = $layers;
 $configFile->{"dxfDrawHatches"} = $dxfDrawHatches;
+if($filterType==3){
+	//var_dump($dxfFeatureExport->getPoligonMask($processingFilter));
+	$configFile->{"dxfPoligonMask"} = $dxfFeatureExport->getPoligonMaskArrayFromfilter($processingFilter);
+}
 
 //abilita spessori
 $configFile->{"dxfEnableLineThickness"} = (is_null($enableLineThickness)) ? boolval($dxfEnableLineThickness) : $enableLineThickness;
@@ -123,14 +140,6 @@ $configFile->{"dxfTextScaleMultiplier"} = (is_null($textScaleMultiplier)) ? $dxf
 $configFile->{"dxfLabelScaleMultiplier"} = (is_null($labelScaleMultiplier)) ? $dxfLabelScaleMultiplier : $dxfLabelScaleMultiplier * doubleval($labelScaleMultiplier);
 $configFile->{"dxfInsertScaleMultiplier"} = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $dxfInsertScaleMultiplier * doubleval($insertScaleMultiplier);
 
-$configFile->{"attributeFilters"} = null;
-if (!is_null($attributeFilters)) {
-	$configFile->{"attributeFilters"} = json_decode($attributeFilters);
-}
-
-//print json_encode($attributeFilters);
-//die(var_dump($configFile));
-
 $dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
@@ -138,9 +147,7 @@ $dxfFact->debug = $dxfDebug;
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;
 $dxfFact->excludeBlockNames = $dxfExcludeBlockNames;
-
 $dxfFact->layersGuaine = $dxfLayersGuaine;
-
 
 /*definizione del tipo di output*/
 if (is_null($outputFormat)) {
