@@ -1417,15 +1417,15 @@ class dxfFactory implements iDxfFactory
 
 	public function getSymbolName($name, $props)
 	{
-		if (in_array($name, $this->excludeBlockNames)) {
-			return NULL;	
-		}
 		$name = trim(preg_replace('/\s\s+/', '', $name));
 		if (strpos($name, '[') === false) {
 			return $name;
 		}
 		if (isset($props->{$this->normalizeField($name)})) {
 			$name = $props->{$this->normalizeField($name)};
+		}
+		if (in_array($name, $this->excludeBlockNames)) {
+			return NULL;	
 		}
 		return $name;
 	}
