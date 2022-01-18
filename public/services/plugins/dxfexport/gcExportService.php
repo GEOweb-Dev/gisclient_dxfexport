@@ -83,8 +83,11 @@ $gcService->startSession();
 $dxfFeatureExport = new dxfFeatureExport($dxfLogPath);
 $dxfFeatureExport->debug = $dxfDebug;
 $dxfFeatureExport->dxfSplitLayers = $dxfSplitLayers;
-$dxfFeatureExport->dxfExcludeGroups = $dxfExcludeGroups;
-$dxfFeatureExport->dxfExcludeLayers = $dxfExcludeLayers;
+
+if($filterType != 2){ //per attributi non escludiamo livelli
+	$dxfFeatureExport->dxfExcludeGroups = $dxfExcludeGroups;
+	$dxfFeatureExport->dxfExcludeLayers = $dxfExcludeLayers;
+}
 $dxfFeatureExport->dxfExcludeClassNames = $dxfExcludeClassNames;
 
 //eseguo la conversione di un mapset in un file di configurazione
