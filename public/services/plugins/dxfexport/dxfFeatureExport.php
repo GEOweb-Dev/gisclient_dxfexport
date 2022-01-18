@@ -75,17 +75,17 @@ class dxfFeatureExport
 		} else {
 			$mapSet = array();
 		}
-		if (!is_null($layerFilter)) {
-			$layerFilter = explode(",", $layerFilter);
-			$layerNames = array();
-			for ($i = 0; $i < count($layerFilter); $i++) {
-				$layerName = explode(".", $layerFilter[$i]);
-				array_push($layerNames, $layerName[1]);
-			}
-			$layerFilter = $layerNames;
-		} else {
-			$layerFilter = array();
-		}
+		// if (!is_null($layerFilter)) {
+		// 	$layerFilter = explode(",", $layerFilter);
+		// 	$layerNames = array();
+		// 	for ($i = 0; $i < count($layerFilter); $i++) {
+		// 		$layerName = explode(".", $layerFilter[$i]);
+		// 		array_push($layerNames, $layerName[1]);
+		// 	}
+		// 	$layerFilter = $layerNames;
+		// } else {
+		// 	$layerFilter = array();
+		// }
 
 		$db = GCApp::getDB();
 		$dbData = new GCDataDB("geoirenweb_ut" . "/" .  USER_SCHEMA);
@@ -131,8 +131,9 @@ class dxfFeatureExport
 			$mapSetList = "'" . implode("','", $mapSet) . "'";
 			$sqlFilter = "mapset_name in ($mapSetList) and theme_name in ($themeList)"; //project = \''. $project .'\' and 
 			if (!empty($layerFilter)) {
+				$layerFilter = explode(",", $layerFilter);
 				$layerFilterList = "'" . implode("','", $layerFilter) . "'";
-				$sqlFilter .= " and layer.layer_name in ($layerFilterList)";
+				$sqlFilter .= " and layergroup.layergroup_name || '.' || layer.layer_name in ($layerFilterList)";
 			}
 		}
 		//Ricavo i layer visibili e che dispongano di esportazione WFS
@@ -162,6 +163,7 @@ class dxfFeatureExport
 			LEFT JOIN ' . DB_SCHEMA . '.layer_groups USING (layer_id)
 			WHERE (' . $sqlFilter . ') AND (' . $authClause . ") and queryable = 1 ORDER BY layer.layer_order;";
 
+		
 		$stmt = $db->prepare($sql);
 		$stmt->execute($sqlValues);
 
