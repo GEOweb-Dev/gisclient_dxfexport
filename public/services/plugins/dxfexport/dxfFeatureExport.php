@@ -307,6 +307,7 @@ class dxfFeatureExport
 
 		while ($thisStyle = $stmtStyle->fetch(PDO::FETCH_ASSOC)) {
 			//echo '<pre>';
+			//print("pp_".$thisLayer["layer_name"]);
 			//var_dump($thisStyle);
 			//echo '</pre>';
 			//se � il primo stile lo uso per definire caratteristiche di base del layer
@@ -389,6 +390,21 @@ class dxfFeatureExport
 				//posizione del testo
 				$style->{"labelPosition"} = $thisStyle["label_position"];
 			}
+			if ($thisStyle["label_def"] != NULL) {
+				$labelDefList = explode(PHP_EOL, $thisStyle["label_def"]);
+				foreach ($labelDefList as $defKey => $defValue) {
+					$labelDefList = explode(" ", $defValue);
+					if (sizeof($labelDefList) < 2) {
+						continue;
+					}
+					switch (strtoupper($labelDefList[0])) {
+						case 'POSITION':
+							$positionStyleName = $labelDefList[1];
+							$style->{"labelPosition"} = $positionStyleName;
+							break;
+					}
+				}
+			}
 			if ($thisStyle["label_color"] != NULL) {
 				//poi al colore della label
 				$thisColor = explode(" ", $thisStyle["label_color"]);;
@@ -420,29 +436,33 @@ class dxfFeatureExport
 			$label_maxsize = 0;
 			$label_minsize = 0;
 			$label_size = 0;
+			
 			if ($thisStyle["label_maxsize"] != NULL) {
-				if (is_numeric($thisStyle["label_maxsize"])) {
-					$label_maxsize = floatval($thisStyle["label_maxsize"]);
-				}
+				$label_maxsize = $thisStyle["label_maxsize"];
+				// if (is_numeric($thisStyle["label_maxsize"])) {
+				// 	$label_maxsize = floatval($thisStyle["label_maxsize"]);
+				// }
 			}
 			if ($thisStyle["label_minsize"] != NULL) {
-				if (is_numeric($thisStyle["label_minsize"])) {
-					$label_minsize = floatval($thisStyle["label_minsize"]);
-				}
+				$label_minsize = $thisStyle["label_minsize"];
+				// if (is_numeric($thisStyle["label_minsize"])) {
+				// 	$label_minsize = floatval($thisStyle["label_minsize"]);
+				// }
 			}
 			if ($thisStyle["label_size"] != NULL) {
-				if (is_numeric($thisStyle["label_size"])) {
-					$label_size = floatval($thisStyle["label_size"]);
-				}
+				$label_size = $thisStyle["label_size"];
+				// if (is_numeric($thisStyle["label_size"])) {
+				// 	$label_size = floatval($thisStyle["label_size"]);
+				// }
 			}
-			if ($label_minsize > 0) {
+			if(isset($label_minsize)) {
 				$style->{"labelSize"} = $label_minsize;
-			} elseif ($label_maxsize > 0) {
-				$style->{"labelSize"} = $label_maxsize;
-			} elseif ($label_size > 0) {
+			}else if(isset($label_size)) {
 				$style->{"labelSize"} = $label_size;
+			}else if(isset($label_maxsize)) {
+				$style->{"labelSize"} = $label_maxsize;
 			}
-			if ($style->{"labelSize"} == NULL) { //TODO MODIFICA F_HTEXT da modificare
+			if ($style->{"labelSize"} == NULL) { 
 				$style->{"labelSize"} = 4;
 			}
 			$i++;/**/
