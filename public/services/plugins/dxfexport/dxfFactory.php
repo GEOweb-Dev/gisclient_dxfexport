@@ -1012,9 +1012,14 @@ class dxfFactory implements iDxfFactory
 		}
 		$textAlignHorizontal = NULL;
 		$textAlignVertical = NULL;
+		$labelPosition = $this->getPropValue($style->{'labelPosition'}, $props);
+		$textAlignMText = $this->getTextAlignMText($labelPosition);
+		//print("<br/>".$dLayer->{'layerName'});
+		//print("<br/>"."labelPosition p ".$labelPosition);
+		//print("<br/>"."textAlignMText p ".$textAlignMText);
 		if (isset($style->{'labelPosition'})) {
-			$textAlignHorizontal = $this->getTextAlignHorizontal($style->{'labelPosition'});
-			$textAlignVertical = $this->getTextAlignVertical($style->{'labelPosition'});
+			$textAlignHorizontal = $this->getTextAlignHorizontal($labelPosition);
+			$textAlignVertical = $this->getTextAlignVertical($labelPosition);
 		}
 		$symbolName = NULL;
 		if (isset($style->{'symbol_name'})) {
@@ -1026,8 +1031,10 @@ class dxfFactory implements iDxfFactory
 		}
 		$labelSize = $this->defaultSize;
 		if (isset($style->{'labelSize'})) {
-			$labelSize = $style->{'labelSize'};
+			//$labelSize = $style->{'labelSize'};
+			$labelSize = $this->getPropValue($style->{'labelSize'}, $props);
 		}
+		
 		$lineWeigth = null;
 
 		//fine definizione dei valori di default
@@ -1062,7 +1069,7 @@ class dxfFactory implements iDxfFactory
 					//aggiungo i valori fissi degli angoli
 					(isset($style->{'textAngle'})) ? $angle += intval($style->{'textAngle'}) : $angle += 0;
 					if (!$this->stringArrayCheck($dLayer->{"layerName"}, $this->excludeTextLayers)) {
-						$this->dxfCode->addMultilineText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+						$this->dxfCode->addMultilineText($this->getLayerNamebyLayer($dLayer, "text"), $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignMText, $labelColor);
 					}
 				}
 				//se il nome del simbolo � settato aggiungo un blocco altrimenti un punto
@@ -1099,7 +1106,7 @@ class dxfFactory implements iDxfFactory
 					if (count($coords) == 2) {
 						array_push($coords, 0);
 					}
-					$this->dxfCode->addMultilineText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignHorizontal, $textAlignVertical, $labelColor);
+					$this->dxfCode->addMultilineText($layerName, $coords[0], $coords[1], $coords[2], $text, $this->getLabelSize($labelSize, $this->dxfTextScaleMultiplier, $dLayer), $angle, $textAlignMText, $labelColor);
 				}
 				break;
 			case "insert":
@@ -1430,6 +1437,18 @@ class dxfFactory implements iDxfFactory
 		return $name;
 	}
 
+	public function getPropValue($name, $props)
+	{
+		//$name = trim(preg_replace('/\s\s+/', '', $name));
+		if (strpos($name, '[') === false) {
+			return $name;
+		}
+		if (isset($props->{$this->normalizeField($name)})) {
+			$name = $props->{$this->normalizeField($name)};
+		}
+		return $name;
+	}
+
 	public function isLabelContestoConfigured($dLayer)
 	{
 		if (!$this->dxfEnableTemplateContesti) return False;
@@ -1479,6 +1498,41 @@ class dxfFactory implements iDxfFactory
 			return 2;
 		}
 		return NULL;
+	}
+
+	public function getTextAlignMText($name)
+	{
+		//GeoWeb codes
+		//UL UC UR
+		//CL CC CR
+		//LL LC LR
+		//AUTO
+		// 1 = Top left; 2 = Top center; 3 = Top right
+		// 4 = Middle left; 5 = Middle center; 6 = Middle right
+		// 7 = Bottom left; 8 = Bottom center; 9 = Bottom right
+		switch ($name) {
+			case "UL":
+				return "9";
+			case "UC":
+				return "8";
+			case "UR":
+				return "7";
+			case "CL":
+				return "5";
+			case "CC":
+			case "AUTO":
+				return "5";
+			case "CR":
+				return "4";
+			case "LL":
+				return "3";
+			case "LC":
+				return "2";
+			case "LR":
+				return "1";
+				break;
+		}
+		return "5"; //mezzo centro
 	}
 
 	public function getTextAlignVertical($geoWebCode)

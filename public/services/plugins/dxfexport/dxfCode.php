@@ -732,7 +732,7 @@ class dxfCode implements iDxfCode {
 	*
 	* @return array
 	*/
-	public function addMultilineText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlignHorizontal, $textAlignVertical, $color){		
+	public function addMultilineText($layerName, $x, $y, $z, $text, $labelSize, $angle, $textAlignMText, $color){		
 		//se il colore � nullo non disegno
 		//if (is_null($color)){
 		//	return;
@@ -794,8 +794,8 @@ class dxfCode implements iDxfCode {
 		array_push($strGeom, $text);
 		array_push($strGeom, " 50");
 		array_push($strGeom, $angle."");
-		array_push($strGeom, " 72");
-		array_push($strGeom, $textAlignHorizontal);
+		array_push($strGeom, " 71");
+		array_push($strGeom, $textAlignMText);
 		//array_push($strGeom, "  11");
 		//array_push($strGeom, $x."");
 		//array_push($strGeom, "  21");
@@ -804,8 +804,8 @@ class dxfCode implements iDxfCode {
 		//array_push($strGeom, $z."");
 		//array_push($strGeom, "100");
 		//array_push($strGeom, "AcDbMText");
-		array_push($strGeom, " 73");
-		array_push($strGeom, $textAlignVertical);
+		//array_push($strGeom, " 73");
+		//array_push($strGeom, $textAlignVertical);
 
 		$this->dxfFactory->writePoint($strGeom);
 		$this->dxfFactory->log("MTEXT added ".$tmpHandle);
