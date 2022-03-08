@@ -1434,7 +1434,10 @@ class dxfFactory implements iDxfFactory
 		if (isset($props->{$this->normalizeField($name)})) {
 			$name = $props->{$this->normalizeField($name)};
 		}
-		
+		//secondo controllo TODO migliorare workaround
+		if (in_array($name, $this->excludeBlockNames)) {
+			return NULL;	
+		}
 		return $name;
 	}
 
