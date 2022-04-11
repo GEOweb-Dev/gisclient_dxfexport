@@ -143,6 +143,7 @@ class dxfFeatureExport
 		$sql = 'SELECT layer.*,
 			mapset_name, layergroup.owstype_id, theme_id,theme_name,theme_title,theme_single,  layergroup.layergroup_name,
 			layer.queryable as wfs,	
+			project_name,
 			layer_order,';
 		//Aggiungo la presenza del campo filtro nel caso sia disponibile
 		 if ($filterType == 3) {
@@ -161,7 +162,7 @@ class dxfFeatureExport
 			INNER JOIN ' . DB_SCHEMA . '.mapset_layergroup using (layergroup_id)
 			LEFT JOIN ' . DB_SCHEMA . '.layer USING (layergroup_id)
 			LEFT JOIN ' . DB_SCHEMA . '.layer_groups USING (layer_id)
-			WHERE (' . $sqlFilter . ') AND (' . $authClause . ") and queryable = 1 ORDER BY layer.layer_order;";
+			WHERE (' . $sqlFilter . ')  and queryable = 1 ORDER BY layer.layer_order;';
 
 		
 		$stmt = $db->prepare($sql);
@@ -170,9 +171,14 @@ class dxfFeatureExport
 		if($filterType==3){
 			$poligonMask = $this->getPoligonMask($processingFilter);
 		}
-		
 		//eseguo il loop sui layer per la generazione dei layer DXF
 		while ($thisLayer = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			$type_name = $thisLayer["layergroup_name"] . '.' . $thisLayer["layer_name"];
+			if($thisLayer['private'] != 0 && $_SESSION['GISCLIENT_USER_LAYER'][$thisLayer['project_name']][$type_name]['WFS'] != 1){
+				print("No");
+				continue;
+			}
+
 			//verifico che sia un WMS
 			$layerName = $thisLayer["theme_name"] . "_" . $thisLayer["layergroup_name"] . "_" . $thisLayer["layer_name"];
 			//verifico che sia valido per l'estrazione
