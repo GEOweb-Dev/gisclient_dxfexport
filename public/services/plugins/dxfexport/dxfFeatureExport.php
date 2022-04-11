@@ -175,7 +175,6 @@ class dxfFeatureExport
 		while ($thisLayer = $stmt->fetch(PDO::FETCH_ASSOC)) {
 			$type_name = $thisLayer["layergroup_name"] . '.' . $thisLayer["layer_name"];
 			if($thisLayer['private'] != 0 && $_SESSION['GISCLIENT_USER_LAYER'][$thisLayer['project_name']][$type_name]['WFS'] != 1){
-				print("No");
 				continue;
 			}
 
