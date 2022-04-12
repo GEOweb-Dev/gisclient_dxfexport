@@ -164,7 +164,6 @@ class dxfFeatureExport
 			LEFT JOIN ' . DB_SCHEMA . '.layer_groups USING (layer_id)
 			WHERE (' . $sqlFilter . ')  and queryable = 1 ORDER BY layer.layer_order;';
 
-		
 		$stmt = $db->prepare($sql);
 		$stmt->execute($sqlValues);
 
@@ -251,7 +250,6 @@ class dxfFeatureExport
 				foreach ($styles as $style) {
 					$clonedLayer = unserialize(serialize($layer));
 					$clonedLayer->{"layerName"} = $clonedLayer->{"layerName"} . "_" . $style->{"className"};
-					//var_dump($style);
 					$clonedLayer->{"styles"} = [$style];
 					//aggiornamento dei colori altrimenti prendono il colore del primo stile principale
 					if ($style->{"outlinecolor"} != NULL) {
@@ -507,14 +505,9 @@ class dxfFeatureExport
 			//$stmtPolygon = $dbData->db->prepare("select 1 as mask;");
 			//$stmtPolygon =  $dbData->db->query("select ST_ASTEXT(ST_UNION(ST_Buffer(ST_Envelope(geom), 20,'endcap=square join=bevel'))) as rmask from ( select geom from elettricita.fcl_e_mt_section inner join elettricita.ocl_ut_e_mt_circuit on fcl_e_mt_section.circ_id = ocl_ut_e_mt_circuit.obj_id where circ_no ilike '200003%' and id_stato = 3) as tmask");
 			//$stmtPolygon = $dbData->db->query("select ST_ASTEXT(ST_UNION(ST_Buffer(ST_Envelope(geom), 20,'endcap=square join=bevel'))) as rmask from ( select geom from elettricita.fcl_e_bt_section inner join elettricita.ocl_ut_e_bt_circuit on fcl_e_bt_section.circ_id = ocl_ut_e_bt_circuit.obj_id where circ_no = '200003A02' and id_stato = 3) as tmask");
-			//var_dump($stmtPolygon);
-			//var_dump($dbData);
 			//$stmtPolygon->query($stmtPolygon);
-			//var_dump($stmtPolygon->fetch(PDO::FETCH_ASSOC));
 			$rowMask = $stmtPolygon->fetch(PDO::FETCH_ASSOC);
 			$poligonMask = $rowMask["rmask"];
-			//var_dump($poligonMask);
-			//print("mask " . $rowMask["rmask"]);
 			return $poligonMask;
 	}
 

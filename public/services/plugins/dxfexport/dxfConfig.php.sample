@@ -24,6 +24,9 @@
 * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 *
 ******************************************************************************/
+//autenticazione dei servizi WFS
+$dxfUserName = "";
+$dxfPassword = "";
 //Toggle del debug
 $dxfDebug = True;
 //Indica il numero di linee iniziali che devono essere rimossi dalle chiamate wfs

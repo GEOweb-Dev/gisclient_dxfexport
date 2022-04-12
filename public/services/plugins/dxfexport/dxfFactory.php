@@ -115,6 +115,9 @@ class dxfFactory implements iDxfFactory
 	public $dxfRemoveWFSHeadersLines = 0;
 	public $dxfPoligonMask = null;
 
+	public $dxfUserName = null;
+	public $dxfPassword = null;
+
 	public $logTxt = ""; //log per debugging
 
 	/**
@@ -1686,23 +1689,27 @@ class dxfFactory implements iDxfFactory
 	{
 		$this->log($url);
 		$this->log("Iniziata richiesta");
+
+		$httpArray = array();
+		array_push($httpArray,"ignore_errors",false);
+		
+		if(!empty($this->dxfUserName) && !empty($this->dxfPassword)){
+			$auth = base64_encode("$dxfUserName:$dxfPassword");
+			array_push($httpArray, "header", "Authorization: Basic $auth");
+			array_push($httpArray, "protocol_version", 1.1);
+		}
+
 		$arrContextOptions = array(
-			'http' => array('ignore_errors' => true),
+			'http' => $httpArray,
 			"ssl" => array(
 				"verify_peer" => false,
 				"verify_peer_name" => false,
 			),
 
 		);
-
 		$url = str_replace(" ", '%20', $url);
-
-		// $ch = curl_init();
-		// curl_setopt($ch, CURLOPT_URL, $url);
-		// curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		// $json = curl_exec($ch);
-
 		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
+		
 		$this->log("Terminata richiesta");
 		$arr = explode("\n", $json);
 		//elimino gli errori generati da mapserver
@@ -1711,7 +1718,6 @@ class dxfFactory implements iDxfFactory
 		}
 		$json = implode("\n", $arr);
 		$geoJson = json_decode($json);
-		//die($json);
 		return $geoJson;
 	}
 

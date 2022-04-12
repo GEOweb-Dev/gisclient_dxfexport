@@ -144,6 +144,9 @@ $configFile->{"dxfLabelScaleMultiplier"} = (is_null($labelScaleMultiplier)) ? $d
 $configFile->{"dxfInsertScaleMultiplier"} = (is_null($insertScaleMultiplier)) ? $dxfInsertScaleMultiplier : $dxfInsertScaleMultiplier * doubleval($insertScaleMultiplier);
 
 $dxfFact = new dxfFactory(json_encode($configFile), $dxfLogPath);
+//autenticazione
+$dxfFact->dxfUserName = $dxfUserName;
+$dxfFact->dxfPassword = $dxfPassword;
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
 //imposto la blacklist di layer da eliminare
