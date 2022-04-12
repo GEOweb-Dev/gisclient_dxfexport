@@ -1690,23 +1690,23 @@ class dxfFactory implements iDxfFactory
 		$this->log($url);
 		$this->log("Iniziata richiesta");
 
-		$httpArray = array();
-		array_push($httpArray,"ignore_errors",false);
-		
-		if(!empty($this->dxfUserName) && !empty($this->dxfPassword)){
-			$auth = base64_encode("$dxfUserName:$dxfPassword");
-			array_push($httpArray, "header", "Authorization: Basic $auth");
-			array_push($httpArray, "protocol_version", 1.1);
-		}
-
 		$arrContextOptions = array(
-			'http' => $httpArray,
+			'http' => array("ignore_errors" => false),
 			"ssl" => array(
 				"verify_peer" => false,
 				"verify_peer_name" => false,
 			),
-
 		);
+		if(!empty($this->dxfUserName) && !empty($this->dxfPassword)){
+			$arrContextOptions = array(
+				'http' => array("ignore_errors" => false,"header" => "Authorization: Basic " . base64_encode($this->dxfUserName.":".$this->dxfPassword),"protocol_version" => 1.1),
+				"ssl" => array(
+					"verify_peer" => false,
+					"verify_peer_name" => false,
+				),
+			);
+		}
+		
 		$url = str_replace(" ", '%20', $url);
 		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
 		
