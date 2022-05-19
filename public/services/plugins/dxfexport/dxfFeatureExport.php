@@ -152,7 +152,6 @@ class dxfFeatureExport
 				array_push($tableNamesArr, "'".$tableValue->{"tableName"}."'");
 			}
 			 $tableNames = implode(', ',$tableNamesArr);
-		 	//$sql .= " (select count(*) from " . DB_SCHEMA . ".field where field.layer_id = layer.layer_id and field_name ='" . $processingFilter->{"field"} . "') as processing_field_count ";
 			 $sql .= " (select count(*) from " . DB_SCHEMA . ".layer as layer2 where layer.layer_id = layer2.layer_id and data in (" . $tableNames . ")) as processing_field_count ";
 		 } else {
 		 	$sql .= ' 0 as processing_field_count ';
@@ -163,13 +162,14 @@ class dxfFeatureExport
 			LEFT JOIN ' . DB_SCHEMA . '.layer USING (layergroup_id)
 			LEFT JOIN ' . DB_SCHEMA . '.layer_groups USING (layer_id)
 			WHERE (' . $sqlFilter . ')  and queryable = 1 ORDER BY layer.layer_order;';
-
+		$this->log($sql);
 		$stmt = $db->prepare($sql);
 		$stmt->execute($sqlValues);
 
 		if($filterType==3){
 			$poligonMask = $this->getPoligonMask($processingFilter);
 		}
+		$this->log(print_r($_SESSION['GISCLIENT_USER_LAYER'], TRUE));
 		//eseguo il loop sui layer per la generazione dei layer DXF
 		while ($thisLayer = $stmt->fetch(PDO::FETCH_ASSOC)) {
 			$type_name = $thisLayer["layergroup_name"] . '.' . $thisLayer["layer_name"];
@@ -490,7 +490,7 @@ class dxfFeatureExport
 			$tables = $processingFilter->{"tables"};
 			$sqlTableMask = "";
 			for ($i = 0; $i < count($tables); $i++) {
-				$sqlTableMask .= " select " . $tables[$i]->{'geometryField'} . " from " . $tables[$i]->{'tableNameSql'} . " where " . $processingFilter->{"field"} . " = " . $fieldValue  . "";
+				$sqlTableMask .= " select " . $tables[$i]->{'geometryField'} . " from " . $tables[$i]->{'tableNameSql'} . " where " . $tables[$i]->{"fieldSql"} . " = " . $fieldValue  . "";
 				if (!is_null($tables[$i]->{'sqlAdditionalFilter'})) {
 					$sqlTableMask .= $tables[$i]->{'sqlAdditionalFilter'};
 				}

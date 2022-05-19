@@ -60,7 +60,6 @@ $outputFormat = $_REQUEST["outputFormat"]; //empty server default json || downlo
 $gcService = GCService::instance();
 $gcService->startSession();
 
-
 $wfsUrl = rtrim(GISCLIENT_OWS_URL, '?&');
 $wfsUrl .= "?PROJECT=$project&MAP=$mapSet&SERVICE=WFS&TYPENAME=$layerFilter&MAXFEATURES=-1&SRS=EPSG:$epsg&REQUEST=GetFeature&VERSION=1.0.0&outputFormat=shapezip";
 $wfsfilter = '&FILTER=%3Cogc:Filter xmlns:ogc=%22http://www.opengis.net/ogc%22%3E%3Cogc:And%3E';
@@ -141,6 +140,7 @@ $wfsUrl = $wfsUrl . $wfsfilter;
 
 $wfsUrl = str_replace(' ', '+', $wfsUrl); //avoid malformed
 
+print($wfsUrl);
 //download del file
 $fileName = uniqid('shp_', true) . ".zip";
 $fileHandle = $dxfTempPath . $fileName;
@@ -154,14 +154,7 @@ curl_exec($ch);
 curl_close($ch);
 //die($wfsUrl);
 //die($fileHandle);
-
-//rimozione delle prime tre linee
 $file = file($fileHandle);
-unset($file[0]);
-unset($file[1]);
-unset($file[2]);
-file_put_contents($fileHandle, $file);
-
 /*definizione del tipo di output*/
 if (is_null($outputFormat)) {
 	$outputFormat = "download";
