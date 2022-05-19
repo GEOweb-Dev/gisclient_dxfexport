@@ -33,7 +33,7 @@
 require_once '../../../../config/config.php';
 require_once ADMIN_PATH . "lib/functions.php";
 require_once ROOT_PATH . "lib/i18n.php";
-require_once ROOT_PATH . 'lib/GCService.php';
+//require_once ROOT_PATH . 'lib/GCService.php';
 //require_once 'include/gcMap.class.php';
 require_once ADMIN_PATH . "lib/gcFeature.class.php";
 require_once "dxfConfig.php";
@@ -73,16 +73,35 @@ $processingFilter = $_REQUEST["processingFilter"];
 
 $outputFormat = $_REQUEST["outputFormat"]; //empty server default json || download
 
-
 //inizializzazione del servizio
-$gcService = GCService::instance();
-$gcService->startSession();
+$user = new GCUser();
+$isAuthenticated = $user->isAuthenticated();
+if (empty($_SESSION['GISCLIENT_USER_LAYER'])) {
+	$user->setAuthorizedLayers(array('mapset_name' => $mapSet));
+}
+// user does not have an open session, try to log in
+if (!$isAuthenticated && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+	if ($user->login($_SERVER['PHP_AUTH_USER'], GCUser::encPwd($_SERVER['PHP_AUTH_PW']))) {
+		$user->setAuthorizedLayers(array('mapset_name' => $mapSet));
+		$isAuthenticated = true;
+	}
+}
+// user could not even log in, send correct headers and exit
+if (!$isAuthenticated) {
+	print_debug('unauthorized access', null, 'system');
+	header('WWW-Authenticate: Basic realm="Gisclient"');
+	header('HTTP/1.0 401 Unauthorized');
+	exit(0);
+}
 
 //carico l'oggetto mapset
 //$objMapset = new gcMap($mapSet, false, NULL, false);
 $dxfFeatureExport = new dxfFeatureExport($dxfLogPath);
 $dxfFeatureExport->debug = $dxfDebug;
 $dxfFeatureExport->dxfSplitLayers = $dxfSplitLayers;
+
+$dxfFeatureExport->log(print_r($_REQUEST, TRUE));
+
 
 if($filterType != 2){ //per attributi non escludiamo livelli
 	$dxfFeatureExport->dxfExcludeGroups = $dxfExcludeGroups;
@@ -149,6 +168,8 @@ $dxfFact->dxfUserName = $dxfUserName;
 $dxfFact->dxfPassword = $dxfPassword;
 //attivo il debug
 $dxfFact->debug = $dxfDebug;
+//imposto la sessione
+$dxfFact->sessionId = session_id();
 //imposto la blacklist di layer da eliminare
 $dxfFact->excludeGeometryLayers = $dxfExcludeGeometryLayers;
 $dxfFact->excludeTextLayers = $dxfExcludeTextLayers;

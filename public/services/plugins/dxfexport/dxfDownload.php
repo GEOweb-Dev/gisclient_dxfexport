@@ -31,8 +31,8 @@ require_once "dxfConfig.php";
 
 $dxf = "";
 //nome del file
-if(isset($_GET["fileName"])){
-	$fileHandle = $dxfTempPath.$_GET["fileName"];
+if(isset($_REQUEST["fileName"])){
+	$fileHandle = $dxfTempPath.$_REQUEST["fileName"];
 	$dxf = file_get_contents($fileHandle, true);
 }else{
 	die("File DXF non trovato");
@@ -43,7 +43,7 @@ header ("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT"); // always modifi
 header ("Cache-Control: no-cache, must-revalidate"); // HTTP/1.1
 header ("Pragma: no-cache"); // HTTP/1.0
 header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename='.$_GET["fileName"]);
+header('Content-Disposition: attachment; filename='.$_REQUEST["fileName"]);
 print $dxf;
 
 

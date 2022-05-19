@@ -53,6 +53,9 @@ include_once('dxfCode.php');
  */
 class dxfFactory implements iDxfFactory
 {
+
+	public $sessionId; //sessione corrente
+
 	private $handle = 0; //contatore univoco per le entit� del dxf
 
 	private $dxfCode = null; //classe per la gestione del codice DXF
@@ -1708,6 +1711,9 @@ class dxfFactory implements iDxfFactory
 		}
 		
 		$url = str_replace(" ", '%20', $url);
+		//if(isset($this->sessionId)){
+		// 	$url.="&GC_SESSION_ID=".$this->sessionId;
+		//}
 		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
 		
 		$this->log("Terminata richiesta");
