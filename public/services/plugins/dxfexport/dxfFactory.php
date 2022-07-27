@@ -1700,20 +1700,37 @@ class dxfFactory implements iDxfFactory
 				"verify_peer_name" => false,
 			),
 		);
-		if(!empty($this->dxfUserName) && !empty($this->dxfPassword)){
-			$arrContextOptions = array(
-				'http' => array("ignore_errors" => false,"header" => "Authorization: Basic " . base64_encode($this->dxfUserName.":".$this->dxfPassword),"protocol_version" => 1.1),
-				"ssl" => array(
-					"verify_peer" => false,
-					"verify_peer_name" => false,
-				),
-			);
-		}
+		// if(!empty($this->dxfUserName) && !empty($this->dxfPassword)){
+		// 	$arrContextOptions = array(
+		// 		'http' => array("ignore_errors" => false,"header" => "Authorization: Basic " . base64_encode($this->dxfUserName.":".$this->dxfPassword),"protocol_version" => 1.1),
+		// 		"ssl" => array(
+		// 			"verify_peer" => false,
+		// 			"verify_peer_name" => false,
+		// 		),
+		// 	);
+		// }
 		
+		session_write_close();
+
 		$url = str_replace(" ", '%20', $url);
-		//if(isset($this->sessionId)){
-		// 	$url.="&GC_SESSION_ID=".$this->sessionId;
-		//}
+		if(isset($this->sessionId)){
+			$url.="&GC_SESSION_ID=".$this->sessionId;
+		}
+		// $ch = curl_init();
+		// curl_setopt($ch, CURLOPT_URL,$url);
+		// curl_setopt($ch, CURLOPT_RETURNTRANSFER,1);
+	
+		// if(!empty($this->dxfUserName) && !empty($this->dxfPassword)){
+		// 	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+		// 	curl_setopt($ch, CURLOPT_USERPWD, "$this->dxfUserName:$this->dxfPassword");
+		// }
+		//die($url);
+		
+		//$json = curl_exec($ch);
+		//curl_close($ch);  
+	
+		
+		
 		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
 		
 		$this->log("Terminata richiesta");
