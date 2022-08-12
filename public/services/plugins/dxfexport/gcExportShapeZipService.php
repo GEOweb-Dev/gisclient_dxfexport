@@ -39,10 +39,6 @@ require_once ADMIN_PATH . "lib/gcFeature.class.php";
 require_once "dxfConfig.php";
 
 set_time_limit(300);
-
-//if (empty($_REQUEST['mapset'])) die (json_encode(array('error' => 200, 'message' => 'No mapset name')));
-if (empty($_REQUEST['themes'])) die(json_encode(array('error' => 200, 'message' => 'No themes defined')));
-
 //elaborazione dei parametri della richiesta
 $minX = $_REQUEST["minx"];
 $maxX = $_REQUEST["maxx"];
@@ -55,6 +51,29 @@ $epsg = $_REQUEST["epsg"];
 $attributeFilters = $_REQUEST["attributeFilters"];
 $layerFilter = $_REQUEST["layers"];
 $outputFormat = $_REQUEST["outputFormat"]; //empty server default json || download
+
+$user = new GCUser();
+$isAuthenticated = $user->isAuthenticated();
+if (empty($_SESSION['GISCLIENT_USER_LAYER'])) {
+	$user->setAuthorizedLayers(array('mapset_name' => $mapSet));
+}
+// user does not have an open session, try to log in
+if (!$isAuthenticated && isset($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+	if ($user->login($_SERVER['PHP_AUTH_USER'], GCUser::encPwd($_SERVER['PHP_AUTH_PW']))) {
+		$user->setAuthorizedLayers(array('mapset_name' => $mapSet));
+		$isAuthenticated = true;
+	}
+}
+// user could not even log in, send correct headers and exit
+if (!$isAuthenticated) {
+	print_debug('unauthorized access', null, 'system');
+	header('WWW-Authenticate: Basic realm="Gisclient"');
+	header('HTTP/1.0 401 Unauthorized');
+	exit(0);
+}
+
+//if (empty($_REQUEST['mapset'])) die (json_encode(array('error' => 200, 'message' => 'No mapset name')));
+if (empty($_REQUEST['themes'])) die(json_encode(array('error' => 200, 'message' => 'No themes defined')));
 
 //inizializzazione del servizio
 $gcService = GCService::instance();
@@ -139,8 +158,10 @@ $wfsfilter = $wfsfilter . "%3C/ogc:And%3E%3C/ogc:Filter%3E";
 $wfsUrl = $wfsUrl . $wfsfilter;
 
 $wfsUrl = str_replace(' ', '+', $wfsUrl); //avoid malformed
+$wfsUrl.="&GC_SESSION_ID=". session_id();
+session_write_close();
 
-print($wfsUrl);
+//print($wfsUrl);
 //download del file
 $fileName = uniqid('shp_', true) . ".zip";
 $fileHandle = $dxfTempPath . $fileName;
@@ -155,10 +176,22 @@ curl_close($ch);
 //die($wfsUrl);
 //die($fileHandle);
 $file = file($fileHandle);
+
+if($dxfRemoveSHPHeadersLines > 0){
+	$content = file_get_contents($fileHandle);
+	$arr = explode("\n", $content);
+		//elimino gli errori generati da mapserver
+		for ($i = 0; $i < $dxfRemoveSHPHeadersLines; $i++) {
+			array_shift($arr);
+		}
+		$newcontent  = implode("\n", $arr);
+		file_put_contents($fileHandle, $newcontent);
+}
+
 /*definizione del tipo di output*/
 if (is_null($outputFormat)) {
 	$outputFormat = "download";
-	if ($dxfSaveToDir == 1) { //server default json
+	if ($dxfSaveToDir == 1) { //server default json verrà scaricato comunque come file ZIP
 		$outputFormat = "json";
 	}
 }
