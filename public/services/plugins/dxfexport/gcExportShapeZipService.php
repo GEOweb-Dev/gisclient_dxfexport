@@ -33,7 +33,7 @@
 require_once '../../../../config/config.php';
 require_once ADMIN_PATH . "lib/functions.php";
 require_once ROOT_PATH . "lib/i18n.php";
-require_once ROOT_PATH . 'lib/GCService.php';
+//require_once ROOT_PATH . 'lib/GCService.php';
 //require_once 'include/gcMap.class.php';
 require_once ADMIN_PATH . "lib/gcFeature.class.php";
 require_once "dxfConfig.php";
@@ -76,8 +76,8 @@ if (!$isAuthenticated) {
 if (empty($_REQUEST['themes'])) die(json_encode(array('error' => 200, 'message' => 'No themes defined')));
 
 //inizializzazione del servizio
-$gcService = GCService::instance();
-$gcService->startSession();
+//$gcService = GCService::instance();
+//$gcService->startSession();
 
 $wfsUrl = rtrim(GISCLIENT_OWS_URL, '?&');
 $wfsUrl .= "?PROJECT=$project&MAP=$mapSet&SERVICE=WFS&TYPENAME=$layerFilter&MAXFEATURES=-1&SRS=EPSG:$epsg&REQUEST=GetFeature&VERSION=1.0.0&outputFormat=shapezip";
@@ -159,9 +159,9 @@ $wfsUrl = $wfsUrl . $wfsfilter;
 
 $wfsUrl = str_replace(' ', '+', $wfsUrl); //avoid malformed
 $wfsUrl.="&GC_SESSION_ID=". session_id();
+$_SESSION["WMS_GETFEATURE_FORMATS"] = "shapezip";
 session_write_close();
 
-//print($wfsUrl);
 //download del file
 $fileName = uniqid('shp_', true) . ".zip";
 $fileHandle = $dxfTempPath . $fileName;
@@ -173,8 +173,6 @@ curl_setopt($ch, CURLOPT_HEADER, 0);
 curl_setopt($ch, CURLOPT_URL, $wfsUrl);
 curl_exec($ch);
 curl_close($ch);
-//die($wfsUrl);
-//die($fileHandle);
 $file = file($fileHandle);
 
 if($dxfRemoveSHPHeadersLines > 0){
