@@ -53,6 +53,19 @@ $layerFilter = $_REQUEST["layers"];
 $outputFormat = $_REQUEST["outputFormat"]; //empty server default json || download
 
 $user = new GCUser();
+
+//Controllo del gruppo 
+$groups = $_SESSION["GROUPS"];
+//$groups = ["geoweb_shp"];
+if(empty($groups)){
+	header("HTTP/1.1 401 Unauthorized");
+	die("gruppo non valido");
+}
+if(!array_intersect($dxfShpAllowedGroups, $groups)){
+	header("HTTP/1.1 401 Unauthorized");
+	die("gruppo non valido");
+}
+
 $isAuthenticated = $user->isAuthenticated();
 if (empty($_SESSION['GISCLIENT_USER_LAYER'])) {
 	$user->setAuthorizedLayers(array('mapset_name' => $mapSet));

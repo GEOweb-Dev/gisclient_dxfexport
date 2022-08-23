@@ -33,6 +33,10 @@ $dxfDebug = True;
 $dxfRemoveWFSHeadersLines = 0;
 //Indica il numero di linee iniziali che devono essere rimossi dalle chiamate shp
 $dxfRemoveSHPHeadersLines = 3;
+//gruppi per estrazione shape
+$dxfShpAllowedGroups = array(
+	'GEOWEB_SHP'
+);
 //Directory di salvataggio del dxf e dei file temporanei
 $dxfTempPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/";
 //Nome file del template di default
