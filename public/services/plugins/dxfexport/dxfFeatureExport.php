@@ -486,7 +486,7 @@ class dxfFeatureExport
 				$fieldValue  = "'$fieldValue'";
 			}
 			//calcolo il poligono maschera
-			$sqlPoligonMask = " select ST_ASTEXT(ST_BuildArea(ST_ExteriorRing(ST_UNION(ST_Buffer(geom, 20,'endcap=square join=bevel'))))) as rmask from (";
+			$sqlPoligonMask = " select ST_ASTEXT(ST_BuildArea(ST_UNION(ST_Buffer(geom, 20,'endcap=square join=bevel')))) as rmask from (";
 			$tables = $processingFilter->{"tables"};
 			$sqlTableMask = "";
 			for ($i = 0; $i < count($tables); $i++) {
