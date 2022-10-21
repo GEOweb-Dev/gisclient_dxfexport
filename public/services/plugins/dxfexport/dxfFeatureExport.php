@@ -50,6 +50,7 @@ class dxfFeatureExport
 	public $dxfExcludeClassNames = [];
 	public $logTxt = "";
 	public $logPath = "";
+	public $enabled_owstypes_id = ["1","2","3","6"];
 
 	public function __construct($dxfLogPath)
 	{
@@ -181,7 +182,7 @@ class dxfFeatureExport
 			$layerName = $thisLayer["theme_name"] . "_" . $thisLayer["layergroup_name"] . "_" . $thisLayer["layer_name"];
 			//verifico che sia valido per l'estrazione
 			if (
-				!($thisLayer["owstype_id"] == 1
+				!(in_array($thisLayer["owstype_id"], $this->enabled_owstypes_id)
 					&& (count($themes) == 0 || in_array($thisLayer["theme_name"], $themes))
 					&& !dxfFeatureExport::stringArrayCheck($thisLayer["layergroup_name"], $this->dxfExcludeGroups)
 					&& !dxfFeatureExport::stringArrayCheck($layerName, $this->dxfExcludeLayers))
