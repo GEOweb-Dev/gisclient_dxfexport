@@ -349,7 +349,9 @@ class dxfFeatureExport
 					$style->{"expression"} = str_replace("}", "')", $style->{"expression"});
 					$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' in " . $style->{"expression"};
 				} else {
-					$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' = " . $thisStyle["expression"];
+					if($thisStyle["expression"]!=NULL){
+						$style->{"expression"} = "'[" . $thisLayer["classitem"] . "]' = " . $thisStyle["expression"];
+					}
 				}
 			}
 			//verifica del campo etichetta
