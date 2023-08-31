@@ -301,7 +301,7 @@ class dxfFeatureExport
                 left join " . DB_SCHEMA . ".style s using (class_id)
                 left join " . DB_SCHEMA . ".symbol using (symbol_name)
                 left join " . DB_SCHEMA . ".e_pattern using(pattern_id)
-                where c.layer_id=?
+                where  (c.maxscale is null or c.maxscale::int > 50) and c.layer_id=?
 				order by style_order";
 
 		$stmtStyle = $db->prepare($sqlStyle);
