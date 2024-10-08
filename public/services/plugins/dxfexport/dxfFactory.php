@@ -908,6 +908,10 @@ class dxfFactory implements iDxfFactory
 					try {
 						$result = $this->parserExpression->evaluateString($expression);
 						$this->log("Risultato espressione " . $result);
+						//workarount per espressioni nulle
+						if($expression== "'' = "){
+							$result = 1;
+						}
 						//se valida uso lo stile
 						if ($result == 1) {
 							array_push($styleResult, $thisStyle);
