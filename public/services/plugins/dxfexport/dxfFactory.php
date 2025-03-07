@@ -1586,6 +1586,9 @@ class dxfFactory implements iDxfFactory
 		//return "CAMBIO ATTRIBUTI";
 		$result = "Continuous";
 		switch (strtolower($name)) {
+			case "linea_tratt_2000":
+				$result = "ACAD_ISO02W100";
+				break;
 			case "dash":
 				$result = "ACAD_ISO02W100";
 				break;
