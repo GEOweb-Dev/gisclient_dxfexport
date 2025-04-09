@@ -943,6 +943,9 @@ class dxfCode implements iDxfCode {
 	
 	public function colorDecToAci($color){
 		switch($color){
+			case 251:
+				return 251;
+				break;
 			case $this->getDecimalColor(255,0,0):
 				return 1;
 				break;
