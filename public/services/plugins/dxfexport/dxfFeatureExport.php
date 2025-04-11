@@ -383,14 +383,21 @@ class dxfFeatureExport
 
 			//verifica outline
 			if ($thisStyle["outlinecolor"] != NULL) {
-				$thisColor = explode(" ", $thisStyle["outlinecolor"]);;
-				$style->{"outlineColor"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+				$thisColor = explode(" ", $thisStyle["outlinecolor"]);
+				if(count($thisColor)==1){
+					$style->{"outlineColor"} = $thisStyle["outlineColor"];
+				}else{
+					$style->{"outlineColor"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+				}
 			}
 			if ($thisStyle["color"] != NULL) {
 				//poi al colore normale
-				$thisColor = explode(" ", $thisStyle["color"]);;
-
-				$style->{"color"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+				$thisColor = explode(" ", $thisStyle["color"]);
+				if(count($thisColor)==1){
+					$style->{"color"} = $thisStyle["color"];
+				}else{
+					$style->{"color"} = aciColors::getDecimalColor($thisColor[0], $thisColor[1], $thisColor[2]);
+				}
 			}
 			if ($thisStyle["label_position"] != NULL) {
 				//posizione del testo

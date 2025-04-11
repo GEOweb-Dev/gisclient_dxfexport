@@ -45,6 +45,7 @@ include_once('dxfErrors.php');
 include_once('dxfInterfaces.php');
 include_once('lexerParser.php');
 include_once('dxfCode.php');
+include_once('aciColors.php');
 
 /**
  *	Classe per la generazione di un file DXF
@@ -662,7 +663,9 @@ class dxfFactory implements iDxfFactory
 							case "point":
 							default:
 								if (is_null($theme->{"layer_default"})) continue;
-								$featureStyle->{"color"} = $theme->{"layer_default"}->{"style"}->{"color"};
+								if (strpos($featureStyle->{"color"}, '[') === false) {
+									$featureStyle->{"color"} = $theme->{"layer_default"}->{"style"}->{"color"};
+								}
 								$featureStyle->{"lineType"} = $theme->{"layer_default"}->{"style"}->{"lineType"};
 								$featureStyle->{"labelSize"} = $theme->{"layer_default_testi"}->{"style"}->{"labelSize"};
 								break;
@@ -986,7 +989,6 @@ class dxfFactory implements iDxfFactory
 
 	public function drawFeature($style, $dLayer, $layerName, $feature)
 	{
-
 		$props = $feature->{'properties'};
 		$coords = $feature->{'geometry'}->{'coordinates'};
 		$this->log("Style: " . json_encode($style));
@@ -999,12 +1001,35 @@ class dxfFactory implements iDxfFactory
 		if (isset($style->{'color'})) {
 			$color = $style->{'color'};
 		}
+		if (strpos($color, '[') !== false) {
+			$color = $this->getPropValue($color, $props);
+			if (strpos($color, '#') !== false) {
+				$color = aciColors::hexToRgba($color);
+				if($color!=null){
+					$color = aciColors::getDecimalColor($color[0], $color[1], $color[2]);
+				}
+			}else{
+				$color = explode(" ", $color);
+				$color = aciColors::getDecimalColor($color[0], $color[1], $color[2]);
+			}
+		}
 		$outlineColor = NULL;
 		if (isset($style->{'outlineColor'})) {
 			$outlineColor = $style->{'outlineColor'};
-		} else {
-			//$outlineColor = $dLayer->{'color'};
 		}
+		if (strpos($outlineColor, '[') !== false) {
+			$outlineColor = $this->getPropValue($outlineColor, $props);
+			if (strpos($outlineColor, '#') !== false) {
+				$outlineColor = aciColors::hexToRgba($outlineColor);
+				if($outlineColor!=null){
+					$outlineColor = aciColors::getDecimalColor($outlineColor[0], $outlineColor[1], $outlineColor[2]);
+				}
+			}else{
+				$outlineColor = explode(" ", $outlineColor);
+				$outlineColor = aciColors::getDecimalColor($outlineColor[0], $outlineColor[1], $outlineColor[2]);
+			}
+		}
+
 		$linetype = NULL;
 		if (isset($style->{'lineType'})) {
 			$linetype = $this->getLineStyleName($style->{'lineType'});

@@ -348,4 +348,34 @@ class aciColors
         }
         return $aci;
     }
+
+
+
+    public static function hexToRgba(string $hex): ?array {
+        // Rimuove il simbolo '#' se presente
+        $hex = ltrim($hex, '#');
+    
+        // Se è in formato RRGGBBAA (8 caratteri)
+        if (strlen($hex) === 8) {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+            $a = hexdec(substr($hex, 6, 2)) / 255;
+            if($a === 0){
+                return null;
+            }
+            return ['r' => $r, 'g' => $g, 'b' => $b, 'a' => round($a, 2)];
+        }
+    
+        // Se è in formato RRGGBB (6 caratteri)
+        if (strlen($hex) === 6) {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+            return ['r' => $r, 'g' => $g, 'b' => $b, 'a' => 1];
+        }
+    
+        // Formato non valido
+        return null;
+    }
 }
