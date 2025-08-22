@@ -386,7 +386,11 @@ class dxfCode implements iDxfCode {
 			array_push($strGeom, "  100");
 			array_push($strGeom, "AcDbPolyline");
 			array_push($strGeom, "  90");
-			array_push($strGeom, count($coords)."");
+			if(is_array($coords[0][0])){
+				array_push($strGeom, count($coords[0])."");
+			}else{
+				array_push($strGeom, count($coords)."");
+			}
 			array_push($strGeom, "  70");
 			array_push($strGeom, "128");
 			//array_push($strGeom, "  43");
@@ -395,13 +399,26 @@ class dxfCode implements iDxfCode {
 				array_push($strGeom, " 43");
 				array_push($strGeom, $this->getThickness($thickness));
 			}
-			for($i = 0; $i < count($coords); $i++){
+			
+			for ($i = 0; $i < count($coords); $i++) {
 				$coord = $coords[$i];
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]."");
+				if(is_array($coord[0])){					
+					$coords2 = $coord;
+					for ($l = 0; $l < count($coords2); $l++) {
+						$coord2 = $coords2[$l];
+						array_push($strGeom, "  10");
+						array_push($strGeom, (string)$coord2[0]);
+						array_push($strGeom, "  20");
+						array_push($strGeom, (string)$coord2[1]);	
+					}
+				}else{
+					array_push($strGeom, "  10");
+					array_push($strGeom, (string)$coord[0]);
+					array_push($strGeom, "  20");
+					array_push($strGeom, (string)$coord[1]);
+				}
 			}
+
 		}
 		$this->dxfFactory->writeLine($strGeom);
 		$this->dxfFactory->log("POLILYNE added ".$tmpHandle);
@@ -426,8 +443,6 @@ class dxfCode implements iDxfCode {
 		//disegno solo se ho un colore
 		if (count($coords) > 0 && !is_null($outlineColor))
 		{
-			
-			
 			if (is_null($lineType))
 			{
 				$lineType = "Continuous";
@@ -470,19 +485,34 @@ class dxfCode implements iDxfCode {
 			array_push($strGeom, "  100");
 			array_push($strGeom, "AcDbPolyline");
 			array_push($strGeom, "  90");
-			array_push($strGeom, count($coords)."");
+			if(is_array($coords[0][0])){
+				array_push($strGeom, count($coords[0])."");
+			}else{
+				array_push($strGeom, count($coords)."");
+			}
 			array_push($strGeom, "  70");
 			array_push($strGeom, "128");
 			if($this->enableLineThickness && !is_null($thickness)){
 				array_push($strGeom, " 43");
 				array_push($strGeom, $this->getThickness($thickness));
 			}
-			for($i = 0; $i < count($coords); $i++){
+			for ($i = 0; $i < count($coords); $i++) {
 				$coord = $coords[$i];
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]."");
+				if(is_array($coord[0])){					
+					$coords2 = $coord;
+					for ($l = 0; $l < count($coords2); $l++) {
+						$coord2 = $coords2[$l];
+						array_push($strGeom, "  10");
+						array_push($strGeom, (string)$coord2[0]);
+						array_push($strGeom, "  20");
+						array_push($strGeom, (string)$coord2[1]);	
+					}
+				}else{
+					array_push($strGeom, "  10");
+					array_push($strGeom, (string)$coord[0]);
+					array_push($strGeom, "  20");
+					array_push($strGeom, (string)$coord[1]);
+				}
 			}
 		
 			$this->dxfFactory->writeLine($strGeom);
@@ -568,25 +598,50 @@ class dxfCode implements iDxfCode {
 			array_push($strGeom, " 93");
 			array_push($strGeom, count($coords));
 			
-			for($i = 0; $i < count($coords); $i++){
+
+			for ($i = 0; $i < count($coords); $i++) {
 				$coord = $coords[$i];
-				if($i == count($coords) - 1){
-					$coord1 = $coords[0];
+				if(is_array($coord[0])){					
+					$coords2 = $coord;
+					for ($l = 0; $l < count($coords2); $l++) {
+						$coord2 = $coords2[$l];
+						if($l == count($coords2) - 1){
+							$coord1 = $coords2[0];
+						}else{
+							$coord1 = $coords2[$l + 1];
+						}
+						array_push($strGeom, " 72");
+						array_push($strGeom, "     1");
+						array_push($strGeom, "  10");
+						array_push($strGeom, $coord2[0]."");
+						array_push($strGeom, "  20");
+						array_push($strGeom, $coord2[1]."");
+						array_push($strGeom, "  11");
+						array_push($strGeom, $coord1[0]."");
+						array_push($strGeom, "  21");
+						array_push($strGeom, $coord1[1]."");
+
+					}
 				}else{
-					$coord1 = $coords[$i + 1];
+					$coord = $coords[$i];
+					if($i == count($coords) - 1){
+						$coord1 = $coords[0];
+					}else{
+						$coord1 = $coords[$i + 1];
+					}
+					array_push($strGeom, " 72");
+					array_push($strGeom, "     1");
+					array_push($strGeom, "  10");
+					array_push($strGeom, $coord[0]."");
+					array_push($strGeom, "  20");
+					array_push($strGeom, $coord[1]."");
+					array_push($strGeom, "  11");
+					array_push($strGeom, $coord1[0]."");
+					array_push($strGeom, "  21");
+					array_push($strGeom, $coord1[1]."");	
 				}
-				array_push($strGeom, " 72");
-				array_push($strGeom, "     1");
-				array_push($strGeom, "  10");
-				array_push($strGeom, $coord[0]."");
-				array_push($strGeom, "  20");
-				array_push($strGeom, $coord[1]."");
-				array_push($strGeom, "  11");
-				array_push($strGeom, $coord1[0]."");
-				array_push($strGeom, "  21");
-				array_push($strGeom, $coord1[1]."");				
 			}
-			
+
 			array_push($strGeom, " 97");
 			array_push($strGeom, "        1");
 			array_push($strGeom, "330");

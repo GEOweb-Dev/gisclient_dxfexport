@@ -428,20 +428,27 @@ class dxfFactory implements iDxfFactory
 		//scrittura dei file con i punti
 		$out = fopen($this->outputFile, "a");
 		$in = fopen($this->outputFilePoints, "r");
-		while ($line = fgets($in)) {
-			fwrite($out, $line);
+		if ($in !== false){
+			while ($line = fgets($in)) {
+				fwrite($out, $line);
+			}
+			fclose($in);
 		}
-		fclose($in);
 		$in = fopen($this->outputFileLines, "r");
-		while ($line = fgets($in)) {
-			fwrite($out, $line);
+		if ($in !== false){
+			while ($line = fgets($in)) {
+				fwrite($out, $line);
+			}
+			fclose($in);
 		}
-		fclose($in);
 		$in = fopen($this->outputFileHatches, "r");
-		while ($line = fgets($in)) {
-			fwrite($out, $line);
+		if ($in !== false){
+			while ($line = fgets($in)) {
+				fwrite($out, $line);
+			}
+			fclose($in);
 		}
-		fclose($in);
+		
 		fclose($out);
 		//elimino i file di cache
 		unlink($this->outputFilePoints);
