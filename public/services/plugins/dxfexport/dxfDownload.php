@@ -33,6 +33,9 @@ $dxf = "";
 //nome del file
 if(isset($_REQUEST["fileName"])){
 	$fileHandle = $dxfTempPath.$_REQUEST["fileName"];
+	if (isset($dxfTempPathCluster) && !empty($dxfTempPathCluster)) {
+		$fileHandle = $dxfTempPathCluster.$_REQUEST["fileName"];
+	}
 	$dxf = file_get_contents($fileHandle, true);
 }else{
 	die("File DXF non trovato");

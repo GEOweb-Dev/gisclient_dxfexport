@@ -189,6 +189,10 @@ if ($outputFormat == "json") {
 	//$dxfTempPath � definito in dxfConfig.php 
 	$fileHandle = $dxfTempPath . $fileName;
 	$dxfFact->createDxf($fileHandle);
+	//copio il file nella share del cluster
+	if (isset($dxfTempPathCluster) && !empty($dxfTempPathCluster)) {
+		copy($fileHandle, $dxfTempPathCluster . $fileName);
+	}
 	$fileJson = new stdClass();
 	$fileJson->{"filePath"} = $fileHandle;
 	$fileJson->{"fileName"} = $fileName;

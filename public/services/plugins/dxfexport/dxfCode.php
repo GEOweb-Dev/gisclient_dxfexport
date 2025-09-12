@@ -341,6 +341,13 @@ class dxfCode implements iDxfCode {
 		if (is_null($color)){
 			return;
 		}
+		if (is_null($thickness)){
+			return;
+		}
+		if ($thickness == 0){
+			return;
+		}
+
 		$strGeom = array();
 		$tmpHandle = $this->dxfFactory->getNextHandleLine();
 		//if (is_null($lineType))

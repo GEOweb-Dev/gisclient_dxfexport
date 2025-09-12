@@ -39,6 +39,8 @@ $dxfShpAllowedGroups = array(
 );
 //Directory di salvataggio del dxf e dei file temporanei
 $dxfTempPath = "/var/srv/geoweb-f/gisclient-3/tmp/dxf/";
+$dxfTempPathCluster = "/var/srv/geoweb-f/gisclient-3/tmp/dxf-share/";
+
 //Nome file del template di default
 $dxfStandardTemplate = "template_dxf.dxf";
 //Attivazione del salvataggio dei file

@@ -1067,7 +1067,7 @@ class dxfFactory implements iDxfFactory
 		if (isset($style->{'symbol_name'})) {
 			$symbolName = $this->getSymbolName($style->{'symbol_name'}, $props);
 		}
-		(!empty($dLayer->{'thickness'})) ? $thickness = $dLayer->{'thickness'} : $thickness = 1;
+		(!empty($dLayer->{'thickness'})) ? $thickness = $dLayer->{'thickness'} : $thickness = 0;
 		if (isset($style->{'thickness'})) {
 			$thickness = $style->{'thickness'};
 		}
