@@ -823,8 +823,7 @@ class dxfFactory implements iDxfFactory
 	public function writeLine($strGeom)
 	{
 		if (isset($this->outputFile)) {
-			file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFileLines, PHP_EOL, FILE_APPEND);
+			file_put_contents($this->outputFileLines, implode(PHP_EOL, $strGeom).PHP_EOL, FILE_APPEND);
 		} else {
 			//$this->entLines = array_merge($this->entLines, $strGeom);
 			foreach ($strGeom as $fline) {
@@ -842,8 +841,7 @@ class dxfFactory implements iDxfFactory
 	{
 		//valuto se scrivere su disco o utilizzare array in memoria
 		if (isset($this->outputFile)) {
-			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFilePoints, PHP_EOL, FILE_APPEND);
+			file_put_contents($this->outputFilePoints, implode(PHP_EOL, $strGeom).PHP_EOL, FILE_APPEND);
 		} else {
 			//$this->entPoints = array_merge($this->entPoints, $strGeom);
 			foreach ($strGeom as $fline) {
@@ -860,8 +858,7 @@ class dxfFactory implements iDxfFactory
 	public function writeHatch($strGeom)
 	{
 		if (isset($this->outputFile)) {
-			file_put_contents($this->outputFileHatches, implode(PHP_EOL, $strGeom), FILE_APPEND);
-			file_put_contents($this->outputFileHatches, PHP_EOL, FILE_APPEND);
+			file_put_contents($this->outputFileHatches, implode(PHP_EOL, $strGeom).PHP_EOL, FILE_APPEND);
 		} else {
 			foreach ($strGeom as $fline) {
 				array_push($this->entHatches, $fline);
