@@ -1,583 +1,1357 @@
-[{
-	"themeName": "base_btu",
-	"layer_default": {
-		"layerNameDxf": "BASE_GEOMETRIE",
-		"style": {
-			"expression": null,
-			"color": "251",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_blocchi": {
-		"layerNameDxf": "BASE_SIMBOLI",
-		"style": {
-			"expression": null,
-			"color": "7",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_testi": {
-		"layerNameDxf": "BASE_ANNOTAZIONI",
-		"style": {
-			"expression": null,
-			"color": "7",
-			"lineType": "CONTINUOUS",
-			"labelSize": 0.65
-		}
-	},
-	"layers": [{
-			"layerNameDxf": "BASE_CIVICI",
-			"layerNames": ["base_btu_stradario_civici"],
-			"style": {
-				"expression": null,
-				"color": "7",
-				"lineType": "CONTINUOUS",
-				"labelSize": 1.0
-			}
-		},
-		{
-			"layerNameDxf": "BASE_TOPONOMASTICA",
-			"layerNames": ["base_btu_stradario_punti_strada"],
-			"style": {
-				"color": "11",
-				"lineType": "CONTINUOUS",
-				"labelSize": 1.40
-			}
-		},
-		{
-			"layerNameDxf": "BASE_EDIFICI",
-			"layerNames": ["base_btu_btu_edificato_btu_edificato_a"],
-			"style": {
-				"color": "253",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "BASE_EDIFICI",
-			"layerNames": ["base_btu_btu_edificato_btu_edificato_l"],
-			"style": {
-				"color": "253",
-				"lineType": "CONTINUOUS"
-			}
-		}
-	]
-},
-{
-	"themeName": "base_dbt",
-	"layer_default": {
-		"layerNameDxf": "BASE_DBT_GEOMETRIE",
-		"style": {
-			"expression": null,
-			"color": "251",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_blocchi": {
-		"layerNameDxf": "BASE_DBT_SIMBOLI",
-		"style": {
-			"expression": null,
-			"color": "7",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_testi": {
-		"layerNameDxf": "BASE_DBT_ANNOTAZIONI",
-		"style": {
-			"expression": null,
-			"color": "7",
-			"lineType": "CONTINUOUS",
-			"labelSize": 0.65
-		}
-	},
-	"layers": [{
-			"layerNameDxf": "BASE_CIVICI",
-			"layerNames": ["base_dbt_dbt_accesso_civici"],
-			"style": {
-				"expression": null,
-				"color": "7",
-				"lineType": "CONTINUOUS",
-				"labelSize": 1.0
-			}
-		},
-		{
-			"layerNameDxf": "BASE_NOMIVIA",
-			"layerNames": ["base_dbt_dbt_toponimi_stradali"],
-			"style": {
-				"expression": null,
-				"color": "1",
-				"lineType": "CONTINUOUS",
-				"labelSize": 1.40
-			}
-		},
-		{
-			"layerNameDxf": "BASE_TOPONOMASTICA",
-			"layerNames": ["base_dbt_dbt_toponimi_stradali"],
-			"style": {
-				"expression": null,
-				"color": "11",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "BASE_EDIFICI",
-			"layerNames": ["*dbt_edificato*"],
-			"style": {
-				"expression": null,
-				"color": "253",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "BASE_QUOTE_ALT",
-			"layerNames": ["ddddd"],
-			"style": {
-				"expression": null,
-				"color": "251",
-				"lineType": "CONTINUOUS"
-			}
-		}
-	]
-},
-{
-	"themeName": "gas",
-	"layer_default": {
-		"layerNameDxf": "GAS_GEOMETRIE",
-		"style": {
-			"expression": null,
-			"color": "40",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_blocchi": {
-		"layerNameDxf": "GAS_SIMBOLI",
-		"style": {
-			"expression": null,
-			"color": "10",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_testi": {
-		"layerNameDxf": "GAS_ANNOTAZIONI",
-		"style": {
-			"expression": null,
-			"color": "10",
-			"lineType": "CONTINUOUS",
-			"labelSize": 1.27
-		}
-	},
-	"layers": [{
-			"layerNameDxf": "GAS_RETE_ALLACCI",
-			"layerNames": ["*esercizio_tratte_allacciamenti*"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO07W100"
-			}
-		},
-		{
-			"layerNameDxf": "GPL_RETE_BASSA",
-			"layerNames": ["*esercizio_tratte_condotte_principali_gpl_bassa"],
-			"style": {
-				"expression": null,
-				"color": "30",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "GPL_RETE_MEDIA",
-			"layerNames": ["*esercizio_tratte_condotte_principali_gpl_media"],
-			"style": {
-				"expression": null,
-				"color": "30",
-				"lineType": "ACAD_ISO10W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_1",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_01"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO08W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_2",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_02"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO05W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_3",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_03"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO06W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_4",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_04"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO10W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_4_BASSA",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_04_bassa"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO13W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_5",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_05"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO11W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_6",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_06"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "ACAD_ISO02W100"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_SPECIE_7",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_07"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_NN",
-			"layerNames": ["*esercizio_tratte_condotte_principali_metano_rete_specie_nd", "*esercizio_tratte_condotte_principali_rete_non_noto"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "GAS_RETE_OLEODOTTO",
-			"layerNames": ["*esercizio_tratte_condotte_principali_oleodotto"],
-			"style": {
-				"expression": null,
-				"color": "10",
-				"lineType": "CONTINUOUS"
-			}
-		}
-
-	]
-},
-{
-	"themeName": "acqua",
-	"layer_default": {
-		"layerNameDxf": "H2O_GEOMETRIE",
-		"style": {
-			"expression": null,
-			"color": "40",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_blocchi": {
-		"layerNameDxf": "H2O_SIMBOLI",
-		"style": {
-			"expression": null,
-			"color": "170",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_testi": {
-		"layerNameDxf": "H2O_ANNOTAZIONI",
-		"style": {
-			"expression": null,
-			"color": "170",
-			"lineType": "CONTINUOUS",
-			"labelSize": 1.27
-		}
-	},
-	"layers": [
-		{
-			"layerNameDxf": "H2O_RETE_ADDUZIONE",
-			"layerNames": ["acqua_a_esercizio_tratte_condotte_principali_rete_adduzione"],
-			"style": {
-				"expression": null,
-				"color": "170",
-				"lineType": "ACAD_ISO10W100"
-			}
-		},
-		{
-			"layerNameDxf": "H2O_RETE_DISTRIBUZIONE",
-			"layerNames": ["acqua_a_esercizio_tratte_condotte_principali_rete_distribuzione"],
-			"style": {
-				"expression": null,
-				"color": "170",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "H2O_RETE_USI_PLURIMI",
-			"layerNames": ["acqua_a_esercizio_tratte_condotte_principali_rete_usi_plurimi"],
-			"style": {
-				"expression": null,
-				"color": "170",
-				"lineType": "ACAD_ISO12W100"
-			}
-		},	
-		{
-			"layerNameDxf": "H2O_RETE_NN",
-			"layerNames": ["acqua_a_esercizio_tratte_condotte_principali_rete_non_noto"],
-			"style": {
-				"expression": null,
-				"color": "170",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "H2O_RETE_ALLACCI",
-			"layerNames": ["acqua_a_esercizio_tratte_allacciamenti*"],
-			"style": {
-				"expression": null,
-				"color": "170",
-				"lineType": "ACAD_ISO07W100"
-			}
-		}
-	]
-},
-{
-	"themeName": "teleriscaldamento",
-	"layer_default": {
-		"layerNameDxf": "TLR_LINEE",
-		"style": {
-			"expression": null,
-			"color": "6",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_blocchi": {
-		"layerNameDxf": "TLR_SIMBOLI",
-		"style": {
-			"expression": null,
-			"color": "6",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_testi": {
-		"layerNameDxf": "TLR_ANNOTAZIONI",
-		"style": {
-			"expression": null,
-			"color": "6",
-			"lineType": "CONTINUOUS",
-			"labelSize": 1.27
-		}
-	},
-	"layers": [{
-			"layerNameDxf": "TLR_RETE_ALLACCIO_RITORNO",
-			"layerNames": ["teleriscaldamento_t_esercizio_allacci_tratte_allaccio_ritorno_distribuzione"],
-			"style": {
-				"expression": null,
-				"color": "4",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "TLR_RETE_ALLACCIO_MANDATA",
-			"layerNames": ["teleriscaldamento_t_esercizio_allacci_tratte_allaccio_mandata_distribuzione"],
-			"style": {
-				"expression": null,
-				"color": "1",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "TLR_RETE_RITORNO",
-			"layerNames": ["teleriscaldamento_t_esercizio_condotte_tratte_condotta_trasporto_ritorno","teleriscaldamento_t_esercizio_condotte_tratte_condotta_distribuzione_ritorno"],
-			"style": {
-				"expression": null,
-				"color": "4",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "TLR_RETE_MANDATA",
-			"layerNames": ["teleriscaldamento_t_esercizio_condotte_tratte_condotta_trasporto_mandata","teleriscaldamento_t_esercizio_condotte_tratte_condotta_distribuzione_mandata"],
-			"style": {
-				"expression": null,
-				"color": "1",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "TLR_RETE_POLIFORA",
-			"layerNames": ["teleriscaldamento_t_esercizio_polifora_tratte"],
-			"style": {
-				"expression": null,
-				"color": "30",
-				"lineType": "ACAD_ISO10W100"
-			}
-		}
-	]
-}, {
-	"themeName": "fognature",
-	"layer_default": {
-		"layerNameDxf": "FGN_GEOMETRIE",
-		"style": {
-			"expression": null,
-			"color": "40",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_blocchi": {
-		"layerNameDxf": "FGN_SIMBOLI",
-		"style": {
-			"expression": null,
-			"color": "7",
-			"lineType": "CONTINUOUS"
-		}
-	},
-	"layer_default_testi": {
-		"layerNameDxf": "FGN_ANNOTAZIONI",
-		"style": {
-			"expression": null,
-			"color": "7",
-			"lineType": "CONTINUOUS",
-			"labelSize": 1.27
-		}
-	},
-
-	"layers": [{
-			"layerNameDxf": "FGN_RETE_ALLACCI",
-			"layerNames": ["fognature_f_esercizio_tratte_allacciamenti"],
-			"style": {
-				"expression": null,
-				"color": "140",
-				"lineType": "ACAD_ISO07W100"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_BIANCHE_GRAVITA",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_bianca_gravita"],
-			"style": {
-				"expression": null,
-				"color": "140",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_BIANCHE_NN",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_bianca_NN"],
-			"style": {
-				"expression": null,
-				"color": "140",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_BIANCHE_PRESSIONE",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_bianca_pressione"],
-			"style": {
-				"expression": null,
-				"color": "140",
-				"lineType": "ACAD_ISO04W100"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_MISTE_GRAVITA",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_mista_gravita"],
-			"style": {
-				"expression": null,
-				"color": "64",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_MISTE_NN",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_mista_NN"],
-			"style": {
-				"expression": null,
-				"color": "64",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_MISTE_PRESSIONE",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_mista_pressione"],
-			"style": {
-				"expression": null,
-				"color": "64",
-				"lineType": "ACAD_ISO04W100"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_NERE_GRAVITA",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_nera_gravit*"],
-			"style": {
-				"expression": null,
-				"color": "14",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_NERE_NN",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_nera_NN"],
-			"style": {
-				"expression": null,
-				"color": "14",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_NERE_PRESSIONE",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_nera_pressione"],
-			"style": {
-				"expression": null,
-				"color": "14",
-				"lineType": "ACAD_ISO04W100"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_NN",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_non_noto"],
-			"style": {
-				"expression": null,
-				"color": "253",
-				"lineType": "CONTINUOUS"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_SCOLMATORE_GRAVITA",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_scolmatore_gravita"],
-			"style": {
-				"expression": null,
-				"color": "160",
-				"lineType": "ACAD_ISO02W100"
-			}
-		},
-		{
-			"layerNameDxf": "FGN_RETE_SCOLMATORE_NN",
-			"layerNames": ["fognature_f_esercizio_tratte_condotte_rete_scolmatore_NN"],
-			"style": {
-				"expression": null,
-				"color": "160",
-				"lineType": "ACAD_ISO02W100"
-			}
-		}
-	]
-}
+[
+    {
+        "themeName": "linee_elettriche_at",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_at_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_bt",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_bt_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_mt",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_mt_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_part_at_mt_bt",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_part_at_mt_bt_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_ip",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_ip_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_impianti_sch_cab",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_impianti_sch_cab_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_infr",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_infr_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_tematismi_accessori",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_tematismi_accessori_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "linee_elettriche_ricerca",
+        "layerNameReplace": [
+            {
+                "search": "linee_elettriche_ricerca_",
+                "replace": "ELE_"
+            }
+        ]
+    },
+    {
+        "themeName": "base_btu",
+        "layer_default": {
+            "layerNameDxf": "BASE_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "251",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "BASE_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "BASE_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS",
+                "labelSize": 0.65
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "BASE_CIVICI",
+                "layerNames": [
+                    "base_btu_stradario_civici"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS",
+                    "labelSize": 1
+                }
+            },
+            {
+                "layerNameDxf": "BASE_TOPONOMASTICA",
+                "layerNames": [
+                    "base_btu_stradario_punti_strada"
+                ],
+                "style": {
+                    "color": "11",
+                    "lineType": "CONTINUOUS",
+                    "labelSize": 1.4
+                }
+            },
+            {
+                "layerNameDxf": "BASE_EDIFICI",
+                "layerNames": [
+                    "base_btu_btu_edificato_btu_edificato_a"
+                ],
+                "style": {
+                    "color": "253",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "BASE_EDIFICI",
+                "layerNames": [
+                    "base_btu_btu_edificato_btu_edificato_l"
+                ],
+                "style": {
+                    "color": "253",
+                    "lineType": "CONTINUOUS"
+                }
+            }
+        ]
+    },
+    {
+        "themeName": "base_dbt",
+        "layer_default": {
+            "layerNameDxf": "BASE_DBT_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "251",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "BASE_DBT_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "BASE_DBT_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS",
+                "labelSize": 0.65
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "BASE_CIVICI",
+                "layerNames": [
+                    "base_dbt_dbt_accesso_civici"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS",
+                    "labelSize": 1
+                }
+            },
+            {
+                "layerNameDxf": "BASE_NOMIVIA",
+                "layerNames": [
+                    "base_dbt_dbt_toponimi_stradali"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "1",
+                    "lineType": "CONTINUOUS",
+                    "labelSize": 1.4
+                }
+            },
+            {
+                "layerNameDxf": "BASE_TOPONOMASTICA",
+                "layerNames": [
+                    "base_dbt_dbt_toponimi_stradali"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "11",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "BASE_EDIFICI",
+                "layerNames": [
+                    "*dbt_edificato*"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "253",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "BASE_QUOTE_ALT",
+                "layerNames": [
+                    "ddddd"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "251",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "BASE_OROGRAFIA",
+                "layerNames": [
+                    "*orografia*"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "251",
+                    "lineType": "CONTINUOUS"
+                }
+            }
+        ]
+    },
+    {
+        "themeName": "gas",
+        "layer_default": {
+            "layerNameDxf": "GAS_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "40",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "GAS_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "10",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "GAS_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "10",
+                "lineType": "CONTINUOUS",
+                "labelSize": 1.27
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "GAS_RETE_ALLACCI",
+                "layerNames": [
+                    "*esercizio_tratte_allacciamenti*"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "GPL_RETE_BASSA",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_gpl_bassa"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "30",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "GPL_RETE_MEDIA",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_gpl_media"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "30",
+                    "lineType": "ACAD_ISO10W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_1",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_01"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO08W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_2",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_02"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO05W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_3",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_03"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO06W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_4",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_04"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO10W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_4_BASSA",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_04_bassa"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO13W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_5",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_05"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO11W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_6",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_06"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_SPECIE_7",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_07"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_NN",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_metano_rete_specie_nd",
+                    "*esercizio_tratte_condotte_principali_rete_non_noto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_RETE_OLEODOTTO",
+                "layerNames": [
+                    "*esercizio_tratte_condotte_principali_oleodotto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "10",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_QUOTE_LINEE",
+                "layerNames": [
+                    "gas_g_tematismi_accessori_quote_l"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "GAS_QUOTE_TESTI",
+                "layerNames": [
+                    "gas_g_tematismi_accessori_quote_t",
+                    "gas_g_tematismi_accessori_quote_p"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS",
+                    "labelSize": 0.72
+                }
+            }
+        ]
+    },
+    {
+        "themeName": "acqua",
+        "layer_default": {
+            "layerNameDxf": "H2O_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "40",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "H2O_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "170",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "H2O_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "170",
+                "lineType": "CONTINUOUS",
+                "labelSize": 1.27
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "H2O_QUOTE_LINEE",
+                "layerNames": [
+                    "acqua_a_tematismi_accessori_quote_l"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_QUOTE_TESTI",
+                "layerNames": [
+                    "acqua_a_tematismi_accessori_quote_t",
+                    "acqua_a_tematismi_accessori_quote_p"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS",
+                    "labelSize": 0.72
+                }
+            }
+        ]
+    },
+    {
+        "themeName": "acqua_in_esercizio",
+        "layer_default": {
+            "layerNameDxf": "H2O_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "40",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "H2O_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "170",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "H2O_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "170",
+                "lineType": "CONTINUOUS",
+                "labelSize": 1.27
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "H2O_RETE_ADDUZIONE",
+                "layerNames": [
+                    "acqua_in_esercizio_a_esercizio_adduzione_tratte_condotte_principali_rete_adduzione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "170",
+                    "lineType": "ACAD_ISO10W100"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_RETE_DISTRIBUZIONE",
+                "layerNames": [
+                    "acqua_in_esercizio_a_esercizio_distribuzione_tratte_condotte_principali_rete_distribuzione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "170",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_RETE_USI_PLURIMI",
+                "layerNames": [
+                    "acqua_in_esercizio_a_esercizio_add_distr_tratte_condotte_principali_rete_usi_plurimi"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "170",
+                    "lineType": "ACAD_ISO12W100"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_RETE_NN",
+                "layerNames": [
+                    "acqua_in_esercizio_a_esercizo_distribuzione_tratte_condotte_principali_rete_non_noto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "170",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_RETE_RIUSO_ACQUA_DEPURATA",
+                "layerNames": [
+                    "acqua_in_esercizio_a_esercizio_add_distr_tratte_condotte_principali_rete_riuso_acq_dep"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "212",
+                    "lineType": "ACAD_ISO12W100"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_RETE_RIUSO_ACQUA_DEPURATA_ALLACCI",
+                "layerNames": [
+                    "acqua_in_esercizio_a_esercizio_add_distr_tratte_allacciamenti_allacciamenti_riuso_acq_dep"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "212",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "H2O_RETE_ALLACCI",
+                "layerNames": [
+                    "*_tratte_allacciamenti_allacciamenti_*"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "170",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            }
+        ]
+    },
+    {
+        "themeName": "fognature",
+        "layer_default": {
+            "layerNameDxf": "FGN_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "40",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "FGN_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "FGN_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS",
+                "labelSize": 1.27
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "FGN_QUOTE_LINEE",
+                "layerNames": [
+                    "fognature_f_tematismi_accessori_quote_l"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_QUOTE_TESTI",
+                "layerNames": [
+                    "fognature_f_tematismi_accessori_quote_t",
+                    "fognature_f_tematismi_accessori_quote_p"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_BENTIVOGLIO_ENZA_IRRIGUO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_bent_enza_can_bon_bent_enza_irriguo"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "180",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_BENTIVOGLIO_ENZA_PROMISCUO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_bent_enza_can_bon_bent_enza_promiscuo"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "202",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_BENTIVOGLIO_ENZA_SCOLO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_bent_enza_can_bon_bent_enza_scolo"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "1",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_PARMIGIANA_MOGLIA_IRRIGUO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_parm_moglia_can_bon_par_moglia_irriguo"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "180",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_PARMIGIANA_MOGLIA_PROMISCUO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_parm_moglia_can_bon_par_moglia_promiscuo"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "202",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_PARMIGIANA_MOGLIA_SCOLO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_parm_moglia_can_bon_par_moglia_scolo"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "1",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_TERRE_GONZAGA_IRRIGAZIONE",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_terre_gonzaga_can_bon_terre_gonzaga_irrigazione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "180",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_TERRE_GONZAGA_PRIVATO",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_terre_gonzaga_can_bon_terre_gonzaga_privato"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "202",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BON_TERRE_GONZAGA_BONIFICA",
+                "layerNames": [
+                    "fognature_bonifica_can_bonif_terre_gonzaga_can_bon_terre_gonzaga_bonifica"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "1",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BONIFICA_RER_PIACENZA",
+                "layerNames": [
+                    "fognature_bonifica_canale_rer_pc"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "180",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_BONIFICA_RER_PARMA",
+                "layerNames": [
+                    "fognature_bonifica_canale_rer_pr"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "180",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_ACQUE_SUPERFICIALI",
+                "layerNames": [
+                    "fognature_acque_superficiali_tratte_condotte_as"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_BIANCHE_GRAVITA",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_bianca_gravita"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_BIANCHE_NN",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_bianca_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_BIANCHE_PRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_bianca_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_BIANCHE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_bianca_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_MISTE_ALLACCI",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_allacciamenti_allacciamento_mista"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_MISTE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_mista_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_MISTE_GRAVITA",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_mista_gravita"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_MISTE_NN",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_mista_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_MISTE_PRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_mista_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_NERE_ALLACCI",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_allacciamenti_allacciamento_nera"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_NERE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_nera_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_NERE_GRAVITA",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_nera_gravita*"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_NERE_NN",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_nera_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_NERE_PRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_nera_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_NN",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_non_noto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "253",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_SCOLMATORE_ALLACCI",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_allacciamenti_allacciamento_scolmatore"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_SCOLMATORE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_scolmatore_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_SCOLMATORE_GRAVITA",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_scolmatore_gravita"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_SCOLMATORE_PRESSIONE",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_scolmatore_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_SCOLMATORE_NN",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_scolmatore_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_FANGODOTTO_ALLACCI",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_allacciamenti_allacciamento_fangodotto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "23",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_FANGODOTTO",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_condotte_rete_fangodotto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "23",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_AG_BIANCHE_ALLACCI",
+                "layerNames": [
+                    "fognature_f_altri_gestori_tratte_allacciamenti_allacciamento_bianca"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            }
+        ]
+    },
+    {
+        "themeName": "fognature_in_esercizio",
+        "layer_default": {
+            "layerNameDxf": "FGN_GEOMETRIE",
+            "style": {
+                "expression": null,
+                "color": "40",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_blocchi": {
+            "layerNameDxf": "FGN_SIMBOLI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS"
+            }
+        },
+        "layer_default_testi": {
+            "layerNameDxf": "FGN_ANNOTAZIONI",
+            "style": {
+                "expression": null,
+                "color": "7",
+                "lineType": "CONTINUOUS",
+                "labelSize": 1.27
+            }
+        },
+        "layers": [
+            {
+                "layerNameDxf": "FGN_SIMBOLI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_altro_manufatti_a",
+                    "fognature_in_esercizio_f_esercizio_altro_manufatti_l"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "7",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_BIANCHE_ALLACCI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_bianca_tratte_allacciamenti_allacciamento_bianca"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_BIANCHE_GRAVITA",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_bianca_tratte_condotte_rete_bianca_gravita"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_BIANCHE_NN",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_bianca_tratte_condotte_rete_bianca_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_BIANCHE_PRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_bianca_tratte_condotte_rete_bianca_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_BIANCHE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_bianca_tratte_condotte_rete_bianca_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "140",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_MISTE_ALLACCI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_mista_tratte_allacciamenti_allacciamento_bianca"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_MISTE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_mista_tratte_condotte_rete_in_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_MISTE_GRAVITA",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_mista_tratte_condotte_rete_in_gravita"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_MISTE_NN",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_mista_tratte_condotte_rete_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_MISTE_PRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_mista_tratte_condotte_rete_in_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "64",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NERE_ALLACCI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_nera_tratte_allacciamenti_allacciamento_bianca"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NERE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_nera_tratte_condotte_rete_in_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NERE_GRAVITA",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_nera_tratte_condotte_rete_in_gravit*"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NERE_NN",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_nera_tratte_condotte_rete_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NERE_PRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_nera_tratte_condotte_rete_in_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NN_ALLACCI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_non_nota_tratte_allacciamenti_allacciamento_nn"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "253",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_NN",
+                "layerNames": [
+                    "fognature_f_esercizio_tratte_condotte_rete_non_noto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "253",
+                    "lineType": "CONTINUOUS"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_SCOLMATORE_ALLACCI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_scolmatore_tratte_allacciamenti_allacciamento_bianca"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_SCOLMATORE_DEPRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_scolmatore_tratte_condotte_rete_in_depressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_SCOLMATORE_GRAVITA",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_scolmatore_tratte_condotte_rete_in_gravita"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_SCOLMATORE_PRESSIONE",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_scolmatore_tratte_condotte_rete_in_pressione"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "14",
+                    "lineType": "ACAD_ISO04W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_SCOLMATORE_NN",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_scolmatore_tratte_condotte_rete_NN"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "160",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_FANGODOTTO_ALLACCI",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_fangodotto_tratte_allacciamenti_allacciamento_nn"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "23",
+                    "lineType": "ACAD_ISO07W100"
+                }
+            },
+            {
+                "layerNameDxf": "FGN_RETE_FANGODOTTO",
+                "layerNames": [
+                    "fognature_in_esercizio_f_esercizio_fangodotto_tratte_condotte_rete_fangodotto"
+                ],
+                "style": {
+                    "expression": null,
+                    "color": "23",
+                    "lineType": "ACAD_ISO02W100"
+                }
+            }
+        ]
+    }
 ]
