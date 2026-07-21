@@ -1768,7 +1768,7 @@ class dxfFactory implements iDxfFactory
 		
 		
 		$json = file_get_contents($url, false, stream_context_create($arrContextOptions));
-		
+		//$this->log($json);
 		$this->log("Terminata richiesta");
 		$arr = explode("\n", $json);
 		//elimino gli errori generati da mapserver

@@ -58,6 +58,10 @@ $mapSet = $_REQUEST["mapset"];
 $themes = $_REQUEST["themes"];
 $project = $_REQUEST["project"];
 $epsg = $_REQUEST["epsg"];
+if (stripos($epsg, 'EPSG') !== false) {
+        $parti = explode(':', $epsg);
+        $epsg = $parti[1] ?? null;
+}
 $template = $_REQUEST["template"];
 $enableLineThickness = $_REQUEST["enableLineThickness"];
 $lineScale = $_REQUEST["lineScale"];
