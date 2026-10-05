@@ -177,7 +177,7 @@ session_write_close();
 
 //download del file
 $fileName = uniqid('shp_', true) . ".zip";
-$fileHandle = $dxfTempPath . $fileName;
+$fileHandle = $dxfTempPathCluster . $fileName;
 $out = fopen($fileHandle, "wb");
 
 $ch = curl_init();
@@ -209,7 +209,7 @@ if (is_null($outputFormat)) {
 
 if ($outputFormat == "json") {
 	//$dxfTempPath � definito in dxfConfig.php 
-	$fileHandle = $dxfTempPath . $fileName;
+	$fileHandle = $dxfTempPathCluster . $fileName;
 	$fileJson = new stdClass();
 	$fileJson->{"filePath"} = $fileHandle;
 	$fileJson->{"fileName"} = $fileName;
